@@ -87,13 +87,13 @@
           </plugin>
         </plugins>
       </build>
-      <dependencies>
+      <!--<dependencies>
         <dependency>
           <groupId>org.open-metadata</groupId>
           <artifactId>openmetadata-ui</artifactId>
           <version>${project.version}</version>
         </dependency>
-      </dependencies>
+      </dependencies>-->
     </profile>
     <profile>
       <id>rpm</id>
@@ -168,13 +168,13 @@
         </plugin>
       </plugins>
     </build>
-    <dependencies>
+    <!--<dependencies>
       <dependency>
         <groupId>org.open-metadata</groupId>
         <artifactId>openmetadata-ui</artifactId>
         <version>${project.version}</version>
       </dependency>
-    </dependencies>
+    </dependencies>-->
   </profile>
   <profile>
     <id>only-backend</id>
