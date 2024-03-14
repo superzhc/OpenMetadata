@@ -42,11 +42,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.json.JsonObject;
 import javax.json.JsonPatch;
@@ -127,6 +123,7 @@ import org.openmetadata.service.security.AuthorizationException;
 import org.openmetadata.service.security.Authorizer;
 import org.openmetadata.service.security.auth.AuthenticatorHandler;
 import org.openmetadata.service.security.auth.BotTokenCache;
+import org.openmetadata.service.security.auth.HanYunAuthenticator;
 import org.openmetadata.service.security.auth.UserTokenCache;
 import org.openmetadata.service.security.jwt.JWTTokenGenerator;
 import org.openmetadata.service.security.policyevaluator.OperationContext;
@@ -1391,4 +1388,203 @@ public class UserResource extends EntityResource<User, UserRepository> {
       }
     }
   }
+
+  /** 以下是单点登录的内容 */
+  @POST
+  @Path("/sso/hanyun")
+  @Operation(
+      operationId = "ssoByHanYun",
+      summary = "Login User with HanYun SSO",
+      description = "Login User with HanYun SSO",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Returns the Jwt Token Response ",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request")
+      })
+  public Response ssoByHanYun(
+      @Context UriInfo uriInfo, @Context SecurityContext securityContext, @QueryParam("code") String code)
+      throws IOException, TemplateException {
+    LoginRequest loginRequest = new LoginRequest();
+    loginRequest.setEmail(code);
+    return Response.status(Response.Status.OK)
+        .entity(HanYunAuthenticator.getInstance().loginUser(loginRequest))
+        .build();
+  }
+
+  /*
+
+  @GET
+  @Path("/open-flag")
+  public Result<SSOVo> openFlag(@QueryParam("sourceSystem") String sourceSystem, @Valid HttpServletRequest request) {
+      SSOConfig.SSOSystem system = ssoConfig.getSystem(sourceSystem);
+      if (nullOrEmpty(system)) {
+          return Result.ok(new SSOVo(false, true, "", ""));
+      } else {
+          return Result.ok(
+                  new SSOVo(
+                          system.getOpen(),
+                          checkToken(request),
+                          getLoginUrl(system.getLoginUrl(), sourceSystem),
+                          destroyToken(getLoginUrl(system.getLoginUrl(), sourceSystem))));
+      }
+  }
+
+  private static final String CLIENT_ID = "client_id";
+  private static final String CLIENT_SECRET = "client_secret";
+  private static final String GRANT_TYPE = "grant_type";
+  private static final String ACCESS_TOKEN = "access_token";
+  private static final String CODE = "code";
+  private static final String ERR_CODE = "errcode";
+  private static final String ERROR_MESSAGE = "msg";
+  private static final String LOGIN_NAME = "loginName";
+
+  @GET
+  @Path("/token")
+  public Response getToken(@Context String code, @Valid String sourceSystem) {
+      SSOConfig.SSOSystem system = ssoConfig.getSystem(sourceSystem);
+      LOG.info("服务端回调登录code: " + code);
+      Map<String, Object> tokenParam = Maps.newHashMap();
+      tokenParam.put(CLIENT_ID, ssoConfig.getClientId());
+      tokenParam.put(CLIENT_SECRET, ssoConfig.getClientSecret());
+      tokenParam.put(GRANT_TYPE, ssoConfig.getGrantType());
+      tokenParam.put(CODE, code);
+      LOG.info("code解析token 地址: " + ssoConfig.getTokenUrl());
+      LOG.info("code解析token 地址参数: " + JsonUtils.pojoToJson(tokenParam));
+      String tokenResult = HttpUtil.post(ssoConfig.getTokenUrl(), tokenParam);
+      LOG.info("code解析token result: " + tokenResult);
+      JSONObject tokenJson = JSONObject.parseObject(tokenResult);
+      Assert.isFalse(tokenJson.containsKey(ERR_CODE), tokenJson.getString(ERROR_MESSAGE));
+      String accessToken = tokenJson.getString(ACCESS_TOKEN);
+      LOG.info("token result 解析accessToken : " + tokenResult);
+      Map<String, Object> userInfoParams = Maps.newHashMap();
+      userInfoParams.put(ACCESS_TOKEN, accessToken);
+      userInfoParams.put(CLIENT_ID, ssoConfig.getClientId());
+      LOG.info("accessToken 解析 地址: " + ssoConfig.getUserInfoUrl());
+      LOG.info("accessToken 解析 地址参数: " + JSONObject.toJSON(userInfoParams));
+      String userInfoResult = HttpUtil.get(ssoConfig.getUserInfoUrl(), userInfoParams);
+      LOG.info("accessToken 解析 userInfoResult : " + userInfoResult);
+      JSONObject userInfoJSON = JSONObject.parseObject(userInfoResult);
+      Assert.isFalse(userInfoJSON.containsKey(ERR_CODE), userInfoJSON.getString(ERROR_MESSAGE));
+      String loginName =
+              userInfoJSON.getString(StrUtil.isBlank(system.getUsername()) ? LOGIN_NAME : system.getUsername());
+      LOG.info(
+              "userInfoResult 解析 "
+                      + (StrUtil.isBlank(system.getUsername()) ? LOGIN_NAME : system.getUsername())
+                      + " : "
+                      + loginName);
+      Assert.isTrue(StrUtil.isNotBlank(loginName), "登录用户名为空");
+      // 自登录
+      User user = repository.getByName(null, loginName, getFields("id"), Include.NON_DELETED, false);
+      Assert.notNull(user, "此用户在汉云操作系统中不存在，请联系管理员");
+      JwtResponse response = authHandler.getJwtResponse(user, loginConfiguration.getJwtTokenExpiryTime());
+      LOG.info("loginName 在汉云os登录后 token : " + response.getAccessToken());
+      String url =
+              String.format(
+                      system.getHanyunIndexUrl() + "?__token__=%s&sso_token=%s", response.getAccessToken(), accessToken);
+      LOG.info("重定向回前端地址：" + url);
+      return Response.status(Response.Status.OK).entity(url).build();
+  }
+
+  private String destroyToken(String url) {
+      return String.format(
+              ssoConfig.getDestroyTokenUrl() + "?redirectToLogin=%s&entityId=%s&redirctToUrl=%s",
+              true,
+              ssoConfig.getClientId(),
+              url.replace("&", "%26"));
+  }
+
+  private String getLoginUrl(String loginUrl, String sourceSystem) {
+      return String.format(
+              loginUrl + "?state=%s&client_id=%s&response_type=code&redirect_uri=%s",
+              sourceSystem,
+              ssoConfig.getClientId(),
+              ssoConfig.getRedirectUrl());
+  }
+
+  private boolean checkToken(HttpServletRequest request) {
+      try {
+          String token = getTokenByRequest(request);
+          DecodedJWT jwt = validateAndReturnDecodedJwtToken(token);
+
+          Map<String, Claim> claims = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+          claims.putAll(jwt.getClaims());
+
+          String userName = validateAndReturnUsername(claims);
+
+          return true;
+      } catch (Exception e) {
+          return false;
+      }
+  }
+
+  public static String getTokenByRequest(HttpServletRequest request) {
+      String token = request.getParameter("token");
+      if (token == null) {
+          token = request.getHeader("X-Access-Token");
+      }
+      return token;
+  }
+
+  @SneakyThrows
+  public String validateAndReturnUsername(Map<String, Claim> claims) {
+      // Get username from JWT token
+      String jwtClaim =
+              jwtPrincipalClaims.stream()
+                      .filter(claims::containsKey)
+                      .findFirst()
+                      .map(claims::get)
+                      .map(claim -> claim.as(TextNode.class).asText())
+                      .orElseThrow(
+                              () ->
+                                      new AuthenticationException(
+                                              "Invalid JWT token, none of the following claims are present " + jwtPrincipalClaims));
+
+      String userName;
+      String domain;
+      if (jwtClaim.contains("@")) {
+          userName = jwtClaim.split("@")[0];
+          domain = jwtClaim.split("@")[1];
+      } else {
+          userName = jwtClaim;
+          domain = org.apache.commons.lang.StringUtils.EMPTY;
+      }
+
+      // validate principal domain
+      if (enforcePrincipalDomain && !domain.equals(principalDomain)) {
+          throw new AuthenticationException(
+                  String.format("Not Authorized! Email does not match the principal domain %s", principalDomain));
+      }
+      return userName;
+  }
+
+  @SneakyThrows
+  public DecodedJWT validateAndReturnDecodedJwtToken(String token) {
+      // Decode JWT Token
+      DecodedJWT jwt;
+      try {
+          jwt = com.auth0.jwt.JWT.decode(token);
+      } catch (JWTDecodeException e) {
+          throw new AuthenticationException("Invalid token", e);
+      }
+
+      // Check if expired
+      // If expiresAt is set to null, treat it as never expiring token
+      if (jwt.getExpiresAt() != null
+              && jwt.getExpiresAt().before(Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime())) {
+          throw new AuthenticationException("Expired token!");
+      }
+
+      // Validate JWT with public key
+      Jwk jwk = jwkProvider.get(jwt.getKeyId());
+      Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+      try {
+          algorithm.verify(jwt);
+      } catch (RuntimeException runtimeException) {
+          throw new AuthenticationException("Invalid token", runtimeException);
+      }
+      return jwt;
+  }
+  */
 }

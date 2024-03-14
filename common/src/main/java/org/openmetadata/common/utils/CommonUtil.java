@@ -88,7 +88,12 @@ public final class CommonUtil {
     try (Stream<Path> paths = Files.walk(Paths.get(file.getPath()))) {
       return paths
           .filter(Files::isRegularFile)
-          .filter(path -> pattern.matcher(path.toString()).matches())
+          .filter(
+              path -> {
+                // 保证 Windows 系统路径转换为 Linux 系统路径
+                String pathStr = path.toString().replace(File.separator, "/");
+                return pattern.matcher(pathStr).matches();
+              })
           .map(
               path -> {
                 String relativePath = root.relativize(path).toString();

@@ -374,7 +374,7 @@ class SQAProfilerInterface(ProfilerInterface, SQAInterfaceMixin):
     ):
         """Run metrics in processor worker"""
         logger.debug(
-            f"Running profiler for {table.__tablename__} on thread {threading.current_thread()}"
+            f"Running {metric_type.value} profiler for {table.__tablename__}{' column '+column.name if column is not None else ''} on thread {threading.current_thread()}"
         )
         Session = self.session_factory  # pylint: disable=invalid-name
         with Session() as session:

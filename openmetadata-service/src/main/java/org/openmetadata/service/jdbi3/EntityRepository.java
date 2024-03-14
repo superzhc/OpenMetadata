@@ -1840,13 +1840,14 @@ public abstract class EntityRepository<T extends EntityInterface> {
     }
 
     private void updateDescription() {
-      if (operation.isPut() && !nullOrEmpty(original.getDescription()) && updatedByBot()) {
+      // 2024年1月31日 不论是否是机器用户都支持直接修改description
+      /*if (operation.isPut() && !nullOrEmpty(original.getDescription()) && updatedByBot()) {
         // Revert change to non-empty description if it is being updated by a bot
         // This is to prevent bots from overwriting the description. Description need to be
         // updated with a PATCH request
         updated.setDescription(original.getDescription());
         return;
-      }
+      }*/
       recordChange(FIELD_DESCRIPTION, original.getDescription(), updated.getDescription());
     }
 
@@ -2406,7 +2407,10 @@ public abstract class EntityRepository<T extends EntityInterface> {
       String columnField = getColumnField(origColumn, "dataLength");
       boolean updated = recordChange(columnField, origColumn.getDataLength(), updatedColumn.getDataLength());
       if (updated
-          && (origColumn.getDataLength() == null || updatedColumn.getDataLength() < origColumn.getDataLength())) {
+          && (origColumn.getDataLength() == null
+              // 取消掉列的长度也无需再比较跟原始列长度的大小了
+              || updatedColumn.getDataLength() == null
+              || updatedColumn.getDataLength() < origColumn.getDataLength())) {
         // The data length of a column was reduced or added. Treat it as backward-incompatible change
         majorVersionChange = true;
       }

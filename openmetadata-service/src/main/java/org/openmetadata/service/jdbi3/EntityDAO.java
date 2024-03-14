@@ -230,7 +230,7 @@ public interface EntityDAO<T extends EntityInterface> {
   List<String> migrationListAfterWithOffset(
       @Define("table") String table, @Define("nameHashColumn") String nameHashColumnName, @Bind("limit") int limit);
 
-  @SqlQuery("SELECT json FROM <table> <cond> AND " + "ORDER BY <nameColumn> " + "LIMIT :limit " + "OFFSET :offset")
+  @SqlQuery("SELECT json FROM <table> <cond> " + "ORDER BY <nameColumn> " + "LIMIT :limit " + "OFFSET :offset")
   List<String> listAfter(
       @Define("table") String table,
       @Define("nameColumn") String nameColumn,

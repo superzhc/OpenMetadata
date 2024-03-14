@@ -13,6 +13,8 @@
 
 package org.openmetadata.service.resources.services.database;
 
+import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
+
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,10 +55,12 @@ import org.openmetadata.schema.entity.services.DatabaseService;
 import org.openmetadata.schema.entity.services.ServiceType;
 import org.openmetadata.schema.entity.services.connections.TestConnectionResult;
 import org.openmetadata.schema.type.EntityHistory;
+import org.openmetadata.schema.type.EntityReference;
 import org.openmetadata.schema.type.Include;
 import org.openmetadata.schema.type.MetadataOperation;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.jdbi3.DatabaseServiceRepository;
+import org.openmetadata.service.jdbi3.ListFilter;
 import org.openmetadata.service.resources.Collection;
 import org.openmetadata.service.resources.services.ServiceEntityResource;
 import org.openmetadata.service.security.Authorizer;
@@ -123,6 +127,9 @@ public class DatabaseServiceResource
       @Parameter(description = "Filter services by domain", schema = @Schema(type = "string", example = "Marketing"))
           @QueryParam("domain")
           String domain,
+      @Parameter(description = "Filter services by service type", schema = @Schema(type = "string"))
+          @QueryParam("serviceType")
+          CreateDatabaseService.DatabaseServiceType serviceType,
       @DefaultValue("10") @Min(0) @Max(1000000) @QueryParam("limit") int limitParam,
       @Parameter(
               description = "Returns list of database services before this cursor",
@@ -138,7 +145,19 @@ public class DatabaseServiceResource
           @QueryParam("include")
           @DefaultValue("non-deleted")
           Include include) {
-    return listInternal(uriInfo, securityContext, fieldsParam, include, domain, limitParam, before, after);
+    // return listInternal(uriInfo, securityContext, fieldsParam, include, domain, limitParam, before, after);
+    ListFilter filter = new ListFilter(include);
+    if (!nullOrEmpty(serviceType)) {
+      filter.addCustomCondition(String.format("serviceType = '%s'", serviceType));
+    }
+
+    if (!nullOrEmpty(domain)) {
+      EntityReference domainReference = Entity.getEntityReferenceByName(Entity.DOMAIN, domain, Include.NON_DELETED);
+      filter.addQueryParam("domainId", domainReference.getId().toString());
+    }
+    ResultList<DatabaseService> services =
+        listInternal(uriInfo, securityContext, fieldsParam, filter, limitParam, before, after);
+    return addHref(uriInfo, decryptOrNullify(securityContext, services));
   }
 
   @GET

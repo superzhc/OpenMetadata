@@ -185,3 +185,11 @@ def _(elements, compiler, **kwargs):  # pylint: disable=unused-argument
     """.format(
         col=col, table=table, percentile=percentile
     )
+
+
+@compiles(MedianFn, Dialects.Doris)
+def _(elements, compiler, **kwargs):
+    col = compiler.process(elements.clauses.clauses[0])
+    percentile = elements.clauses.clauses[2].value
+    # 2024年2月4日 非函数的列如 day 会直接报错，但如果直接添加转义符，这对于如 len(`aa`) 会报错
+    return "percentile_approx(%s, %.2f)" % (col, percentile)

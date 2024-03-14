@@ -98,10 +98,7 @@ import org.openmetadata.service.secrets.masker.EntityMaskerFactory;
 import org.openmetadata.service.security.Authorizer;
 import org.openmetadata.service.security.NoopAuthorizer;
 import org.openmetadata.service.security.NoopFilter;
-import org.openmetadata.service.security.auth.AuthenticatorHandler;
-import org.openmetadata.service.security.auth.BasicAuthenticator;
-import org.openmetadata.service.security.auth.LdapAuthenticator;
-import org.openmetadata.service.security.auth.NoopAuthenticator;
+import org.openmetadata.service.security.auth.*;
 import org.openmetadata.service.security.jwt.JWTTokenGenerator;
 import org.openmetadata.service.security.saml.OMMicrometerHttpFilter;
 import org.openmetadata.service.security.saml.SamlAssertionConsumerServlet;
@@ -208,6 +205,7 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
 
     // authenticationHandler Handles auth related activities
     authenticatorHandler.init(catalogConfig);
+    HanYunAuthenticator.getInstance().init(catalogConfig);
 
     webAnalyticEvents = MicrometerBundleSingleton.latencyTimer(catalogConfig.getEventMonitorConfiguration());
     FilterRegistration.Dynamic micrometerFilter =

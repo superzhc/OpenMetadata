@@ -128,7 +128,6 @@
   "additionalProperties": false,
   "required": [
     "hostPort",
-    "username",
-    "database"
+    "username"
   ]
 }

@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openmetadata.client.api.DatabaseServicesApi;
 import org.openmetadata.client.model.CreateDatabaseService;
+import org.openmetadata.client.model.DatabaseService;
 
 public class DatabaseServiceTest extends OpenMetadataBaseTest {
   DatabaseServicesApi api;
@@ -24,5 +25,11 @@ public class DatabaseServiceTest extends OpenMetadataBaseTest {
     createDatabaseService.setServiceType(CreateDatabaseService.ServiceTypeEnum.DORIS);
     createDatabaseService.setConnection(null);
     api.createOrUpdateDatabaseService(createDatabaseService);
+  }
+
+  @Test
+  public void testGetDatabaseServiceByFQN() {
+    DatabaseService dbService = api.getDatabaseServiceByFQN("dtc_dw_clickhouse", "%2A", "non-deleted");
+    System.out.println(dbService);
   }
 }

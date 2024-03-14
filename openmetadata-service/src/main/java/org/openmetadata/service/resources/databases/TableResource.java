@@ -14,6 +14,7 @@
 package org.openmetadata.service.resources.databases;
 
 import static org.openmetadata.common.utils.CommonUtil.listOf;
+import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -169,6 +170,7 @@ public class TableResource extends EntityResource<Table, TableRepository> {
               schema = @Schema(type = "string", example = "snowflakeWestCoast.financeDB.schema"))
           @QueryParam("databaseSchema")
           String databaseSchemaParam,
+      @Parameter(schema = @Schema(type = "string", example = "数仓分层.DWS汇总层")) @QueryParam("tagfqn") String tagfqn,
       @Parameter(
               description =
                   "Include tables with an empty test suite (i.e. no test cases have been created for this table). Default to true",
@@ -199,6 +201,13 @@ public class TableResource extends EntityResource<Table, TableRepository> {
             .addQueryParam("database", databaseParam)
             .addQueryParam("databaseSchema", databaseSchemaParam)
             .addQueryParam("includeEmptyTestSuite", includeEmptyTestSuite);
+
+    // 2024年3月11日 对查询表进行标签条件设置，低效查询方式，待优化
+    if (!nullOrEmpty(tagfqn)) {
+      filter.addCustomCondition(
+          String.format("fqnhash in (select targetfqnhash from tag_usage where tagfqn='%s')", tagfqn));
+    }
+
     return super.listInternal(uriInfo, securityContext, fieldsParam, filter, limitParam, before, after);
   }
 

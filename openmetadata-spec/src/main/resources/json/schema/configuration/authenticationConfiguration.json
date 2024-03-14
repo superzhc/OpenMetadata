@@ -28,6 +28,14 @@
       "description": "Client ID",
       "type": "string"
     },
+    "clientSecret": {
+      "description": "Client Secret",
+      "type": "string"
+    },
+    "grantType": {
+      "description": "Grant Type",
+      "type": "string"
+    },
     "callbackUrl": {
       "description": "Callback URL",
       "type": "string"

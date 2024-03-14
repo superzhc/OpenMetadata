@@ -9,6 +9,8 @@ OpenMetadata Ingestion is a simple framework to build connectors and ingest meta
 
 - Python &gt;= 3.7.x
 
+官网使用的具体版本是 3.9.9
+
 ### Docs
 
 Please refer to the documentation here https://docs.open-metadata.org/connectors

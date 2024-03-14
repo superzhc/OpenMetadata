@@ -358,6 +358,8 @@ class TableMetricConstructFactory:
 table_metric_construct_factory = TableMetricConstructFactory()
 table_metric_construct_factory.register("base", base_table_construct)
 table_metric_construct_factory.register(Dialects.Redshift, redshift_table_construct)
+# doris 采用与mysql相同的方式来统计表信息
+table_metric_construct_factory.register(Dialects.Doris, mysql_table_construct)
 table_metric_construct_factory.register(Dialects.MySQL, mysql_table_construct)
 table_metric_construct_factory.register(Dialects.BigQuery, bigquery_table_construct)
 table_metric_construct_factory.register(Dialects.ClickHouse, clickhouse_table_construct)

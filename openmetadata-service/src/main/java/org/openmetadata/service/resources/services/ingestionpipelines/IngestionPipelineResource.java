@@ -785,8 +785,12 @@ public class IngestionPipelineResource extends EntityResource<IngestionPipeline,
 
   private void unmask(IngestionPipeline ingestionPipeline) {
     repository.setFullyQualifiedName(ingestionPipeline);
+
     IngestionPipeline originalIngestionPipeline =
         repository.findByNameOrNull(ingestionPipeline.getFullyQualifiedName(), Include.NON_DELETED);
+    // 2024年2月29日 集成工作流是否可用状态使用原工作流情况，不使用默认值
+    ingestionPipeline.setEnabled(originalIngestionPipeline.getEnabled());
+
     EntityMaskerFactory.getEntityMasker().unmaskIngestionPipeline(ingestionPipeline, originalIngestionPipeline);
   }
 

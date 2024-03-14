@@ -136,6 +136,22 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
         Relationship.CONTAINS);
   }
 
+  //  /**
+  //   * 2023年11月30日 airflow 对于重新部署的任务并不会更新其是否 Pause/UnPause 的状态，新的任务延续原来任务的状态
+  //   *
+  //   * @param uriInfo
+  //   * @param original
+  //   * @param updated
+  //   * @return
+  //   */
+  //  @Transaction
+  //  @Override
+  //  public RestUtil.PutResponse<IngestionPipeline> update(
+  //      UriInfo uriInfo, IngestionPipeline original, IngestionPipeline updated) {
+  //    updated.setEnabled(original.getEnabled());
+  //    return super.update(uriInfo, original, updated);
+  //  }
+
   @Override
   public EntityUpdater getUpdater(IngestionPipeline original, IngestionPipeline updated, Operation operation) {
     return new IngestionPipelineUpdater(original, updated, operation);

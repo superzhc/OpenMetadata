@@ -34,7 +34,8 @@
         "custom-oidc",
         "ldap",
         "saml",
-        "openmetadata"
+        "openmetadata",
+        "hanyun"
       ],
       "default": "basic"
     }
