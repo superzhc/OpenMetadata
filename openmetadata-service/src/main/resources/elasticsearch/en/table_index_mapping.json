@@ -36,14 +36,7 @@
     }
   },
   "mappings": {
-    "dynamic_templates": {
-      "extension_template": {
-        "path_match": "_source.extension.*",
-        "mapping": {
-          "type": "text"
-        }
-      }
-    },
+    "date_detection": false,
     "properties": {
       "id": {
         "type": "text"
