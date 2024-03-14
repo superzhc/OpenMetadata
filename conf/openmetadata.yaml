@@ -147,8 +147,10 @@ authenticationConfiguration:
   # This will only be valid when provider type specified is customOidc
   providerName: ${CUSTOM_OIDC_AUTHENTICATION_PROVIDER_NAME:-""}
   publicKeyUrls: ${AUTHENTICATION_PUBLIC_KEYS:-[http://localhost:8585/api/v1/system/config/jwks]}
-  authority: ${AUTHENTICATION_AUTHORITY:-https://accounts.google.com}
+  authority: ${AUTHENTICATION_AUTHORITY:-https://hanyunip.com}
+  grantType: ${AUTHENTICATION_GRANT_TYPE:-"authorization_code"}
   clientId: ${AUTHENTICATION_CLIENT_ID:-""}
+  clientSecret: ${AUTHENTICATION_CLIENT_Secret:-""}
   callbackUrl: ${AUTHENTICATION_CALLBACK_URL:-""}
   jwtPrincipalClaims: ${AUTHENTICATION_JWT_PRINCIPAL_CLAIMS:-[email,preferred_username,sub]}
   enableSelfSignup : ${AUTHENTICATION_ENABLE_SELF_SIGNUP:-true}
