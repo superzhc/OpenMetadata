@@ -61,7 +61,8 @@ generate:  ## Generate the pydantic models from the JSON Schemas to the ingestio
 	rm -rf ingestion/src/metadata/generated
 	mkdir -p ingestion/src/metadata/generated
 	python scripts/datamodel_generation.py
-	$(MAKE) py_antlr js_antlr
+	#$(MAKE) py_antlr js_antlr
+	$(MAKE) py_antlr
 	$(MAKE) install
 
 ## Ingestion tests & QA
@@ -113,14 +114,14 @@ coverage_apis:  ## Run the python tests on openmetadata-airflow-apis
 	coverage xml --rcfile openmetadata-airflow-apis/.coveragerc -o openmetadata-airflow-apis/coverage.xml
 	sed -e "s/$(shell python -c "import site; import os; from pathlib import Path; print(os.path.relpath(site.getsitepackages()[0], str(Path.cwd())).replace('/','\/'))")\///g" openmetadata-airflow-apis/coverage.xml >> openmetadata-airflow-apis/ci-coverage.xml
 
-## Yarn
-.PHONY: yarn_install_cache
-yarn_install_cache:  ## Use Yarn to install UI dependencies
-	cd openmetadata-ui/src/main/resources/ui && yarn install --frozen-lockfile
-
-.PHONY: yarn_start_dev_ui
-yarn_start_dev_ui:  ## Run the UI locally with Yarn
-	cd openmetadata-ui/src/main/resources/ui && yarn start
+### Yarn
+#.PHONY: yarn_install_cache
+#yarn_install_cache:  ## Use Yarn to install UI dependencies
+#	cd openmetadata-ui/src/main/resources/ui && yarn install --frozen-lockfile
+#
+#.PHONY: yarn_start_dev_ui
+#yarn_start_dev_ui:  ## Run the UI locally with Yarn
+#	cd openmetadata-ui/src/main/resources/ui && yarn start
 
 ## Ingestion Core
 .PHONY: core_install_dev
@@ -160,9 +161,9 @@ core_py_antlr:  ## Generate the Python core code for parsing FQNs under ingestio
 py_antlr:  ## Generate the Python code for parsing FQNs
 	antlr4 -Dlanguage=Python3 -o ingestion/src/metadata/generated/antlr ${PWD}/openmetadata-spec/src/main/antlr4/org/openmetadata/schema/*.g4
 
-.PHONY: js_antlr
-js_antlr:  ## Generate the Python code for parsing FQNs
-	antlr4 -Dlanguage=JavaScript -o openmetadata-ui/src/main/resources/ui/src/generated/antlr ${PWD}/openmetadata-spec/src/main/antlr4/org/openmetadata/schema/*.g4
+#.PHONY: js_antlr
+#js_antlr:  ## Generate the Python code for parsing FQNs
+#	antlr4 -Dlanguage=JavaScript -o openmetadata-ui/src/main/resources/ui/src/generated/antlr ${PWD}/openmetadata-spec/src/main/antlr4/org/openmetadata/schema/*.g4
 
 
 .PHONY: install_antlr_cli
@@ -213,9 +214,9 @@ snyk-server-report:  ## Uses Snyk CLI to validate the catalog code and container
 	snyk test --all-projects $(SNYK_ARGS) --json > security-report/server-dep-scan.json | true;
 	snyk code test --all-projects --severity-threshold=high --json > security-report/server-code-scan.json | true;
 
-.PHONY: snyk-ui-report
-snyk-ui-report:  ## Uses Snyk CLI to validate the UI dependencies. Don't stop the execution
-	snyk test --file=openmetadata-ui/src/main/resources/ui/yarn.lock $(SNYK_ARGS) --json > security-report/ui-dep-scan.json | true;
+#.PHONY: snyk-ui-report
+#snyk-ui-report:  ## Uses Snyk CLI to validate the UI dependencies. Don't stop the execution
+#	snyk test --file=openmetadata-ui/src/main/resources/ui/yarn.lock $(SNYK_ARGS) --json > security-report/ui-dep-scan.json | true;
 
 .PHONY: snyk-dependencies-report
 snyk-dependencies-report:  ## Uses Snyk CLI to validate the project dependencies: MySQL, Postgres and ES. Only local testing.
@@ -232,7 +233,7 @@ snyk-report:  ## Uses Snyk CLI to run a security scan of the different pieces of
 	$(MAKE) snyk-ingestion-report
 	$(MAKE) snyk-airflow-apis-report
 	$(MAKE) snyk-server-report
-	$(MAKE) snyk-ui-report
+	#$(MAKE) snyk-ui-report
 	$(MAKE)	export-snyk-pdf-report
 
 .PHONY: export-snyk-pdf-report

@@ -150,7 +150,7 @@ authenticationConfiguration:
   authority: ${AUTHENTICATION_AUTHORITY:-https://hanyunip.com}
   grantType: ${AUTHENTICATION_GRANT_TYPE:-"authorization_code"}
   clientId: ${AUTHENTICATION_CLIENT_ID:-""}
-  clientSecret: ${AUTHENTICATION_CLIENT_Secret:-""}
+  clientSecret: ${AUTHENTICATION_CLIENT_SECRET:-""}
   callbackUrl: ${AUTHENTICATION_CALLBACK_URL:-""}
   jwtPrincipalClaims: ${AUTHENTICATION_JWT_PRINCIPAL_CLAIMS:-[email,preferred_username,sub]}
   enableSelfSignup : ${AUTHENTICATION_ENABLE_SELF_SIGNUP:-true}
