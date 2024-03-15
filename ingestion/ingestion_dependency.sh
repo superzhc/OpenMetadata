@@ -31,10 +31,10 @@ airflow db init
 
 airflow users create \
     --username ${AIRFLOW_ADMIN_USER} \
-    --firstname Peter \
-    --lastname Parker \
+    --firstname XGIT \
+    --lastname XGIT \
     --role Admin \
-    --email spiderman@superhero.org \
+    --email xgit@xgit.org \
     --password ${AIRFLOW_ADMIN_PASSWORD}
 
 (sleep 5; airflow db upgrade)
