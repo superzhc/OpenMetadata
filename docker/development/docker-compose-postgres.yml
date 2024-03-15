@@ -381,7 +381,7 @@ services:
     command:
       - "/opt/airflow/ingestion_dependency.sh"
     depends_on:
-      opensearch:
+      elasticsearch:
         condition: service_started
       postgresql:
         condition: service_healthy
