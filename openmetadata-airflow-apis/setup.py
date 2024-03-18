@@ -50,7 +50,7 @@ def get_long_description():
 
 base_requirements = {
     "pendulum~=2.1.2",
-    "apache-airflow>=2.2.2",
+    "apache-airflow==2.6.3",
     "Flask>=1.1.4",
     "Flask-Admin==1.6.0",
 }

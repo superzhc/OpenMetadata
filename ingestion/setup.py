@@ -127,6 +127,7 @@ base_requirements = {
     "typing_extensions<=4.5.0",  # We need to have this fixed due to a yanked release 4.6.0
     "typing-inspect",
     "wheel~=0.38.4",
+    "sqllineage==1.4.9",
 }
 
 
