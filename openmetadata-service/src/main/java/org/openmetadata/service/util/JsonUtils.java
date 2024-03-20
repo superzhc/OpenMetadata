@@ -18,6 +18,7 @@ import static org.openmetadata.service.util.RestUtil.DATE_TIME_FORMAT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -76,6 +77,8 @@ public final class JsonUtils {
     OBJECT_MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     OBJECT_MAPPER.setDateFormat(DATE_TIME_FORMAT);
     OBJECT_MAPPER.registerModule(new JSR353Module());
+    // 2024年3月20日 反序列化时忽略多余字段
+    OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   static {

@@ -38,6 +38,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.sql.SQLException;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -259,10 +260,10 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
     Jdbi jdbi = new JdbiFactory().build(environment, dbFactory, "database");
     SqlLogger sqlLogger =
         new SqlLogger() {
-          @Override
-          public void logBeforeExecution(StatementContext context) {
-            LOG.debug("sql {}, parameters {}", context.getRenderedSql(), context.getBinding());
-          }
+          // @Override
+          // public void logBeforeExecution(StatementContext context) {
+          //   LOG.debug("sql {}, parameters {}", context.getRenderedSql(), context.getBinding());
+          // }
 
           @Override
           public void logAfterExecution(StatementContext context) {
@@ -271,6 +272,16 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
                 context.getRenderedSql(),
                 context.getBinding(),
                 context.getElapsedTime(ChronoUnit.MILLIS));
+          }
+
+          @Override
+          public void logException(StatementContext context, SQLException ex) {
+            LOG.error(
+                "sql {}, parameters {}, errorCode {}, sqlstate {}",
+                context.getRenderedSql(),
+                context.getBinding(),
+                ex.getErrorCode(),
+                ex.getSQLState());
           }
         };
     if (LOG.isDebugEnabled()) {
