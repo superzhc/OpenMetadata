@@ -1,0 +1,36 @@
+{
+  "createClassification" : {
+    "name": "DataWarehouse",
+    "displayName": "数仓分层",
+    "description": "数据仓库分层",
+    "provider": "system",
+    "mutuallyExclusive": "true"
+  },
+  "createTags": [
+    {
+      "name": "ODS",
+      "displayName": "数据贴源层",
+      "description": "ODS（Operation Data Store）：存放未经过处理的原始数据至数据仓库系统，结构上与源系统保持一致，是数据仓库的数据准备区。"
+    },
+    {
+      "name": "DWD",
+      "displayName": "数据明细层",
+      "description": ""
+    },
+    {
+      "name": "DWS",
+      "displayName": "数据服务层",
+      "description": ""
+    },
+    {
+      "name": "ADS",
+      "displayName": "数据应用层",
+      "description": ""
+    },
+    {
+      "name": "DIM",
+      "displayName": "维度层",
+      "description": ""
+    }
+  ]
+}

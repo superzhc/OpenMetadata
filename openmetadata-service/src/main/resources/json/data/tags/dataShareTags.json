@@ -1,0 +1,19 @@
+{
+  "createClassification" : {
+    "name": "DataShare",
+    "displayName": "是否共享",
+    "description": "数据是否共享",
+    "provider": "system",
+    "mutuallyExclusive": "true"
+  },
+  "createTags": [
+    {
+      "name": "NotShare",
+      "displayName": "不共享"
+    },
+    {
+      "name": "Share",
+      "displayName": "共享"
+    }
+  ]
+}

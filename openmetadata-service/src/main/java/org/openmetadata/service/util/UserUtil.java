@@ -212,6 +212,8 @@ public final class UserUtil {
     String botRole;
     switch (botName) {
       case Entity.INGESTION_BOT_NAME:
+      case "hanyun-datacenter":
+      case "hanyun-metadata":
         botRole = Entity.INGESTION_BOT_ROLE;
         break;
       case Entity.QUALITY_BOT_NAME:
@@ -221,7 +223,10 @@ public final class UserUtil {
         botRole = Entity.PROFILER_BOT_ROLE;
         break;
       default:
-        throw new IllegalArgumentException("No role found for the bot " + botName);
+        // 2024年3月25日 框架自身的缺陷，定义 Bot 不能直接设置权限，未系统匹配代码写死的 Bot，直接授予消费者权限
+        // throw new IllegalArgumentException("No role found for the bot " + botName);
+        botRole = Entity.DATA_CONSUMER;
+        break;
     }
     return listOf(RoleResource.getRole(botRole));
   }

@@ -1,0 +1,10 @@
+{
+  "name": "hanyun-datacenter",
+  "description": "数仓建模模块",
+  "fullyQualifiedName": "hanyun-datacenter",
+  "botUser": {
+    "name" : "hanyun-datacenter",
+    "type" : "user"
+  },
+  "provider": "system"
+}

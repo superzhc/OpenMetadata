@@ -1,0 +1,10 @@
+{
+  "name": "hanyun-metadata",
+  "description": "元数据模块",
+  "fullyQualifiedName": "hanyun-metadata",
+  "botUser": {
+    "name" : "hanyun-metadata",
+    "type" : "user"
+  },
+  "provider": "system"
+}

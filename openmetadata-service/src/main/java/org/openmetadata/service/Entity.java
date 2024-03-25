@@ -207,6 +207,8 @@ public final class Entity {
   public static final String PROFILER_BOT_ROLE = "ProfilerBotRole";
   public static final String QUALITY_BOT_NAME = "quality-bot";
   public static final String QUALITY_BOT_ROLE = "QualityBotRole";
+  // 2024年3月25日 数据消费角色
+  public static final String DATA_CONSUMER = "DataConsumer";
   public static final String ALL_RESOURCES = "All";
 
   public static final String DOCUMENT = "document";

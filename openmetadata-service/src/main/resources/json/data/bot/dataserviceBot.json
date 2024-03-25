@@ -1,0 +1,10 @@
+{
+  "name": "hanyun-dataservice",
+  "description": "数据服务Api模块",
+  "fullyQualifiedName": "hanyun-dataservice",
+  "botUser": {
+    "name" : "hanyun-dataservice",
+    "type" : "user"
+  },
+  "provider": "system"
+}
