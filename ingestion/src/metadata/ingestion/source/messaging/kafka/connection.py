@@ -15,6 +15,7 @@ Source connection handler
 from dataclasses import dataclass
 from typing import Optional, Union
 
+from confluent_kafka import Consumer
 from confluent_kafka.admin import AdminClient
 from confluent_kafka.avro import AvroConsumer
 from confluent_kafka.schema_registry.schema_registry_client import SchemaRegistryClient
@@ -86,9 +87,11 @@ def get_connection(
             consumer_config["auto.offset.reset"] = "largest"
         consumer_config["enable.auto.commit"] = False
         logger.debug(f"Using Kafka consumer config: {consumer_config}")
-        consumer_client = AvroConsumer(
-            consumer_config, schema_registry=schema_registry_client
-        )
+        # 2024年3月27日 直接使用原生的Consumer
+        # consumer_client = AvroConsumer(
+        #     consumer_config, schema_registry=schema_registry_client
+        # )
+        consumer_client = Consumer(consumer_config)
 
     return KafkaClient(
         admin_client=admin_client,

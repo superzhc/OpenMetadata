@@ -22,6 +22,8 @@ import confluent_kafka
 from confluent_kafka import KafkaError, KafkaException
 from confluent_kafka.admin import ConfigResource
 from confluent_kafka.schema_registry.avro import AvroDeserializer
+from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
+from confluent_kafka.schema_registry.json_schema import JSONDeserializer
 from confluent_kafka.schema_registry.schema_registry_client import Schema
 
 from metadata.generated.schema.api.data.createTopic import CreateTopicRequest
@@ -177,7 +179,9 @@ class CommonBrokerSource(MessagingServiceSource, ABC):
 
                 if "cleanup.policy" in config_response:
                     cleanup_policies = config_response.get("cleanup.policy").value
-                    topic.cleanupPolicies = cleanup_policies.split(",")
+                    # 2024年3月22日 存在清除策略为空或空字符串的情况
+                    if not(cleanup_policies is None or cleanup_policies == ""):
+                        topic.cleanupPolicies = cleanup_policies.split(",")
 
                 topic_config = {}
                 for key, conf_response in config_response.items():
@@ -261,9 +265,14 @@ class CommonBrokerSource(MessagingServiceSource, ABC):
                 schema_str=schema, schema_registry_client=self.schema_registry_client
             )
             return str(deserializer(record, None))
-        if schema_type == SchemaType.Protobuf:
+        elif schema_type == SchemaType.Protobuf:
             logger.debug("Protobuf deserializing sample data is not supported")
             return ""
+        elif schema_type == SchemaType.JSON:
+            # 2024年3月27日 使用json类型的schema对应消息内容解析
+            deserializer = JSONDeserializer(schema_str=schema, schema_registry_client=self.schema_registry_client)
+            return str(deserializer(record, None))
+
         return str(record.decode("utf-8"))
 
     def close(self):
