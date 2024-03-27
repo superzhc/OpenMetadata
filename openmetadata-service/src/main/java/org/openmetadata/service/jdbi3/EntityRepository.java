@@ -1869,11 +1869,12 @@ public abstract class EntityRepository<T extends EntityInterface> {
     }
 
     private void updateDisplayName() {
-      if (operation.isPut() && !nullOrEmpty(original.getDisplayName()) && updatedByBot()) {
+      // 2024年3月26日 Bot Token 支持直接修改 displayName
+      /*if (operation.isPut() && !nullOrEmpty(original.getDisplayName()) && updatedByBot()) {
         // Revert change to non-empty displayName if it is being updated by a bot
         updated.setDisplayName(original.getDisplayName());
         return;
-      }
+      }*/
       recordChange(FIELD_DISPLAY_NAME, original.getDisplayName(), updated.getDisplayName());
     }
 
@@ -1919,11 +1920,12 @@ public abstract class EntityRepository<T extends EntityInterface> {
         return;
       }
 
-      if (updatedByBot() && operation == Operation.PUT) {
+      // 2024年3月26日 Bot Token 支持直接修改 Extension
+      /*if (updatedByBot() && operation == Operation.PUT) {
         // Revert extension field, if being updated by a bot with a PUT request to avoid overwriting custom extension
         updated.setExtension(original.getExtension());
         return;
-      }
+      }*/
 
       List<JsonNode> added = new ArrayList<>();
       List<JsonNode> deleted = new ArrayList<>();
