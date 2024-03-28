@@ -236,16 +236,42 @@ class CommonBrokerSource(MessagingServiceSource, ABC):
                 )
             else:
                 if messages:
+
+                    # 2024年3月28日 定义解析器，解析器是对应topic的，不需要为每条消息来定义解析器
+                    deserializer = None
+                    if self.context.topic.messageSchema.schemaType == SchemaType.Avro:
+                        deserializer = AvroDeserializer(
+                            schema_str=self.context.topic.messageSchema.schemaText,
+                            schema_registry_client=self.schema_registry_client
+                        )
+                    elif self.context.topic.messageSchema.schemaType == SchemaType.Protobuf:
+                        from metadata.parsers.protobuf_parser import ProtobufParser, ProtobufParserConfig
+
+                        protobuf_parser = ProtobufParser(
+                            config=ProtobufParserConfig(schema_name=topic_name,
+                                                        schema_text=self.context.topic.messageSchema.schemaText)
+                        )
+                        proto_path, file_path = protobuf_parser.create_proto_files()
+                        instance = protobuf_parser.get_protobuf_python_object(
+                            proto_path=proto_path, file_path=file_path
+                        )
+                        if instance:
+                            deserializer = ProtobufDeserializer(type(instance), {'use.deprecated.format': False})
+                    elif self.context.topic.messageSchema.schemaType == SchemaType.JSON:
+                        deserializer = JSONDeserializer(schema_str=self.context.topic.messageSchema.schemaText,
+                                                        schema_registry_client=self.schema_registry_client)
+
                     for message in messages:
                         try:
                             value = message.value()
-                            sample_data.append(
-                                self.decode_message(
-                                    value,
-                                    self.context.topic.messageSchema.schemaText,
-                                    self.context.topic.messageSchema.schemaType,
-                                )
-                            )
+                            # sample_data.append(
+                            #     self.decode_message(
+                            #         value,
+                            #         self.context.topic.messageSchema.schemaText,
+                            #         self.context.topic.messageSchema.schemaType,
+                            #     )
+                            # )
+                            sample_data.append(str(deserializer(value, None)) if deserializer else str(value.decode("utf-8")))
                         except Exception as exc:
                             logger.warning(
                                 f"Failed to decode sample data from topic {topic_name}: {exc}"

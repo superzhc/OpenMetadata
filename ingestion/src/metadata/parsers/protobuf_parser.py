@@ -13,6 +13,7 @@
 Utils module to parse the protobuf schema
 """
 
+import platform
 import glob
 import importlib
 import shutil
@@ -115,6 +116,11 @@ class ProtobufParser:
             proto_interface_dir_path = Path(self.proto_interface_dir)
             proto_interface_dir_path.mkdir(parents=True, exist_ok=True)
 
+            # 2024年3月28日 完成路径的创建后，标准化地址，防止不同类型操作系统地址不标准问题
+            self.config.base_file_path = str(proto_interface_dir_path.parent.absolute())
+            self.proto_interface_dir = str(proto_interface_dir_path.absolute())
+            self.generated_src_dir = str(generated_src_dir_path.absolute())
+
             # Create a .proto file under the interfaces directory with schema text
             file_path = f"{self.proto_interface_dir}/{self.config.schema_name}.proto"
             with open(file_path, "w", encoding="UTF-8") as file:
@@ -128,9 +134,12 @@ class ProtobufParser:
             )
         return None
 
-    def get_protobuf_python_object(self, proto_path: str, file_path: str):
+    def get_protobuf_python_module(self, proto_path: str, file_path: str):
         """
-        Method to create protobuf python module and get object
+        Method to create protobuf python module
+        :param proto_path:
+        :param file_path:
+        :return:
         """
         try:
             # compile the .proto file and create python class
@@ -152,16 +161,47 @@ class ProtobufParser:
                 )
             )[0]
             module_name = Path(py_file).stem
-            message = importlib.import_module(module_name)
+            module_obj = importlib.import_module(module_name)
+            return module_obj
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.debug(traceback.format_exc())
+            logger.warning(
+                f"Unable to create protobuf python module for {self.config.schema_name}: {exc}"
+            )
+        return None
 
-            # get the class and create a object instance
-            class_ = getattr(message, snake_to_camel(self.config.schema_name))
+    def get_protobuf_python_class(self, proto_path: str, file_path: str, class_name: str):
+        """
+        Method to get the class
+        :param proto_path:
+        :param file_path:
+        :param class_name:
+        :return:
+        """
+        try:
+            module_obj = self.get_protobuf_python_module(proto_path, file_path)
+            class_ = getattr(module_obj, class_name)
+            return class_
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.debug(traceback.format_exc())
+            logger.warning(
+                f"Unable to get protobuf python class for {self.config.schema_name}: {exc}"
+            )
+        return None
+
+    def get_protobuf_python_object(self, proto_path: str, file_path: str):
+        """
+        Method to get object
+        """
+        try:
+            class_ = self.get_protobuf_python_class(proto_path, file_path, snake_to_camel(self.config.schema_name))
+            # create a object instance
             instance = class_()
             return instance
         except Exception as exc:  # pylint: disable=broad-except
             logger.debug(traceback.format_exc())
             logger.warning(
-                f"Unable to create protobuf python module for {self.config.schema_name}: {exc}"
+                f"Unable to create protobuf python object instance for {self.config.schema_name}: {exc}"
             )
         return None
 
