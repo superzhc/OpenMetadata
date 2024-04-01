@@ -90,14 +90,7 @@ import org.openmetadata.schema.entity.domains.DataProduct;
 import org.openmetadata.schema.entity.domains.Domain;
 import org.openmetadata.schema.entity.events.EventSubscription;
 import org.openmetadata.schema.entity.policies.Policy;
-import org.openmetadata.schema.entity.services.DashboardService;
-import org.openmetadata.schema.entity.services.DatabaseService;
-import org.openmetadata.schema.entity.services.MessagingService;
-import org.openmetadata.schema.entity.services.MetadataService;
-import org.openmetadata.schema.entity.services.MlModelService;
-import org.openmetadata.schema.entity.services.PipelineService;
-import org.openmetadata.schema.entity.services.SearchService;
-import org.openmetadata.schema.entity.services.StorageService;
+import org.openmetadata.schema.entity.services.*;
 import org.openmetadata.schema.entity.services.connections.TestConnectionDefinition;
 import org.openmetadata.schema.entity.services.ingestionPipelines.IngestionPipeline;
 import org.openmetadata.schema.entity.teams.Persona;
@@ -267,6 +260,9 @@ public interface CollectionDAO {
   MessagingServiceDAO messagingServiceDAO();
 
   @CreateSqlObject
+  NetworkServiceDAO networkServiceDAO();
+
+  @CreateSqlObject
   StorageServiceDAO storageServiceDAO();
 
   @CreateSqlObject
@@ -417,6 +413,23 @@ public interface CollectionDAO {
     @Override
     default Class<MetadataService> getEntityClass() {
       return MetadataService.class;
+    }
+
+    @Override
+    default String getNameHashColumn() {
+      return "nameHash";
+    }
+  }
+
+  interface NetworkServiceDAO extends EntityDAO<NetworkService>{
+    @Override
+    default String getTableName(){
+      return "network_service_entity";
+    }
+
+    @Override
+    default Class<NetworkService> getEntityClass(){
+      return NetworkService.class;
     }
 
     @Override

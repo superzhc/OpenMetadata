@@ -119,6 +119,7 @@ public final class Entity {
   public static final String PIPELINE_SERVICE = "pipelineService";
   public static final String STORAGE_SERVICE = "storageService";
   public static final String MLMODEL_SERVICE = "mlmodelService";
+  public static final String NETWORK_SERVICE="networkService";
   public static final String METADATA_SERVICE = "metadataService";
   public static final String SEARCH_SERVICE = "searchService";
   //
@@ -224,6 +225,7 @@ public final class Entity {
     SERVICE_TYPE_ENTITY_MAP.put(ServiceType.METADATA, METADATA_SERVICE);
     SERVICE_TYPE_ENTITY_MAP.put(ServiceType.STORAGE, STORAGE_SERVICE);
     SERVICE_TYPE_ENTITY_MAP.put(ServiceType.SEARCH, SEARCH_SERVICE);
+    SERVICE_TYPE_ENTITY_MAP.put(ServiceType.NETWORK,NETWORK_SERVICE);
   }
 
   //

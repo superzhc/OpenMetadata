@@ -1,0 +1,124 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/services/mlmodelService.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NetworkService",
+  "description": "Network Service Entity, such as HTTP.",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.entity.services.NetworkService",
+  "javaInterfaces": [
+    "org.openmetadata.schema.EntityInterface",
+    "org.openmetadata.schema.ServiceEntityInterface"
+  ],
+  "definitions": {
+    "networkServiceType": {
+      "description": "Type of Network service",
+      "type": "string",
+      "javaInterfaces": ["org.openmetadata.schema.EnumInterface"],
+      "enum": ["Http"],
+      "javaEnums": [
+        {
+          "name": "Http"
+        }
+      ]
+    },
+    "networkConnection": {
+      "type": "object",
+      "javaType": "org.openmetadata.schema.type.NetworkConnection",
+      "description": "Network Connection.",
+      "javaInterfaces": [
+        "org.openmetadata.schema.ServiceConnectionEntityInterface"
+      ],
+      "properties": {
+        "config": {
+          "mask": true,
+          "oneOf": [
+            {
+              "$ref": "./connections/network/httpConnection.json"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "id": {
+      "description": "Unique identifier of this pipeline service instance.",
+      "$ref": "../../type/basic.json#/definitions/uuid"
+    },
+    "name": {
+      "description": "Name that identifies this pipeline service.",
+      "$ref": "../../type/basic.json#/definitions/entityName"
+    },
+    "fullyQualifiedName": {
+      "description": "FullyQualifiedName same as `name`.",
+      "$ref": "../../type/basic.json#/definitions/fullyQualifiedEntityName"
+    },
+    "serviceType": {
+      "description": "Type of pipeline service such as Airflow or Prefect...",
+      "$ref": "#/definitions/networkServiceType"
+    },
+    "description": {
+      "description": "Description of a pipeline service instance.",
+      "type": "string"
+    },
+    "displayName": {
+      "description": "Display Name that identifies this pipeline service. It could be title or label from the source services.",
+      "type": "string"
+    },
+    "version": {
+      "description": "Metadata version of the entity.",
+      "$ref": "../../type/entityHistory.json#/definitions/entityVersion"
+    },
+    "updatedAt": {
+      "description": "Last update time corresponding to the new version of the entity in Unix epoch time milliseconds.",
+      "$ref": "../../type/basic.json#/definitions/timestamp"
+    },
+    "updatedBy": {
+      "description": "User who made the update.",
+      "type": "string"
+    },
+    "pipelines": {
+      "description": "References to pipelines deployed for this pipeline service to extract metadata",
+      "$ref": "../../type/entityReferenceList.json"
+    },
+    "connection": {
+      "$ref": "#/definitions/networkConnection"
+    },
+    "testConnectionResult": {
+      "description": "Last test connection results for this service",
+      "$ref": "connections/testConnectionResult.json"
+    },
+    "tags": {
+      "description": "Tags for this Network Service.",
+      "type": "array",
+      "items": {
+        "$ref": "../../type/tagLabel.json"
+      },
+      "default": null
+    },
+    "owner": {
+      "description": "Owner of this pipeline service.",
+      "$ref": "../../type/entityReference.json"
+    },
+    "href": {
+      "description": "Link to the resource corresponding to this pipeline service.",
+      "$ref": "../../type/basic.json#/definitions/href"
+    },
+    "changeDescription": {
+      "description": "Change that lead to this version of the entity.",
+      "$ref": "../../type/entityHistory.json#/definitions/changeDescription"
+    },
+    "deleted": {
+      "description": "When `true` indicates the entity has been soft deleted.",
+      "type": "boolean",
+      "default": false
+    },
+    "domain" : {
+      "description": "Domain the Network service belongs to.",
+      "$ref": "../../type/entityReference.json"
+    }
+  },
+  "required": ["id", "name", "serviceType"],
+  "additionalProperties": false
+}
