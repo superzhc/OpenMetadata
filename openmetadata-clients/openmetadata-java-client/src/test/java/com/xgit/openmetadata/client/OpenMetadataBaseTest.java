@@ -1,51 +1,21 @@
 package com.xgit.openmetadata.client;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import org.junit.Test;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.openmetadata.client.gateway.OpenMetadata;
-import org.openmetadata.schema.security.client.OpenMetadataJWTClientConfig;
+import org.openmetadata.client.security.*;
+import org.openmetadata.schema.security.client.*;
 import org.openmetadata.schema.services.connections.metadata.AuthProvider;
 import org.openmetadata.schema.services.connections.metadata.OpenMetadataConnection;
 
-public class OpenMetadataBaseTest {
-  private static final String JWT_TOKEN =
-      "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6IkFsbEF1dGgiLCJlbWFpbCI6IkFsbEF1dGhAeGdpdC5jb20iLCJpc0JvdCI6dHJ1ZSwidG9rZW5UeXBlIjoiQk9UIiwiaWF0IjoxNzA4NDk2MTExLCJleHAiOm51bGx9.GRsZtM6i-ty1w71wg6HOxFmYQHDFXDH278x-G861jmaxuDLSCiIjRE0UiVlbNlsKQXoDbQIAT20eehfjgJ2Bp2HwUYBF8obunkTAkPv6WACJ741y5PQ-a59AWBYQlNhYviKxlUtneqDbQs88wN0iJL8FR_pdaMhYzLraSZs1FdA6mC_bLjfLyU6aSHrnmh7C6vEYBZS4NKDXmAp9iqp_upm_p0bmk7KUbY540TbA7ilcAAvYoZtxfYp86irtTOEq-yVni2J37XMLyVqNy3cVFT9ZcNS5sPDsTFB011fqKW-aaSFM45nXGt5A0eYEHaBrKLM_kUrdt-WRL2gjIXDpKg";
-  private static final String HOST_PORT = "http://127.0.0.1:8585/api";
+public abstract class OpenMetadataBaseTest {
 
   private OpenMetadata openMetadata = null;
 
-  private LocalDateTime current;
-
   public OpenMetadataBaseTest() {
-    current = LocalDateTime.now();
   }
 
-  protected OpenMetadataConnection openMetadataConnection() {
-    OpenMetadataConnection connection = new OpenMetadataConnection();
-    setHostPort(connection);
-    setAuth(connection);
-
-    return connection;
-  }
-
-  protected OpenMetadataConnection setHostPort(
-      final OpenMetadataConnection openMetadataConnection) {
-    openMetadataConnection.setHostPort(HOST_PORT);
-    return openMetadataConnection;
-  }
-
-  protected OpenMetadataConnection setAuth(final OpenMetadataConnection openMetadataConnection) {
-    OpenMetadataJWTClientConfig openMetadataJWTClientConfig = new OpenMetadataJWTClientConfig();
-    openMetadataJWTClientConfig.setJwtToken(JWT_TOKEN);
-    openMetadataConnection.setSecurityConfig(openMetadataJWTClientConfig);
-
-    openMetadataConnection.setAuthProvider(AuthProvider.OPENMETADATA);
-
-    return openMetadataConnection;
-  }
-
-  public OpenMetadata getClient() {
+  public OpenMetadata apiClient() {
     if (openMetadata == null) {
       openMetadata = new OpenMetadata(openMetadataConnection());
     }
@@ -53,38 +23,71 @@ public class OpenMetadataBaseTest {
     return openMetadata;
   }
 
-  // region 工具方法
-  public String year() {
-    return currentFormat("yyyy");
+  private OpenMetadataConnection openMetadataConnection() {
+    OpenMetadataConnection connection = new OpenMetadataConnection();
+    /*对于Client只需要用到如下两个配置*/
+    setHostPort(connection);
+    setAuth(connection);
+
+    return connection;
   }
 
-  public String month() {
-    return currentFormat("yyyyMM");
+  private OpenMetadataConnection setHostPort(final OpenMetadataConnection openMetadataConnection) {
+    openMetadataConnection.setHostPort(hostPort());
+    return openMetadataConnection;
   }
 
-  public String day() {
-    return currentFormat("yyyyMMdd");
+  protected abstract String hostPort();
+
+  private OpenMetadataConnection setAuth(final OpenMetadataConnection openMetadataConnection) {
+    openMetadataConnection.setAuthProvider(authProvider());
+    openMetadataConnection.setSecurityConfig(securityConfig());
+    return openMetadataConnection;
   }
 
-  public String hour() {
-    return currentFormat("yyyyMMddHH");
-  }
+  abstract protected AuthProvider authProvider();
 
-  public String minute() {
-    return currentFormat("yyyyMMddHHmm");
-  }
-
-  public String currentFormat(String format) {
-    if (null == format || format.trim().length() == 0) {
-      format = "yyyyMMddHHmmssSSS";
+  protected Object securityConfig() {
+    switch (authProvider()) {
+      case NO_AUTH:
+        return null;
+      case GOOGLE:
+        return googleSSOClientConfig();
+      case OKTA:
+        return oktaSSOClientConfig();
+      case AUTH_0:
+        return auth0SSOClientConfig();
+      case CUSTOM_OIDC:
+        return customOIDCSSOClientConfig();
+      case AZURE:
+        return azureSSOClientConfig();
+      case OPENMETADATA:
+        return openMetadataJWTClientConfig();
     }
-    return current.format(DateTimeFormatter.ofPattern(format));
+    return null;
   }
 
-  // endregion
+  protected OpenMetadataJWTClientConfig openMetadataJWTClientConfig() {
+    throw new NotImplementedException("尚未设置 JWT Token");
+  }
 
-  @Test
-  public void testVersion() {
-    System.out.println("OpenMetadata version: " + String.join(".", getClient().getClientVersion()));
+  protected GoogleSSOClientConfig googleSSOClientConfig() {
+    throw new NotImplementedException("尚未设置 Google SSO");
+  }
+
+  protected OktaSSOClientConfig oktaSSOClientConfig() {
+    throw new NotImplementedException("尚未设置 Okta SSO");
+  }
+
+  protected Auth0SSOClientConfig auth0SSOClientConfig() {
+    throw new NotImplementedException("尚未设置 Auth0 SSO");
+  }
+
+  protected CustomOIDCSSOClientConfig customOIDCSSOClientConfig() {
+    throw new NotImplementedException("尚未设置 Custom OIDC SSO");
+  }
+
+  protected AzureSSOClientConfig azureSSOClientConfig() {
+    throw new NotImplementedException("尚未设置 Azure SSO");
   }
 }

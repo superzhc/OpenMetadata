@@ -42,7 +42,8 @@ public class OpenMetadata {
 
   public OpenMetadata(OpenMetadataConnection config) {
     initClient(config);
-    validateVersion();
+    // 2024年4月8日 默认不再对版本进行校验
+    // validateVersion();
   }
 
   public OpenMetadata(OpenMetadataConnection config, boolean validateVersion) {

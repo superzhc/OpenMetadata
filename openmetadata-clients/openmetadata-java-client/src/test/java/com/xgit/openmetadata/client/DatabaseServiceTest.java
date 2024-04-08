@@ -2,23 +2,33 @@ package com.xgit.openmetadata.client;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import com.xgit.openmetadata.client.config.ClientConfig;
+import com.xgit.openmetadata.client.config.LocalServerConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmetadata.client.api.DatabaseServicesApi;
 import org.openmetadata.client.model.CreateDatabaseService;
 import org.openmetadata.client.model.DatabaseService;
 
-public class DatabaseServiceTest extends OpenMetadataBaseTest {
+public class DatabaseServiceTest extends OpenMetadataTest {
   DatabaseServicesApi api;
 
   @Before
   public void setUp() throws Exception {
-    api = getClient().buildClient(DatabaseServicesApi.class);
+    api = apiClient().buildClient(DatabaseServicesApi.class);
+  }
+
+  @Override
+  protected ClientConfig initClientConfig() {
+    return new LocalServerConfig();
   }
 
   @Test
   public void testCreateDatabaseService() {
-    String name = String.format("sdk_%s", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+    String name =
+        String.format(
+            "sdk_%s", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
     CreateDatabaseService createDatabaseService = new CreateDatabaseService();
     createDatabaseService.setName(name);
     createDatabaseService.setDescription("通过 SDK 创建");
@@ -29,7 +39,7 @@ public class DatabaseServiceTest extends OpenMetadataBaseTest {
 
   @Test
   public void testGetDatabaseServiceByFQN() {
-    DatabaseService dbService = api.getDatabaseServiceByFQN("dtc_dw_clickhouse", "%2A", "non-deleted");
+    DatabaseService dbService = api.getDatabaseServiceByFQN("dtc_dw_doris", "%2A", "non-deleted");
     System.out.println(dbService);
   }
 }

@@ -3,31 +3,42 @@ package com.xgit.openmetadata.client;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import com.xgit.openmetadata.client.config.ClientConfig;
+import com.xgit.openmetadata.client.config.LocalServerConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmetadata.client.api.TablesApi;
 import org.openmetadata.client.model.*;
-import org.openmetadata.schema.services.connections.metadata.OpenMetadataConnection;
 
-public class TableTest extends OpenMetadataBaseTest {
+public class TableTest extends OpenMetadataTest {
 
   TablesApi api;
 
   @Before
   public void setUp() throws Exception {
-    api = getClient().buildClient(TablesApi.class);
+    api = apiClient().buildClient(TablesApi.class);
   }
 
-//  @Override
-//  protected OpenMetadataConnection setHostPort(OpenMetadataConnection openMetadataConnection) {
-//    openMetadataConnection.setHostPort("http://10.90.20.236:8585/api");
-//    return openMetadataConnection;
-//  }
+  @Override
+  protected ClientConfig initClientConfig() {
+    return new LocalServerConfig();
+  }
 
   @Test
   public void testList() {
     TableList tableList =
-        api.listTables("tags", null, null, "数仓分层.DWS汇总层", null, 5, null, null, null);
+        api.listTables(
+            "tags",
+            "dtc_dw_doris.dw",
+            null,
+            "DataShare.Share",
+            null,
+            // 分页查询
+            1,
+            null,
+            "YXNhc2Fz",
+            null);
     System.out.println(tableList);
   }
 
@@ -41,7 +52,7 @@ public class TableTest extends OpenMetadataBaseTest {
   @Test
   public void testCreateOrUpdateTable() {
     CreateTable createTable = new CreateTable();
-    createTable.setName(String.format("sdk_%s", minute()));
+    createTable.setName(String.format("sdk_%s"));
     createTable.setDescription("通过SDK创建的测试数据");
     createTable.setTableType(CreateTable.TableTypeEnum.REGULAR);
     createTable.setDatabaseSchema("superz_template_doris.default.superz");
