@@ -352,10 +352,11 @@ class SQAProfilerInterface(ProfilerInterface, SQAInterfaceMixin):
         self,
         session,
         table,
-        sample,
+        sampler,
     ):
         """Create thread safe runner"""
         if not hasattr(thread_local, "runner"):
+            sample = sampler.random_sample()
             thread_local.runner = QueryRunner(
                 session=session,
                 table=table,
@@ -384,11 +385,10 @@ class SQAProfilerInterface(ProfilerInterface, SQAInterfaceMixin):
                 session,
                 table,
             )
-            sample = sampler.random_sample()
             runner = self._create_thread_safe_runner(
                 session,
                 table,
-                sample,
+                sampler,
             )
 
             try:
@@ -397,7 +397,7 @@ class SQAProfilerInterface(ProfilerInterface, SQAInterfaceMixin):
                     runner=runner,
                     session=session,
                     column=column,
-                    sample=sample,
+                    sample=runner.sample,
                 )
             except Exception as exc:
                 error = f"{column if column is not None else runner.table.__tablename__} metric_type.value: {exc}"

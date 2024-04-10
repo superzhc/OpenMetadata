@@ -234,6 +234,58 @@ def clickhouse_table_construct(runner: QueryRunner, **kwargs):
     return runner._session.execute(query).first()
 
 
+def mssql_table_construct(runner: QueryRunner, **kwargs):
+    """
+    2024年4月10日 sqlserver table construct for table metrics
+    :param runner: query runner object
+    """
+    try:
+        schema_name, table_name = _get_table_and_schema_name(runner.table)
+    except AttributeError:
+        raise AttributeError(ERROR_MSG)
+
+    database = runner.session.get_bind().url.database
+
+    col_names, col_count = _get_col_names_and_count(runner.table)
+
+    sys_tables = cte(
+        _build_query(
+            [
+                Column("name"),
+                Column("create_date"),
+            ],
+            _build_table("tables", f"{database}.sys"),
+            [
+                func.lower(Column("name")) == table_name.lower(),
+            ]
+        )
+    )
+
+    row_count = cte(
+        _build_query(
+            [
+                Metrics.ROW_COUNT.value().fn(),
+                literal(table_name, type_=String).label("name")
+            ],
+            runner.table
+        )
+    )
+
+    columns = [
+        Column("rowCount"),
+        Column("create_date").label("createDateTime"),
+        col_names,
+        col_count,
+    ]
+
+    query = _build_query(columns, sys_tables).join(
+        row_count,
+        sys_tables.c.name == row_count.c.name
+    )
+
+    return runner.session.execute(query).first()
+
+
 def oracle_table_construct(runner: QueryRunner, **kwargs):
     """oracle table construct for table metrics
 
@@ -365,3 +417,5 @@ table_metric_construct_factory.register(Dialects.BigQuery, bigquery_table_constr
 table_metric_construct_factory.register(Dialects.ClickHouse, clickhouse_table_construct)
 table_metric_construct_factory.register(Dialects.Oracle, oracle_table_construct)
 table_metric_construct_factory.register(Dialects.Snowflake, snowflake_table_construct)
+# 2024年4月10日 sqlserver 自定义统计表信息
+table_metric_construct_factory.register(Dialects.MSSQL, mssql_table_construct)

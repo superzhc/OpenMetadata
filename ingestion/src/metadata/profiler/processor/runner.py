@@ -55,6 +55,22 @@ class QueryRunner:
         self._partition_details = partition_details
         self._profile_sample_query = profile_sample_query
 
+    @property
+    def sample(self):
+        """
+        2024年4月10日 公开 sample 属性
+        :return:
+        """
+        return self._sample
+
+    @property
+    def session(self):
+        """
+        2024年4月10日 session
+        :return:
+        """
+        return self._session
+
     def _build_query(self, *entities, **kwargs) -> Query:
         return self._session.query(*entities, **kwargs)
 
