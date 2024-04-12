@@ -16,10 +16,12 @@ from typing import Iterable, Optional
 
 from sqlalchemy.dialects.oracle.base import INTERVAL, OracleDialect, ischema_names
 from sqlalchemy.engine import Inspector
+from sqlalchemy.inspection import inspect
 
 from metadata.generated.schema.entity.data.table import TableType
 from metadata.generated.schema.entity.services.connections.database.oracleConnection import (
     OracleConnection,
+    OracleDatabaseSchema,
 )
 from metadata.generated.schema.metadataIngestion.workflow import (
     Source as WorkflowSource,
@@ -85,6 +87,24 @@ class OracleSource(CommonDbSourceService):
                 f"Expected OracleConnection, but got {connection}"
             )
         return cls(config, metadata)
+
+    def get_database_names(self) -> Iterable[str]:
+        """
+        2024年4月3日 Oracle 连接类型为数据库方式，则当前连接的数据库即为设置的数据库
+        """
+        if isinstance(self.service_connection.oracleConnectionType, OracleDatabaseSchema):
+            if self.service_connection.oracleConnectionType.databaseSchema:
+                database_name = self.service_connection.oracleConnectionType.databaseSchema
+                self.inspector = inspect(self.engine)
+                yield database_name
+
+        yield from super().get_database_names()
+
+    def get_raw_database_schema_names(self) -> Iterable[str]:
+        """
+        2024年4月12日 对于oracle来说，schema其实就是当前的用户名称
+        """
+        yield self.service_connection.username
 
     def query_table_names_and_types(
         self, schema_name: str

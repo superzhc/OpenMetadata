@@ -119,10 +119,14 @@ class CommonDbSourceService(
         logger.info(f"Ingesting from database: {database_name}")
 
         new_service_connection = deepcopy(self.service_connection)
-        new_service_connection.database = database_name
-        self.engine = get_connection(new_service_connection)
-        self.inspector = inspect(self.engine)
-        self._connection = None  # Lazy init as well
+        # 2024年4月3日 如果无需设置数据库，则直接使用原有的engine
+        if not hasattr(new_service_connection, "database"):
+            self.inspector = inspect(self.engine)
+        else:
+            new_service_connection.database = database_name
+            self.engine = get_connection(new_service_connection)
+            self.inspector = inspect(self.engine)
+            self._connection = None  # Lazy init as well
 
     def get_database_names(self) -> Iterable[str]:
         """
@@ -287,6 +291,8 @@ class CommonDbSourceService(
                         database_name=self.context.database.name.__root__,
                         schema_name=self.context.database_schema.name.__root__,
                         table_name=view_name,
+                        # 2024年4月3日 直接构建表的fqn，无需进行es的搜索
+                        skip_es_search=True,
                     )
 
                     if filter_by_table(
@@ -482,6 +488,7 @@ class CommonDbSourceService(
         foreign_constraints = []
         for column in foreign_columns:
             referred_column_fqns = []
+            # 2024年4月3日 外键对应的主表只能使用搜索引擎来搜索，因数据库、schema都可能不知道，但此处依旧存在关联错误表的情况
             referred_table = fqn.search_table_from_es(
                 metadata=self.metadata,
                 table_name=column.get("referred_table"),
