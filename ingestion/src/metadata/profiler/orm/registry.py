@@ -93,6 +93,8 @@ NOT_COMPUTE = {
     sqa_types.SQASGeography.__name__,
     DataType.ARRAY.value,
     DataType.JSON.value,
+    # 2024年4月12日 fix bug:对oracle的HexByteString进行统计计算会报错，排除计算
+    CustomTypes.BYTES.value.__name__,
     CustomTypes.ARRAY.value.__name__,
     CustomTypes.SQADATETIMERANGE.value.__name__,
 }
