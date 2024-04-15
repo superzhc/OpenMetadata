@@ -16,12 +16,12 @@ from typing import Iterable, Optional
 
 from sqlalchemy.dialects.oracle.base import INTERVAL, OracleDialect, ischema_names
 from sqlalchemy.engine import Inspector
-from sqlalchemy.inspection import inspect
 
 from metadata.generated.schema.entity.data.table import TableType
 from metadata.generated.schema.entity.services.connections.database.oracleConnection import (
     OracleConnection,
     OracleDatabaseSchema,
+    OracleServiceName,
 )
 from metadata.generated.schema.metadataIngestion.workflow import (
     Source as WorkflowSource,
@@ -93,12 +93,20 @@ class OracleSource(CommonDbSourceService):
         2024年4月3日 Oracle 连接类型为数据库方式，则当前连接的数据库即为设置的数据库
         """
         if isinstance(self.service_connection.oracleConnectionType, OracleDatabaseSchema):
-            if self.service_connection.oracleConnectionType.databaseSchema:
-                database_name = self.service_connection.oracleConnectionType.databaseSchema
-                self.inspector = inspect(self.engine)
-                yield database_name
-
-        yield from super().get_database_names()
+            database_name = self.service_connection.oracleConnectionType.databaseSchema
+            self.set_inspector(database_name)
+            yield database_name
+        elif isinstance(self.service_connection.oracleConnectionType, OracleServiceName):
+            """
+            数据库服务名
+            从oracle9i版本开始，引入的一个全新的参数
+            如果数据库有域名，则数据库服务名就是全局数据库名；否则，数据库服务名与数据库名相同
+            """
+            database_name = self.service_connection.oracleConnectionType.oracleServiceName
+            self.set_inspector(database_name)
+            yield database_name
+        else:
+            yield from super().get_database_names()
 
     def get_raw_database_schema_names(self) -> Iterable[str]:
         """
