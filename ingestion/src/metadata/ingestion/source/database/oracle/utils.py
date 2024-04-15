@@ -48,7 +48,7 @@ def get_table_comment(
         connection,
         table_name=table_name.lower(),
         schema=schema.lower() if schema else None,
-        query=ORACLE_ALL_TABLE_COMMENTS,
+        query=ORACLE_ALL_TABLE_COMMENTS.format(owner=schema.lower()),
     )
 
 
@@ -68,7 +68,7 @@ def get_view_definition(
         connection,
         table_name=view_name.lower(),
         schema=schema.lower() if schema else None,
-        query=ORACLE_ALL_VIEW_DEFINITIONS,
+        query=ORACLE_ALL_VIEW_DEFINITIONS.format(owner=schema.lower()),
     )
 
 

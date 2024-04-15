@@ -18,7 +18,7 @@ SELECT
 	LOWER(table_name) "table_name",
 	LOWER(owner) "schema" 	
 FROM all_tab_comments
-where comments is not null and owner not in ('SYSTEM', 'SYS')
+where comments is not null and LOWER(owner) = '{owner}'
 """
 
 
@@ -28,14 +28,14 @@ LOWER(view_name) AS "view_name",
 LOWER(owner) AS "schema",
 DBMS_METADATA.GET_DDL('VIEW', view_name, owner) AS view_def
 FROM all_views
-WHERE owner NOT IN ('SYSTEM', 'SYS')
+WHERE LOWER(owner) = '{owner}'
 UNION ALL
 SELECT
 LOWER(mview_name) AS "view_name",
 LOWER(owner) AS "schema",
 DBMS_METADATA.GET_DDL('MATERIALIZED_VIEW', mview_name, owner) AS view_def
 FROM all_mviews
-WHERE owner NOT IN ('SYSTEM', 'SYS')
+WHERE LOWER(owner) = '{owner}'
 """
 
 GET_MATERIALIZED_VIEW_NAMES = """
