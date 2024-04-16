@@ -34,6 +34,14 @@ class avg(GenericFunction):
     name = "avg"
     inherit_cache = CACHE
 
+@compiles(avg, Dialects.Postgres)
+def _(element, compiler, **kw):
+    """
+    2024年4月16日 对于原始列为 money 类型的无法直接使用 avg 函数，做一层转换
+    """
+    col_name = compiler.process(element.clauses, **kw)
+    # col_type = element.clauses.clauses[0].type.__visit_name__
+    return f"avg(CAST({col_name} AS numeric))"
 
 @compiles(avg, Dialects.ClickHouse)
 def _(element, compiler, **kw):

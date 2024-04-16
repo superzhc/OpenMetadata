@@ -43,6 +43,15 @@ def _(element, compiler, **kw):
 def _(element, compiler, **kw):
     return "STDEVP(%s)" % compiler.process(element.clauses, **kw)
 
+@compiles(StdDevFn, Dialects.Postgres)
+def _(element, compiler, **kw):
+    """
+    2024年4月16日 Postgres money 类型不支持直接使用该函数，需要对其进行类型转换
+    """
+    col_name = compiler.process(element.clauses, **kw)
+    # col_type = element.clauses.clauses[0].type.__visit_name__
+    return f"STDDEV_POP(CAST({col_name} AS numeric))"
+
 
 @compiles(StdDevFn, Dialects.SQLite)  # Needed for unit tests
 def _(element, compiler, **kw):

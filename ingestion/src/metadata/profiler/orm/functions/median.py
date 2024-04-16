@@ -35,6 +35,15 @@ def _(elements, compiler, **kwargs):  # pylint: disable=unused-argument
     percentile = elements.clauses.clauses[2].value
     return "percentile_cont(%.2f) WITHIN GROUP (ORDER BY %s ASC)" % (percentile, col)
 
+@compiles(MedianFn, Dialects.Postgres)
+def _(elements, compiler, **kwargs):  # pylint: disable=unused-argument
+    """
+    2024年4月16日 Postgres money 类型不支持直接使用该函数，需要对其进行类型转换
+    """
+    col_name = compiler.process(elements.clauses.clauses[0])
+    #col_type = elements.clauses.clauses[0].type.__visit_name__
+    percentile = elements.clauses.clauses[2].value
+    return "percentile_cont(%.2f) WITHIN GROUP (ORDER BY CAST(%s AS numeric) ASC)" % (percentile, col_name)
 
 @compiles(MedianFn, Dialects.BigQuery)
 def _(elements, compiler, **kwargs):
