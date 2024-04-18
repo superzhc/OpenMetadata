@@ -208,11 +208,16 @@ class REST:
         """
         retry_codes = self._retry_codes
         try:
+            import uuid
+            uid=uuid.uuid1()
+            logger.debug("[%s] [%s] %s", uid, method, url)
+            logger.debug("[%s] %s", uid, opts)
             resp = self._session.request(method, url, **opts)
             resp.raise_for_status()
 
             if resp.text != "":
                 try:
+                    logger.debug("[%s] %s", uid, resp.json())
                     return resp.json()
                 except Exception as exc:
                     logger.debug(traceback.format_exc())

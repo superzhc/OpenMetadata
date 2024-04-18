@@ -331,7 +331,9 @@ class OpenMetadata(
         """
         fields_str = "?fields=" + ",".join(fields) if fields else ""
         try:
-            resp = self.client.get(f"{self.get_suffix(entity)}/{path}{fields_str}")
+            url = f"{self.get_suffix(entity)}/{path}{fields_str}"
+            # logger.debug("GET Request [%s]" % url)
+            resp = self.client.get(url)
             if not resp:
                 raise EmptyPayloadException(
                     f"Got an empty response when trying to GET from {self.get_suffix(entity)}/{path}{fields_str}"
