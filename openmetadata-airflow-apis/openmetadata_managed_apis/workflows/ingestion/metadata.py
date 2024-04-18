@@ -43,7 +43,7 @@ def build_metadata_workflow_config(
             config={},
         ),
         workflowConfig=build_workflow_config_property(ingestion_pipeline),
-        ingestionPipelineFQN=ingestion_pipeline.fullyQualifiedName.__root__,
+        ingestionPipelineFQN=ingestion_pipeline.fullyQualifiedName.__root__ if ingestion_pipeline.fullyQualifiedName else None,
     )
 
     return workflow_config
