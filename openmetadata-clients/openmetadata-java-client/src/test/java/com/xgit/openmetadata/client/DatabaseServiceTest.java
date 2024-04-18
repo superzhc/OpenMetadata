@@ -1,15 +1,15 @@
 package com.xgit.openmetadata.client;
 
+import com.xgit.openmetadata.client.config.ClientConfig;
+import com.xgit.openmetadata.client.config.DevServerConfig;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
-import com.xgit.openmetadata.client.config.ClientConfig;
-import com.xgit.openmetadata.client.config.LocalServerConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmetadata.client.api.DatabaseServicesApi;
 import org.openmetadata.client.model.CreateDatabaseService;
 import org.openmetadata.client.model.DatabaseService;
+import org.openmetadata.client.model.DatabaseServiceList;
 
 public class DatabaseServiceTest extends OpenMetadataTest {
   DatabaseServicesApi api;
@@ -21,7 +21,15 @@ public class DatabaseServiceTest extends OpenMetadataTest {
 
   @Override
   protected ClientConfig initClientConfig() {
-    return new LocalServerConfig();
+    return new DevServerConfig();
+  }
+
+  @Test
+  public void testListDatabaseServices() {
+    DatabaseServicesApi.ListDatabaseServicesQueryParams params =
+        new DatabaseServicesApi.ListDatabaseServicesQueryParams();
+    DatabaseServiceList list = api.listDatabaseServices(params);
+    System.out.println(list);
   }
 
   @Test

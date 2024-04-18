@@ -8,6 +8,33 @@
         <version>1.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <version>xgit-1.0.0</version>
+
+    <distributionManagement>
+        <repository>
+            <id>hanyun</id>
+            <name>HanYun</name>
+            <url>http://10.100.2.80:8081/repository/maven-releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>hanyun-snapshot</id>
+            <name>HanYun Snapshot</name>
+            <url>http://10.100.2.80:8081/repository/maven-releases</url>
+        </snapshotRepository>
+    </distributionManagement>
+    <repositories>
+        <repository>
+            <id>hanyun</id>
+            <name>HanYun</name>
+            <url>http://10.100.2.80:8081/repository/maven-public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <artifactId>openmetadata-java-client</artifactId>
     <properties>
@@ -25,7 +52,7 @@
         <dependency>
             <groupId>org.open-metadata</groupId>
             <artifactId>openmetadata-spec</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <!-- FEIGN DEPENDENCY-->
         <dependency>
@@ -167,6 +194,48 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>hanyun</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>false</extensions>
                     </plugin>
                 </plugins>
             </build>

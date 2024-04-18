@@ -1,17 +1,15 @@
 package com.xgit.openmetadata.client;
 
 import com.xgit.openmetadata.client.config.ClientConfig;
-import com.xgit.openmetadata.client.config.LocalServerConfig;
+import com.xgit.openmetadata.client.config.DevServerConfig;
 import feign.Response;
+import java.io.IOException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmetadata.client.api.ElasticSearchApi;
 import org.openmetadata.client.api.SearchApi;
 import org.openmetadata.client.model.SearchResponse;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 public class SearchTest extends OpenMetadataTest {
   SearchApi api;
@@ -25,7 +23,7 @@ public class SearchTest extends OpenMetadataTest {
 
   @Override
   protected ClientConfig initClientConfig() {
-    return new LocalServerConfig();
+    return new DevServerConfig();
   }
 
   /** 使用该接口报错，官网issue：https://github.com/open-metadata/OpenMetadata/issues/11990 */
