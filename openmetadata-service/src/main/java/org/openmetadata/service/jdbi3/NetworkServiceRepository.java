@@ -6,8 +6,7 @@ import org.openmetadata.schema.type.NetworkConnection;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.resources.services.network.NetworkServiceResource;
 
-public class NetworkServiceRepository
-    extends ServiceEntityRepository<NetworkService, NetworkConnection> {
+public class NetworkServiceRepository extends ServiceEntityRepository<NetworkService, NetworkConnection> {
   private static final String UPDATE_FIELDS = "owner,connection";
 
   public NetworkServiceRepository() {

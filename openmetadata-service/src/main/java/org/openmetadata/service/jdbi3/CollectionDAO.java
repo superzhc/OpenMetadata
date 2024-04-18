@@ -421,14 +421,14 @@ public interface CollectionDAO {
     }
   }
 
-  interface NetworkServiceDAO extends EntityDAO<NetworkService>{
+  interface NetworkServiceDAO extends EntityDAO<NetworkService> {
     @Override
-    default String getTableName(){
+    default String getTableName() {
       return "network_service_entity";
     }
 
     @Override
-    default Class<NetworkService> getEntityClass(){
+    default Class<NetworkService> getEntityClass() {
       return NetworkService.class;
     }
 

@@ -34,9 +34,21 @@
       "$ref": "#/definitions/httpType",
       "default": "Http"
     },
-    "url": {
-      "title": "Url",
-      "description": "Request Url",
+    "protocol": {
+      "title": "Protocol",
+      "description": "Request Protocol",
+      "type": "string",
+      "enum": ["HTTP","HTTPS"],
+      "default": "HTTP"
+    },
+    "hostPort": {
+      "title": "HostPort",
+      "description": "Request Host and Port",
+      "type": "string"
+    },
+    "path": {
+      "title": "Path",
+      "description": "Request Path",
       "type": "string"
     },
     "method": {
@@ -52,11 +64,24 @@
       "additionalProperties": {
         "type": "string"
       }
+    },
+    "query": {
+      "title": "Query Parameters",
+      "description": "Request Query Parameters",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "body": {
+      "title": "Body",
+      "description": "Request Body",
+      "type": "string"
     }
   },
   "additionalProperties": false,
   "required": [
-    "url",
-    "method"
+    "protocol",
+    "hostPort"
   ]
 }

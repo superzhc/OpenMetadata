@@ -1,0 +1,35 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/services/connections/mlmodel/mlflowConnection.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TCPConnection",
+  "description": "TCP Connection Config",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.services.connections.network.TcpConnection",
+  "definitions": {
+    "tcpType": {
+      "description": "Service type.",
+      "type": "string",
+      "enum": [
+        "TCP"
+      ],
+      "default": "TCP"
+    }
+  },
+  "properties": {
+    "type": {
+      "title": "Service Type",
+      "description": "Service Type",
+      "$ref": "#/definitions/tcpType",
+      "default": "TCP"
+    },
+    "url": {
+      "title": "Url",
+      "description": "Request Url",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "url"
+  ]
+}
