@@ -21,7 +21,7 @@ def get_long_description():
 
 
 dev = {
-    "datamodel-code-generator==0.13.0",
+    "datamodel-code-generator==0.22.0",
     "black==21.12b0",
     "incremental",
     "twine",
