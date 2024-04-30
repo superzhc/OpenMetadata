@@ -15,6 +15,7 @@ import datetime
 import time
 import traceback
 from typing import Callable, Dict, List, Optional, Union
+import threading
 
 import requests
 from requests.exceptions import HTTPError
@@ -208,22 +209,25 @@ class REST:
         """
         retry_codes = self._retry_codes
         try:
-            import uuid
-            uid=uuid.uuid1()
-            logger.debug("[%s] [%s] %s", uid, method, url)
-            logger.debug("[%s] %s", uid, opts)
+            logger.debug("[%s] [%s] %s", threading.current_thread(), method, url)
+            logger.debug("[%s] [Headers] %s", threading.current_thread(), opts.headers)
+            if "params" in opts:
+                logger.debug("[%s] [Params] %s",threading.current_thread(), opts.params)
+            if "data" in opts:
+                logger.debug("[%s] [Body] %s",threading.current_thread(), opts.data)
+
             resp = self._session.request(method, url, **opts)
             resp.raise_for_status()
 
             if resp.text != "":
                 try:
-                    logger.debug("[%s] %s", uid, resp.json())
+                    logger.debug("[%s] [Response] %s", threading.current_thread(), resp.json())
                     return resp.json()
                 except Exception as exc:
-                    logger.debug(traceback.format_exc())
-                    logger.warning(
-                        f"Unexpected error while returning response {resp} in json format - {exc}"
-                    )
+                    logger.debug(f"[{threading.current_thread()}] [Response Error : Returning response {resp} in json format] {exc}")
+                    # logger.warning(
+                    #     f"Unexpected error while returning response {resp} in json format - {exc}"
+                    # )
 
         except HTTPError as http_error:
             # retry if we hit Rate Limit
@@ -240,16 +244,16 @@ class REST:
             try:
                 return self._session.request(method, url, **opts).json()
             except Exception as exc:
-                logger.debug(traceback.format_exc())
-                logger.warning(
-                    f"Unexpected error while retrying after a connection error - {exc}"
-                )
+                logger.debug(f"[{threading.current_thread()}] [Response Error : Retrying after a connection error] {exc}")
+                # logger.warning(
+                #     f"Unexpected error while retrying after a connection error - {exc}"
+                # )
                 raise conn
         except Exception as exc:
-            logger.debug(traceback.format_exc())
-            logger.warning(
-                f"Unexpected error calling [{url}] with method [{method}]: {exc}"
-            )
+            logger.debug(f"[{threading.current_thread()}] [Response Error] {exc}")
+            # logger.warning(
+            #     f"Unexpected error calling [{url}] with method [{method}]: {exc}"
+            # )
 
         return None
 

@@ -52,6 +52,11 @@ public final class CommonUtil {
 
   private CommonUtil() {}
 
+  public static boolean isJar(Class<?> clazz){
+    String protocol=clazz.getResource("").getProtocol();
+    return "jar".equals(protocol);
+  }
+
   /** Get resources from jar file or directories in the class path matching pattern */
   public static List<String> getResources(Pattern pattern) throws IOException {
     ArrayList<String> resources = new ArrayList<>();

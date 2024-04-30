@@ -25,6 +25,49 @@
         "DELETE"
       ],
       "default": "GET"
+    },
+    "authType": {
+      "description": "Authorization Type",
+      "type": "string",
+      "enum": [
+        "NoAuth",
+        "BasicAuth",
+        "BearerToken",
+        "JWTBearer",
+        "DigestAuth",
+        "OAuth1_0",
+        "OAuth2_0",
+        "HawkAuthentication",
+        "AWSSignature",
+        "NTLMAuthentication",
+        "APIKey",
+        "AkamaiEdgeGrid",
+        "ASAP"
+      ]
+    },
+    "basicAuth": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "format": "password"
+        }
+      }
+    },
+    "bearerToken": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "title": "Token",
+          "type": "string",
+          "format": "password"
+        }
+      }
     }
   },
   "properties": {
@@ -56,6 +99,27 @@
       "description": "Request Method",
       "$ref": "#/definitions/httpMethodType",
       "default": "GET"
+    },
+    "authorization": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "$ref": "#/definitions/authType"
+        },
+        "config": {
+          "title": "Auth Configuration",
+          "oneOf": [
+            {
+              "$ref": "#/definitions/basicAuth"
+            },
+            {
+              "$ref": "#/definitions/bearerToken"
+            }
+          ],
+          "default": null
+        }
+      }
     },
     "headers": {
       "title": "Headers",
