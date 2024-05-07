@@ -146,6 +146,7 @@
   "additionalProperties": false,
   "required": [
     "protocol",
-    "hostPort"
+    "hostPort",
+    "method"
   ]
 }

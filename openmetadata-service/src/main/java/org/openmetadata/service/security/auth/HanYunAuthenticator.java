@@ -13,8 +13,10 @@ import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.openmetadata.schema.api.security.AuthenticationConfiguration;
+import org.openmetadata.schema.auth.BasicAuthMechanism;
 import org.openmetadata.schema.auth.LoginRequest;
 import org.openmetadata.schema.auth.RefreshToken;
+import org.openmetadata.schema.entity.teams.AuthenticationMechanism;
 import org.openmetadata.schema.entity.teams.User;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.OpenMetadataApplicationConfig;
@@ -22,10 +24,7 @@ import org.openmetadata.service.auth.JwtResponse;
 import org.openmetadata.service.exception.CustomExceptionMessage;
 import org.openmetadata.service.jdbi3.TokenRepository;
 import org.openmetadata.service.jdbi3.UserRepository;
-import org.openmetadata.service.util.EntityUtil;
-import org.openmetadata.service.util.HttpClientUtils;
-import org.openmetadata.service.util.JsonUtils;
-import org.openmetadata.service.util.TokenUtil;
+import org.openmetadata.service.util.*;
 
 @Slf4j
 public class HanYunAuthenticator implements AuthenticatorHandler {
@@ -91,18 +90,27 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
     // 自登录
     User user = lookUserInProvider(userName);
     if (null == user) {
-      throw new CustomExceptionMessage(Response.Status.BAD_REQUEST, "元数据系统不存在当前用户，请联系管理员");
+      // throw new CustomExceptionMessage(Response.Status.BAD_REQUEST, "元数据系统不存在当前用户，请联系管理员");
+      // 2024年5月6日 汉云单点登陆，用户不存在的情况下自动同步该用户到元数据系统中
+      User newUser=new User()
+          .withId(UUID.randomUUID())
+          .withName(userName)
+          .withFullyQualifiedName(userName)
+          .withEmail(userName + "@xgit.com")
+          .withIsBot(false)
+          .withIsAdmin(false)
+          .withIsEmailVerified(true)
+          .withUpdatedBy(userName)
+          .withUpdatedAt(System.currentTimeMillis())
+          .withAuthenticationMechanism(
+              new AuthenticationMechanism()
+                  .withAuthType(AuthenticationMechanism.AuthType.BASIC)
+                  .withConfig(new BasicAuthMechanism().withPassword(PasswordUtil.generateRandomPassword())));
+      user=userRepository.createInternal(newUser);
     }
     // 将jwt的失效设置为最大，即可认为无失效期限
     JwtResponse response = getJwtResponse(user, ChronoField.EPOCH_DAY.range().getMaximum());
 
-    //        String url =
-    //                String.format(
-    //                        system.getHanyunIndexUrl() + "?__token__=%s&sso_token=%s", response.getAccessToken(),
-    // accessToken);
-    //        LOG.info("重定向回前端地址：" + url);
-    //        return Response.status(Response.Status.OK).entity(url).build();
-    //        return null;
     return response;
   }
 
