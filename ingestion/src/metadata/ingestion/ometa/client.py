@@ -210,11 +210,11 @@ class REST:
         retry_codes = self._retry_codes
         try:
             logger.debug("[%s] [%s] %s", threading.current_thread(), method, url)
-            logger.debug("[%s] [Headers] %s", threading.current_thread(), opts.headers)
+            logger.debug("[%s] [Headers] %s", threading.current_thread(), opts["headers"])
             if "params" in opts:
-                logger.debug("[%s] [Params] %s",threading.current_thread(), opts.params)
+                logger.debug("[%s] [Params] %s",threading.current_thread(), opts["params"])
             if "data" in opts:
-                logger.debug("[%s] [Body] %s",threading.current_thread(), opts.data)
+                logger.debug("[%s] [Body] %s",threading.current_thread(), opts["data"])
 
             resp = self._session.request(method, url, **opts)
             resp.raise_for_status()
