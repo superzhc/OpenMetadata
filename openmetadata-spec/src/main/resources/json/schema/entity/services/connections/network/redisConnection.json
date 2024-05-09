@@ -1,0 +1,57 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/services/connections/mlmodel/mlflowConnection.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RedisConnection",
+  "description": "Redis Connection Config",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.services.connections.network.RedisConnection",
+  "definitions": {
+    "redisType": {
+      "description": "Service type.",
+      "type": "string",
+      "enum": ["Redis"],
+      "default": "Redis"
+    }
+  },
+  "properties": {
+    "type": {
+      "title": "Service Type",
+      "description": "Service Type",
+      "$ref": "#/definitions/redisType",
+      "default": "Redis"
+    },
+    "host": {
+      "title": "Host",
+      "type": "string"
+    },
+    "port": {
+      "title": "Port",
+      "type": "integer"
+    },
+    "db": {
+      "title": "DB",
+      "type": "integer",
+      "default": 0
+    },
+    "username": {
+      "title": "Username",
+      "type": "string",
+      "default": null
+    },
+    "password": {
+      "title": "Password",
+      "type": "string",
+      "format": "password",
+      "default": null
+    },
+    "protocol": {
+      "title": "Protocol",
+      "description": "Defines Redis protocol version. Available values: RESP2, RESP3. Default value: RESP2",
+      "type": "integer",
+      "enum": [2,3],
+      "default": 2
+    }
+  },
+  "additionalProperties": false,
+  "required": ["host", "port"]
+}

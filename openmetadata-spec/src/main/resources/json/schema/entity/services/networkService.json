@@ -14,10 +14,16 @@
       "description": "Type of Network service",
       "type": "string",
       "javaInterfaces": ["org.openmetadata.schema.EnumInterface"],
-      "enum": ["Http"],
+      "enum": ["Http", "Redis", "MQTT"],
       "javaEnums": [
         {
           "name": "Http"
+        },
+        {
+          "name": "Redis"
+        },
+        {
+          "name": "MQTT"
         }
       ]
     },
@@ -34,6 +40,12 @@
           "oneOf": [
             {
               "$ref": "./connections/network/httpConnection.json"
+            },
+            {
+              "$ref": "./connections/network/redisConnection.json"
+            },
+            {
+              "$ref": "./connections/network/mqttConnection.json"
             }
           ]
         }

@@ -1,0 +1,50 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/services/connections/mlmodel/mlflowConnection.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MQTTConnection",
+  "description": "Websocket Connection Config",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.services.connections.network.MQTTConnection",
+  "definitions": {
+    "mqttType": {
+      "description": "Service type.",
+      "type": "string",
+      "enum": ["MQTT"],
+      "default": "MQTT"
+    }
+  },
+  "properties": {
+    "type": {
+      "title": "Service Type",
+      "description": "Service Type",
+      "$ref": "#/definitions/mqttType",
+      "default": "MQTT"
+    },
+    "host": {
+      "title": "Host",
+      "type": "string"
+    },
+    "port": {
+      "title": "Port",
+      "type": "integer",
+      "default": 1883
+    },
+    "user": {
+      "title": "User",
+      "type": "string",
+      "default": null
+    },
+    "password": {
+      "title": "Password",
+      "type": "string",
+      "format": "password",
+      "default": null
+    },
+    "topic": {
+      "title": "Topic",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}
