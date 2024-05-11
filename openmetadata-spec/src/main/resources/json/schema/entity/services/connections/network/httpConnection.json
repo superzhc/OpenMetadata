@@ -28,6 +28,7 @@
     },
     "authType": {
       "description": "Authorization Type",
+      "javaType": "org.openmetadata.schema.services.connections.network.auth.http.AuthType",
       "type": "string",
       "enum": [
         "NoAuth",
@@ -44,30 +45,6 @@
         "AkamaiEdgeGrid",
         "ASAP"
       ]
-    },
-    "basicAuth": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "title": "Username",
-          "type": "string"
-        },
-        "password": {
-          "title": "Password",
-          "type": "string",
-          "format": "password"
-        }
-      }
-    },
-    "bearerToken": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "title": "Token",
-          "type": "string",
-          "format": "password"
-        }
-      }
     }
   },
   "properties": {
@@ -111,15 +88,16 @@
           "title": "Auth Configuration",
           "oneOf": [
             {
-              "$ref": "#/definitions/basicAuth"
+              "$ref": "./http/basicAuth.json"
             },
             {
-              "$ref": "#/definitions/bearerToken"
+              "$ref": "./http/bearerToken.json"
             }
           ],
           "default": null
         }
-      }
+      },
+      "additionalProperties": false
     },
     "headers": {
       "title": "Headers",

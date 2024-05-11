@@ -31,6 +31,7 @@ import org.openmetadata.schema.services.connections.database.PostgresConnection;
 import org.openmetadata.schema.services.connections.database.TrinoConnection;
 import org.openmetadata.schema.services.connections.database.datalake.GCSConfig;
 import org.openmetadata.schema.services.connections.metadata.OpenMetadataConnection;
+import org.openmetadata.schema.services.connections.network.HttpConnection;
 import org.openmetadata.schema.services.connections.pipeline.AirflowConnection;
 import org.openmetadata.schema.services.connections.storage.GcsConnection;
 
@@ -51,6 +52,8 @@ public final class ClassConverterFactory {
             Map.entry(MysqlConnection.class, new MysqlConnectionClassConverter()),
             Map.entry(TrinoConnection.class, new TrinoConnectionClassConverter()),
             Map.entry(PostgresConnection.class, new PostgresConnectionClassConverter()),
+            // 2024年5月10日 新增 Http 类型转换
+            Map.entry(HttpConnection.class, new HttpConnectionClassConverter()),
             Map.entry(DbtGCSConfig.class, new DbtGCSConfigClassConverter()),
             Map.entry(DbtPipeline.class, new DbtPipelineClassConverter()),
             Map.entry(GCSConfig.class, new GCPConfigClassConverter()),

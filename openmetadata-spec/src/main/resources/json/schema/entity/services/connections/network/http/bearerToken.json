@@ -1,0 +1,15 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/services/connections/database/common/basicAuth.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Basic Auth",
+  "description": "Http Connection Config",
+  "javaType": "org.openmetadata.schema.services.connections.network.auth.http.BearerToken",
+  "type": "object",
+  "properties": {
+    "token": {
+      "title": "Token",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
