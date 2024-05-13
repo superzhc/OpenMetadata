@@ -32,6 +32,9 @@
         },
         {
           "$ref": "../services/searchService.json#/definitions/searchConnection"
+        },
+        {
+          "$ref": "../services/networkService.json#/definitions/networkConnection"
         }
       ]
     },

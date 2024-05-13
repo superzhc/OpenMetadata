@@ -38,12 +38,14 @@ import org.openmetadata.schema.api.data.RestoreEntity;
 import org.openmetadata.schema.api.services.CreateNetworkService;
 import org.openmetadata.schema.entity.services.NetworkService;
 import org.openmetadata.schema.entity.services.ServiceType;
+import org.openmetadata.schema.entity.services.connections.TestConnectionResult;
 import org.openmetadata.schema.type.*;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.jdbi3.NetworkServiceRepository;
 import org.openmetadata.service.resources.Collection;
 import org.openmetadata.service.resources.services.ServiceEntityResource;
 import org.openmetadata.service.security.Authorizer;
+import org.openmetadata.service.security.policyevaluator.OperationContext;
 import org.openmetadata.service.util.JsonUtils;
 import org.openmetadata.service.util.ResultList;
 
@@ -197,30 +199,28 @@ public class NetworkServiceResource
     return decryptOrNullify(securityContext, networkService);
   }
 
-  //    @PUT
-  //    @Path("/{id}/testConnectionResult")
-  //    @Operation(
-  //            operationId = "addTestConnectionResult",
-  //            summary = "Add test connection result",
-  //            description = "Add test connection result to the service.",
-  //            responses = {
-  //                    @ApiResponse(
-  //                            responseCode = "200",
-  //                            description = "Successfully updated the service",
-  //                            content =
-  //                            @Content(mediaType = "application/json", schema = @Schema(implementation =
-  // DatabaseService.class)))
-  //            })
-  //    public NetworkService addTestConnectionResult(
-  //            @Context UriInfo uriInfo,
-  //            @Context SecurityContext securityContext,
-  //            @Parameter(description = "Id of the service", schema = @Schema(type = "UUID")) @PathParam("id") UUID id,
-  //            @Valid TestConnectionResult testConnectionResult) {
-  //        OperationContext operationContext = new OperationContext(entityType, MetadataOperation.CREATE);
-  //        authorizer.authorize(securityContext, operationContext, getResourceContextById(id));
-  //        NetworkService service = repository.addTestConnectionResult(id, testConnectionResult);
-  //        return decryptOrNullify(securityContext, service);
-  //    }
+  @PUT
+  @Path("/{id}/testConnectionResult")
+  @Operation(
+      operationId = "addTestConnectionResult",
+      summary = "Add test connection result",
+      description = "Add test connection result to the service.",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully updated the service",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = NetworkService.class)))
+      })
+  public NetworkService addTestConnectionResult(
+      @Context UriInfo uriInfo,
+      @Context SecurityContext securityContext,
+      @Parameter(description = "Id of the service", schema = @Schema(type = "UUID")) @PathParam("id") UUID id,
+      @Valid TestConnectionResult testConnectionResult) {
+    OperationContext operationContext = new OperationContext(entityType, MetadataOperation.CREATE);
+    authorizer.authorize(securityContext, operationContext, getResourceContextById(id));
+    NetworkService service = repository.addTestConnectionResult(id, testConnectionResult);
+    return decryptOrNullify(securityContext, service);
+  }
 
   @GET
   @Path("/{id}/versions")
