@@ -11,6 +11,19 @@
       "type": "string",
       "enum": ["Redis"],
       "default": "Redis"
+    },
+    "redisProtocolVersion": {
+      "description": "Defines Redis protocol version. Available values: RESP2, RESP3. Default value: RESP2",
+      "type": "integer",
+      "enum": [2,3],
+      "javaEnums": [
+        {
+          "name": "RESP2"
+        },
+        {
+          "name": "RESP3"
+        }
+      ]
     }
   },
   "properties": {
@@ -26,7 +39,8 @@
     },
     "port": {
       "title": "Port",
-      "type": "integer"
+      "type": "integer",
+      "default": 6379
     },
     "db": {
       "title": "DB",
@@ -46,9 +60,7 @@
     },
     "protocol": {
       "title": "Protocol",
-      "description": "Defines Redis protocol version. Available values: RESP2, RESP3. Default value: RESP2",
-      "type": "integer",
-      "enum": [2,3],
+      "$ref": "#/definitions/redisProtocolVersion",
       "default": 2
     }
   },

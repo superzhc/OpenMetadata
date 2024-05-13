@@ -4,13 +4,13 @@
   "title": "MQTTConnection",
   "description": "Websocket Connection Config",
   "type": "object",
-  "javaType": "org.openmetadata.schema.services.connections.network.MQTTConnection",
+  "javaType": "org.openmetadata.schema.services.connections.network.MqttConnection",
   "definitions": {
     "mqttType": {
       "description": "Service type.",
       "type": "string",
-      "enum": ["MQTT"],
-      "default": "MQTT"
+      "enum": ["Mqtt"],
+      "default": "Mqtt"
     }
   },
   "properties": {
@@ -18,7 +18,7 @@
       "title": "Service Type",
       "description": "Service Type",
       "$ref": "#/definitions/mqttType",
-      "default": "MQTT"
+      "default": "Mqtt"
     },
     "host": {
       "title": "Host",
@@ -46,5 +46,5 @@
     }
   },
   "additionalProperties": false,
-  "required": []
+  "required": ["host","port"]
 }
