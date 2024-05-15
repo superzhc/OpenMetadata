@@ -1,0 +1,14 @@
+{
+  "name": "Redis",
+  "displayName": "Redis Test Connection",
+  "description": "This Test Connection validates the access against the server.",
+  "steps": [
+    {
+      "name": "CheckAccess",
+      "description": "Validate that we can connect redis and authenticate with the given credentials.",
+      "errorMessage": "Failed to connect to redis, please validate the credentials",
+      "shortCircuit": true,
+      "mandatory": true
+    }
+  ]
+}
