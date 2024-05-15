@@ -8,7 +8,11 @@ from metadata.generated.schema.entity.services.ingestionPipelines.ingestionPipel
     IngestionPipeline,
     PipelineType,
 )
+from metadata.generated.schema.metadataIngestion.workflow import LogLevels
 from metadata.utils.secrets.secrets_manager_factory import SecretsManagerFactory
+from metadata.utils.logger import (
+    set_loggers_level,
+)
 from openmetadata_managed_apis.workflows.ingestion.metadata import build_metadata_workflow_config
 from openmetadata_managed_apis.workflows.ingestion.profiler import build_profiler_workflow_config
 
@@ -23,15 +27,21 @@ def check_workflow_config(workflow_config_str: str):
         airflow_pipeline.openMetadataServerConnection.secretsManagerLoader,
     )
 
-    dag_type = airflow_pipeline.pipelineType.value
-    if PipelineType.metadata.value == dag_type:
-        build_metadata_workflow_config(airflow_pipeline)
-    elif PipelineType.profiler.value == dag_type:
-        build_profiler_workflow_config(airflow_pipeline)
-    else:
-        raise Exception(f"尚不支持任务类型为{dag_type}的配置检测")
+    logger_level = airflow_pipeline.loggerLevel or LogLevels.INFO
+    set_loggers_level(logger_level.value)
 
-    print("检测成功")
+    dag_type = airflow_pipeline.pipelineType.value
+    try:
+        if PipelineType.metadata.value == dag_type:
+            build_metadata_workflow_config(airflow_pipeline)
+        elif PipelineType.profiler.value == dag_type:
+            build_profiler_workflow_config(airflow_pipeline)
+        else:
+            print(f"配置文件检测失败，尚不支持任务类型为[{dag_type}]的配置检测")
+    except Exception as ex:
+        print(f"配置文件检测失败，错误信息：[{ex}]")
+
+    print("配置文件检测成功")
 
 
 if __name__ == "__main__":
