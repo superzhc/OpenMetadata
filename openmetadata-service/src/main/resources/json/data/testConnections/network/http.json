@@ -1,0 +1,14 @@
+{
+  "name": "Http",
+  "displayName": "Http Test Connection",
+  "description": "This Test Connection validates the access against the server.",
+  "steps": [
+    {
+      "name": "CheckAccess",
+      "description": "Validate that we can visit http url and authenticate with the given credentials.",
+      "errorMessage": "Failed to connect to http, please validate the credentials",
+      "shortCircuit": true,
+      "mandatory": true
+    }
+  ]
+}
