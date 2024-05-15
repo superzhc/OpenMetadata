@@ -211,9 +211,9 @@ class REST:
         try:
             logger.debug("[%s] [%s] %s", threading.current_thread(), method, url)
             logger.debug("[%s] [Headers] %s", threading.current_thread(), opts["headers"])
-            if "params" in opts:
+            if "params" in opts and opts["params"]:
                 logger.debug("[%s] [Params] %s",threading.current_thread(), opts["params"])
-            if "data" in opts:
+            if "data" in opts and opts["data"]:
                 logger.debug("[%s] [Body] %s",threading.current_thread(), opts["data"])
 
             resp = self._session.request(method, url, **opts)

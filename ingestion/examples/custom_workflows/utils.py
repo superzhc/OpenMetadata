@@ -46,15 +46,6 @@ from openmetadata_managed_apis.workflows.ingestion.usage import (
 from openmetadata_managed_apis.workflows.ingestion.lineage import (
     build_lineage_workflow_config,
 )
-from metadata.generated.schema.entity.automations.workflow import (
-    Workflow as AutomationWorkflow,
-    WorkflowType,
-)
-from metadata.generated.schema.entity.automations import testServiceConnection
-from metadata.automations.runner import (
-    execute,
-    run_workflow,
-)
 from metadata.utils.secrets.secrets_manager_factory import SecretsManagerFactory
 
 TOKEN = "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6IkFsbEF1dGgiLCJlbWFpbCI6IkFsbEF1dGhAeGdpdC5jb20iLCJpc0JvdCI6dHJ1ZSwidG9rZW5UeXBlIjoiQk9UIiwiaWF0IjoxNzA4NDk2MTExLCJleHAiOm51bGx9.GRsZtM6i-ty1w71wg6HOxFmYQHDFXDH278x-G861jmaxuDLSCiIjRE0UiVlbNlsKQXoDbQIAT20eehfjgJ2Bp2HwUYBF8obunkTAkPv6WACJ741y5PQ-a59AWBYQlNhYviKxlUtneqDbQs88wN0iJL8FR_pdaMhYzLraSZs1FdA6mC_bLjfLyU6aSHrnmh7C6vEYBZS4NKDXmAp9iqp_upm_p0bmk7KUbY540TbA7ilcAAvYoZtxfYp86irtTOEq-yVni2J37XMLyVqNy3cVFT9ZcNS5sPDsTFB011fqKW-aaSFM45nXGt5A0eYEHaBrKLM_kUrdt-WRL2gjIXDpKg"
@@ -110,99 +101,6 @@ def build_openmetadataConnection(host_port: str,
 
     return openMetadataServerConnection
 
-
-def standard_openmetadata_connection(
-        openmetadata_server_connection: Union[dict, openMetadataConnection.OpenMetadataConnection]):
-    return openmetadata_server_connection if isinstance(openmetadata_server_connection,
-                                                        openMetadataConnection.OpenMetadataConnection) else openMetadataConnection.OpenMetadataConnection(
-        **openmetadata_server_connection)
-
-
-def build_request(openmetadata_server_connection: Union[dict, openMetadataConnection.OpenMetadataConnection],
-                  service_type: ServiceType,
-                  service_name: str
-                  ):
-    metadata = OpenMetadata(standard_openmetadata_connection(openmetadata_server_connection))
-
-    service = metadata.get_by_name(
-        entity=SERVICE_TYPE_CLASS_MAP.get(service_type),
-        fqn=service_name,
-        fields="*",
-        nullable=False,
-    )
-
-    request = {
-        "connection": service.connection,
-        "connectionType": service.serviceType.value,
-        # "secretsManagerProvider": "noop",
-        "serviceName": service.name,
-        "serviceType": service_type.value,
-    }
-
-    return request
-
-
-def build_automation_workflow(openmetadata_server_connection: dict,
-                              service_type: ServiceType,
-                              service_name: str,
-                              ):
-    automation_workflow = AutomationWorkflow(
-        id=uuid.uuid1(),
-        name="test-connection-{}-{}".format(service_type.value, time.time()),
-        workflowType=WorkflowType.TEST_CONNECTION,
-        request=build_request(openmetadata_server_connection, service_type, service_name),
-        openMetadataServerConnection=openmetadata_server_connection,
-    )
-    return automation_workflow
-
-
-def run_test_connection_by_config(automation_workflow: AutomationWorkflow):
-    """
-    注意此种方式调用，需要元数据系统先配置测试连接的配置
-    :param automation_workflow:
-    :return:
-    """
-    # we need to instantiate the secret manager in case secrets are passed
-    SecretsManagerFactory(
-        automation_workflow.openMetadataServerConnection.secretsManagerProvider,
-        automation_workflow.openMetadataServerConnection.secretsManagerLoader,
-    )
-
-    execute(automation_workflow)
-
-
-def run_test_connection(openmetadata_server_connection: Union[dict, openMetadataConnection.OpenMetadataConnection],
-                        service_type: ServiceType,
-                        service_name: str,
-                        ):
-    openMetadataServerConnection: openMetadataConnection.OpenMetadataConnection = openmetadata_server_connection if isinstance(
-        openmetadata_server_connection,
-        openMetadataConnection.OpenMetadataConnection) else openMetadataConnection.OpenMetadataConnection(
-        **openmetadata_server_connection)
-
-    # we need to instantiate the secret manager in case secrets are passed
-    SecretsManagerFactory(
-        openMetadataServerConnection.secretsManagerProvider,
-        openMetadataServerConnection.secretsManagerLoader,
-    )
-
-    metadata = OpenMetadata(openMetadataServerConnection)
-
-    service = metadata.get_by_name(
-        entity=SERVICE_TYPE_CLASS_MAP.get(service_type),
-        fqn=service_name,
-        fields="*",
-        nullable=False,
-    )
-
-    request = testServiceConnection.TestServiceConnectionRequest(**{
-        "connection": service.connection,
-        "connectionType": service.serviceType.value,
-        "serviceName": service.name,
-        "serviceType": service_type.value,
-    })
-
-    run_workflow(request, None, metadata)
 
 
 def get_service_by_metadata(metadata: OpenMetadata,
@@ -326,7 +224,7 @@ def run_by_custom(openmetadataServerConnection: openMetadataConnection.OpenMetad
             "id": service.id,
             "fullyQualifiedName": service.fullyQualifiedName.__root__,
             "name": service.name.__root__,
-            #"type": SERVICE_TYPE_CLASS_MAP.get(service_type).__name__, #Bug:首字母要小写
+            # "type": SERVICE_TYPE_CLASS_MAP.get(service_type).__name__, #Bug:首字母要小写
             "type": "{}Service".format(service_type.value.lower()),
             "deleted": service.deleted,
         },
