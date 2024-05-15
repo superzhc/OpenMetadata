@@ -66,6 +66,8 @@ public final class JsonUtils {
   public static final String ENTITY_TYPE_ANNOTATION = "@om-entity-type";
   public static final String JSON_FILE_EXTENSION = ".json";
   private static final ObjectMapper OBJECT_MAPPER;
+  // 2024年5月11日 非严格映射转换
+  private static final ObjectMapper NON_STRICT_OBJECT_MAPPER;
   private static final ObjectMapper EXPOSED_OBJECT_MAPPER;
   private static final ObjectMapper MASKER_OBJECT_MAPPER;
   private static final JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(VersionFlag.V7);
@@ -77,8 +79,12 @@ public final class JsonUtils {
     OBJECT_MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     OBJECT_MAPPER.setDateFormat(DATE_TIME_FORMAT);
     OBJECT_MAPPER.registerModule(new JSR353Module());
+  }
+
+  static {
+    NON_STRICT_OBJECT_MAPPER = OBJECT_MAPPER.copy();
     // 2024年3月20日 反序列化时忽略多余字段
-    OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    NON_STRICT_OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   static {
@@ -181,6 +187,69 @@ public final class JsonUtils {
 
   public static <T> T convertValue(Object object, TypeReference<T> toValueTypeRef) {
     return object == null ? null : OBJECT_MAPPER.convertValue(object, toValueTypeRef);
+  }
+
+  public static <T> T readValueWithoutStrict(String json, String clazzName) {
+    try {
+      return (T) readValueWithoutStrict(json, Class.forName(clazzName));
+    } catch (ClassNotFoundException e) {
+      throw new UnhandledServerException(FAILED_TO_PROCESS_JSON, e);
+    }
+  }
+
+  public static <T> T readValueWithoutStrict(String json, Class<T> clz) {
+    if (json == null) {
+      return null;
+    }
+    try {
+      return NON_STRICT_OBJECT_MAPPER.readValue(json, clz);
+    } catch (JsonProcessingException e) {
+      throw new UnhandledServerException(FAILED_TO_PROCESS_JSON, e);
+    }
+  }
+
+  public static <T> T readValueWithoutStrict(String json, TypeReference<T> valueTypeRef) {
+    if (json == null) {
+      return null;
+    }
+    try {
+      return NON_STRICT_OBJECT_MAPPER.readValue(json, valueTypeRef);
+    } catch (JsonProcessingException e) {
+      throw new UnhandledServerException(FAILED_TO_PROCESS_JSON, e);
+    }
+  }
+
+  /** Read an array of objects of type {@code T} from json */
+  public static <T> List<T> readObjectsWithoutStrict(String json, Class<T> clz) {
+    if (json == null) {
+      return Collections.emptyList();
+    }
+    TypeFactory typeFactory = NON_STRICT_OBJECT_MAPPER.getTypeFactory();
+    try {
+      return NON_STRICT_OBJECT_MAPPER.readValue(json, typeFactory.constructCollectionType(List.class, clz));
+    } catch (JsonProcessingException e) {
+      throw new UnhandledServerException(FAILED_TO_PROCESS_JSON, e);
+    }
+  }
+
+  /** Read an object of type {@code T} from json */
+  public static <T> List<T> readObjectsWithoutStrict(List<String> jsons, Class<T> clz) {
+    if (jsons == null) {
+      return Collections.emptyList();
+    }
+    List<T> list = new ArrayList<>();
+    for (String json : jsons) {
+      list.add(readValueWithoutStrict(json, clz));
+    }
+    return list;
+  }
+
+  public static <T> T convertValueWithoutStrict(Object object, Class<T> clz) {
+    return object == null ? null : NON_STRICT_OBJECT_MAPPER.convertValue(object, clz);
+  }
+
+  public static <T> T convertValueWithoutStrict(Object object, TypeReference<T> toValueTypeRef) {
+    return object == null ? null : NON_STRICT_OBJECT_MAPPER.convertValue(object, toValueTypeRef);
   }
 
   /** Applies the patch on original object and returns the updated object */

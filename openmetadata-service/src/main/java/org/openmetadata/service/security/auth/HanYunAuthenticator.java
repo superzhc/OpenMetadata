@@ -2,6 +2,7 @@ package org.openmetadata.service.security.auth;
 
 import static org.openmetadata.service.resources.teams.UserResource.USER_PROTECTED_FIELDS;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.time.temporal.ChronoField;
@@ -10,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.json.JsonObject;
-import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.openmetadata.schema.api.security.AuthenticationConfiguration;
 import org.openmetadata.schema.auth.BasicAuthMechanism;
@@ -21,7 +21,6 @@ import org.openmetadata.schema.entity.teams.User;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.OpenMetadataApplicationConfig;
 import org.openmetadata.service.auth.JwtResponse;
-import org.openmetadata.service.exception.CustomExceptionMessage;
 import org.openmetadata.service.jdbi3.TokenRepository;
 import org.openmetadata.service.jdbi3.UserRepository;
 import org.openmetadata.service.util.*;
@@ -88,26 +87,38 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
     String userName = userInfoJson.getString("loginName");
 
     // 自登录
-    User user = lookUserInProvider(userName);
-    if (null == user) {
-      // throw new CustomExceptionMessage(Response.Status.BAD_REQUEST, "元数据系统不存在当前用户，请联系管理员");
+    User user;
+    String email = userName + "@xgit.com";
+    boolean exist = userRepository.checkEmailAlreadyExists(email);
+    if (!exist) {
       // 2024年5月6日 汉云单点登陆，用户不存在的情况下自动同步该用户到元数据系统中
-      User newUser=new User()
-          .withId(UUID.randomUUID())
-          .withName(userName)
-          .withFullyQualifiedName(userName)
-          .withEmail(userName + "@xgit.com")
-          .withIsBot(false)
-          .withIsAdmin(false)
-          .withIsEmailVerified(true)
-          .withUpdatedBy(userName)
-          .withUpdatedAt(System.currentTimeMillis())
-          .withAuthenticationMechanism(
-              new AuthenticationMechanism()
-                  .withAuthType(AuthenticationMechanism.AuthType.BASIC)
-                  .withConfig(new BasicAuthMechanism().withPassword(PasswordUtil.generateRandomPassword())));
-      user=userRepository.createInternal(newUser);
+      User newUser =
+          new User()
+              .withId(UUID.randomUUID())
+              .withName(userName)
+              .withFullyQualifiedName(userName)
+              .withEmail(email)
+              .withIsBot(false)
+              .withIsAdmin(false)
+              .withIsEmailVerified(true)
+              .withUpdatedBy(userName)
+              .withUpdatedAt(System.currentTimeMillis())
+          //                  .withTeams(EntityUtil.toEntityReferences(create.getTeams(), Entity.TEAM))
+          //                  .withRoles(EntityUtil.toEntityReferences(create.getRoles(), Entity.ROLE))
+          ;
+
+      String genPWD = PasswordUtil.generateRandomPassword();
+      LOG.info("用户：{}，密码：{}", userName, genPWD);
+      String newHashedPwd = BCrypt.withDefaults().hashToString(12, genPWD.toCharArray());
+      newUser.withAuthenticationMechanism(
+          new AuthenticationMechanism()
+              .withAuthType(AuthenticationMechanism.AuthType.BASIC)
+              .withConfig(new BasicAuthMechanism().withPassword(newHashedPwd)));
+      user = userRepository.createInternal(newUser);
+    } else {
+      user = lookUserInProvider(userName);
     }
+
     // 将jwt的失效设置为最大，即可认为无失效期限
     JwtResponse response = getJwtResponse(user, ChronoField.EPOCH_DAY.range().getMaximum());
 
@@ -132,6 +143,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
 
   @Override
   public User lookUserInProvider(String userName) {
+
     return userRepository.getByName(
         null, userName, new EntityUtil.Fields(Set.of(USER_PROTECTED_FIELDS), USER_PROTECTED_FIELDS));
   }

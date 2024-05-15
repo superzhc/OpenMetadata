@@ -63,6 +63,13 @@
       <artifactId>openmetadata-spec</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--2024年4月24日 本地调试使用，后期删除-->
+    <dependency>
+      <groupId>org.open-metadata</groupId>
+      <artifactId>openmetadata-ui</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-assets</artifactId>

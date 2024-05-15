@@ -110,6 +110,9 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
   public void storeEntity(IngestionPipeline ingestionPipeline, boolean update) {
     // Relationships and fields such as service are derived and not stored as part of json
     EntityReference service = ingestionPipeline.getService();
+    if ("networkService".equals(service.getType())) {
+      throw new RuntimeException("尚不支持提取");
+    }
     OpenMetadataConnection openmetadataConnection = ingestionPipeline.getOpenMetadataServerConnection();
 
     SecretsManager secretsManager = SecretsManagerFactory.getSecretsManager();
