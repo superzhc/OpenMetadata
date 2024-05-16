@@ -26,6 +26,12 @@ public class SearchTest extends OpenMetadataTest {
     return new DevServerConfig();
   }
 
+  public void testDoc(){
+    /*
+    * 测试部分
+    * */
+  }
+
   /** 使用该接口报错，官网issue：https://github.com/open-metadata/OpenMetadata/issues/11990 */
   @Test
   public void testQuery() {
