@@ -29,8 +29,7 @@ public class SearchTest extends OpenMetadataTest {
   /** 使用该接口报错，官网issue：https://github.com/open-metadata/OpenMetadata/issues/11990 */
   @Test
   public void testQuery() {
-    SearchApi.SearchEntitiesWithQueryQueryParams params =
-        new SearchApi.SearchEntitiesWithQueryQueryParams();
+    SearchApi.SearchEntitiesWithQueryQueryParams params = new SearchApi.SearchEntitiesWithQueryQueryParams();
 
     SearchResponse response =
         api.searchEntitiesWithQuery(
