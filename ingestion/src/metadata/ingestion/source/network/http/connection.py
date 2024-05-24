@@ -15,8 +15,10 @@ from metadata.generated.schema.entity.automations.workflow import (
 from metadata.generated.schema.entity.services.connections.network.httpConnection import (
     HttpConnection,
     AuthType,
-    BasicAuth,
-    BearerToken,
+)
+from metadata.generated.schema.entity.services.connections.network.http import (
+    basicAuth,
+    bearerToken,
 )
 from metadata.ingestion.connections.test_connections import test_connection_steps
 from metadata.ingestion.ometa.ometa_api import OpenMetadata
@@ -56,11 +58,11 @@ def test_connection(
     auth = None
     if service_connection.authorization:
         if AuthType.BasicAuth == service_connection.authorization.type:
-            auth_config: BasicAuth = cast(BasicAuth, service_connection.authorization.config)
+            auth_config: basicAuth.BasicAuth = cast(basicAuth.BasicAuth, service_connection.authorization.config)
             auth = HTTPBasicAuth(auth_config.username, auth_config.password.get_secret_value())
         elif AuthType.BearerToken == service_connection.authorization.type:
-            auth_config: BearerToken = cast(BearerToken, service_connection.authorization.config)
-            auth = BearerTokenAuth(auth_config.token.get_secret_value())
+            auth_config: bearerToken.BearerToken = cast(bearerToken.BearerToken, service_connection.authorization.config)
+            auth = BearerTokenAuth(auth_config.token)
 
     def custom_executor():
         resp = client.request(service_connection.method.value.lower(), url,
