@@ -52,8 +52,8 @@ public final class CommonUtil {
 
   private CommonUtil() {}
 
-  public static boolean isJar(Class<?> clazz){
-    String protocol=clazz.getResource("").getProtocol();
+  public static boolean isJar(Class<?> clazz) {
+    String protocol = clazz.getResource("").getProtocol();
     return "jar".equals(protocol);
   }
 
