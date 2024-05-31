@@ -268,6 +268,10 @@ public class UserRepository extends EntityRepository<User> {
     return daoCollection.userDAO().checkEmailExists(emailId) > 0;
   }
 
+  public boolean checkNameAlreadyExists(String name) {
+    return daoCollection.userDAO().checkNameExists(name) > 0;
+  }
+
   public void initializeUsers(OpenMetadataApplicationConfig config) {
     AuthProvider authProvider = config.getAuthenticationConfiguration().getProvider();
     // Create Admins

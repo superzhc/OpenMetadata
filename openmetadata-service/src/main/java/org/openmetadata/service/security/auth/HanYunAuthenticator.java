@@ -91,10 +91,11 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
 
     // 自登录
     User user;
-    String email = userName + SecurityUtil.getDomain(config);
-    boolean exist = userRepository.checkEmailAlreadyExists(email);
+    boolean exist = userRepository.checkNameAlreadyExists(userName);
     if (!exist) {
       // 2024年5月6日 汉云单点登陆，用户不存在的情况下自动同步该用户到元数据系统中
+      String email = userName + "@" + SecurityUtil.getDomain(config);
+
       User newUser =
           new User()
               .withId(UUID.randomUUID())
