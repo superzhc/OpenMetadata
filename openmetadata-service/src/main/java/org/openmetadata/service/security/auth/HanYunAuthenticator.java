@@ -23,12 +23,14 @@ import org.openmetadata.service.OpenMetadataApplicationConfig;
 import org.openmetadata.service.auth.JwtResponse;
 import org.openmetadata.service.jdbi3.TokenRepository;
 import org.openmetadata.service.jdbi3.UserRepository;
+import org.openmetadata.service.security.SecurityUtil;
 import org.openmetadata.service.util.*;
 
 @Slf4j
 public class HanYunAuthenticator implements AuthenticatorHandler {
   private UserRepository userRepository;
   private TokenRepository tokenRepository;
+  private OpenMetadataApplicationConfig config;
   private AuthenticationConfiguration authenticationConfiguration;
 
   private static final HanYunAuthenticator INSTANCE = new HanYunAuthenticator();
@@ -41,6 +43,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
   public void init(OpenMetadataApplicationConfig config) {
     this.userRepository = (UserRepository) Entity.getEntityRepository(Entity.USER);
     this.tokenRepository = Entity.getTokenRepository();
+    this.config = config;
     this.authenticationConfiguration = config.getAuthenticationConfiguration();
   }
 
@@ -88,7 +91,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
 
     // 自登录
     User user;
-    String email = userName + "@xgit.com";
+    String email = userName + SecurityUtil.getDomain(config);
     boolean exist = userRepository.checkEmailAlreadyExists(email);
     if (!exist) {
       // 2024年5月6日 汉云单点登陆，用户不存在的情况下自动同步该用户到元数据系统中
