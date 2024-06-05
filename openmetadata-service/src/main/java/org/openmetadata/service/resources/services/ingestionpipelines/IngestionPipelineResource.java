@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -121,6 +122,47 @@ public class IngestionPipelineResource extends EntityResource<IngestionPipeline,
 
   public static class IngestionPipelineList extends ResultList<IngestionPipeline> {
     /* Required for serde */
+  }
+
+  @GET
+  @Path("/check")
+  @Operation(
+      operationId = "isExistIngestionPipeline",
+      summary = "Is exist ingestion pipeline",
+      description = "Is exist ingestion pipeline",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "exist is true, otherwise false",
+            content = @Content(mediaType = "application/json"))
+      })
+  public Response isExistIngestionPipeline(
+      @Context UriInfo uriInfo,
+      @Context SecurityContext securityContext,
+      @Parameter(
+              description = "Filter Ingestion Pipelines by service fully qualified name",
+              schema = @Schema(type = "string", example = "snowflakeWestCoast"))
+          @NonNull
+          @QueryParam("service")
+          String serviceParam,
+      @Parameter(
+              description = "Filter Ingestion Pipelines by pipeline Type",
+              schema = @Schema(type = "string", example = "elasticSearchReindex"))
+          @QueryParam("pipelineType")
+          @DefaultValue("metadata")
+          String pipelineType,
+      @Parameter(
+              description = "Include all, deleted, or non-deleted entities.",
+              schema = @Schema(implementation = Include.class))
+          @QueryParam("include")
+          @DefaultValue("non-deleted")
+          Include include) {
+    ListFilter filter =
+        new ListFilter(include).addQueryParam("service", serviceParam).addQueryParam("pipelineType", pipelineType);
+    return Response.ok(
+            Collections.singletonMap("exist", repository.isExistIngetsionPipeline(filter)),
+            MediaType.APPLICATION_JSON_TYPE)
+        .build();
   }
 
   @GET

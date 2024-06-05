@@ -1772,6 +1772,22 @@ public interface CollectionDAO {
 
     @SqlQuery("SELECT count(*) FROM ingestion_pipeline_entity <cond> ")
     int listIngestionPipelineCount(@Define("cond") String cond, @BindMap Map<String, Object> bindings);
+
+    default int isExistIngestionPipelineByServiceAndPipelineType(ListFilter filter) {
+      String condition = "WHERE 1=1";
+
+      if (filter.getQueryParam("pipelineType") != null) {
+        String pipelineTypeCondition = String.format(" and %s", filter.getPipelineTypeCondition(null));
+        condition += pipelineTypeCondition;
+      }
+
+      if (filter.getQueryParam("service") != null) {
+        String serviceCondition = String.format(" and %s", filter.getServiceCondition(null));
+        condition += serviceCondition;
+      }
+
+      return listIngestionPipelineCount(condition, new HashMap<>());
+    }
   }
 
   interface PipelineServiceDAO extends EntityDAO<PipelineService> {

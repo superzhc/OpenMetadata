@@ -106,6 +106,10 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
     return ingestionPipeline;
   }
 
+  public boolean isExistIngetsionPipeline(ListFilter filter) {
+    return daoCollection.ingestionPipelineDAO().isExistIngestionPipelineByServiceAndPipelineType(filter) > 0;
+  }
+
   @Override
   public void storeEntity(IngestionPipeline ingestionPipeline, boolean update) {
     // Relationships and fields such as service are derived and not stored as part of json
