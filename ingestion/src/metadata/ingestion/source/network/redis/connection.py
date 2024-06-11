@@ -20,6 +20,8 @@ def get_connection(
         host=connection.host,
         port=connection.port,
         db=connection.db,
+        username=connection.username,
+        password=connection.password.get_secret_value(),
     )
     return pool
 
