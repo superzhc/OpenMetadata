@@ -75,6 +75,9 @@ from metadata.generated.schema.api.services.createStorageService import (
 from metadata.generated.schema.api.services.ingestionPipelines.createIngestionPipeline import (
     CreateIngestionPipelineRequest,
 )
+from metadata.generated.schema.api.services.createNetworkService import (
+    CreateNetworkServiceRequest,
+)
 from metadata.generated.schema.api.teams.createRole import CreateRoleRequest
 from metadata.generated.schema.api.teams.createTeam import CreateTeamRequest
 from metadata.generated.schema.api.teams.createUser import CreateUserRequest
@@ -122,6 +125,7 @@ from metadata.generated.schema.entity.services.mlmodelService import MlModelServ
 from metadata.generated.schema.entity.services.pipelineService import PipelineService
 from metadata.generated.schema.entity.services.searchService import SearchService
 from metadata.generated.schema.entity.services.storageService import StorageService
+from metadata.generated.schema.entity.services.networkService import NetworkService
 from metadata.generated.schema.entity.teams.role import Role
 from metadata.generated.schema.entity.teams.team import Team
 from metadata.generated.schema.entity.teams.user import AuthenticationMechanism, User
@@ -203,6 +207,9 @@ ROUTES = {
     IngestionPipeline.__name__: "/services/ingestionPipelines",
     CreateIngestionPipelineRequest.__name__: "/services/ingestionPipelines",
     TestConnectionDefinition.__name__: "/services/testConnectionDefinitions",
+    # 2024年6月11日 新增数据连接接口支持
+    CreateNetworkServiceRequest.__name__: "/services/networkServices",
+    NetworkService.__name__: "/services/networkServices",
     # Data Quality
     TestDefinition.__name__: "/dataQuality/testDefinitions",
     CreateTestDefinitionRequest.__name__: "/dataQuality/testDefinitions",

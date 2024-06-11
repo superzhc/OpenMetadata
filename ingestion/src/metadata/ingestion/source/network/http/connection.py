@@ -61,14 +61,15 @@ def test_connection(
             auth_config: basicAuth.BasicAuth = cast(basicAuth.BasicAuth, service_connection.authorization.config)
             auth = HTTPBasicAuth(auth_config.username, auth_config.password.get_secret_value())
         elif AuthType.BearerToken == service_connection.authorization.type:
-            auth_config: bearerToken.BearerToken = cast(bearerToken.BearerToken, service_connection.authorization.config)
+            auth_config: bearerToken.BearerToken = cast(bearerToken.BearerToken,
+                                                        service_connection.authorization.config)
             auth = BearerTokenAuth(auth_config.token)
 
     def custom_executor():
         resp = client.request(service_connection.method.value.lower(), url,
                               headers=service_connection.headers,
                               params=service_connection.query,
-                              data=json.loads(service_connection.body) if service_connection.body else None,
+                              data=service_connection.body.encode("utf-8") if service_connection.body else None,
                               auth=auth,
                               )
         resp.raise_for_status()

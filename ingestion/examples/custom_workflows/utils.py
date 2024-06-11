@@ -25,6 +25,7 @@ from metadata.generated.schema.entity.services.mlmodelService import MlModelServ
 from metadata.generated.schema.entity.services.pipelineService import PipelineService
 from metadata.generated.schema.entity.services.searchService import SearchService
 from metadata.generated.schema.entity.services.storageService import StorageService
+from metadata.generated.schema.entity.services.networkService import NetworkService
 from openmetadata_managed_apis.workflows.ingestion.common import (
     metadata_ingestion_workflow,
 )
@@ -55,6 +56,7 @@ SERVICE_TYPE_CLASS_MAP = {
     ServiceType.Database: DatabaseService,
     ServiceType.Messaging: MessagingService,
     ServiceType.Metadata: MetadataService,
+    ServiceType.Network: NetworkService,
 }
 
 
