@@ -20,6 +20,7 @@ def get_connection(
         host=connection.host,
         port=connection.port,
         db=connection.db,
+        protocol=connection.protocol.value if connection.protocol else 2,
         username=connection.username,
         password=connection.password.get_secret_value(),
     )

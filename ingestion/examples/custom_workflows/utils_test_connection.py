@@ -5,6 +5,7 @@
 import json
 import logging
 import uuid
+from typing import Union
 from functools import singledispatch
 
 from utils import (
@@ -29,7 +30,6 @@ from metadata.utils.secrets.secrets_manager_factory import SecretsManagerFactory
 from metadata.generated.schema.entity.automations.testServiceConnection import (
     TestServiceConnectionRequest,
 )
-from metadata.ingestion.source.connections import get_connection, get_test_connection_fn
 
 
 @singledispatch
@@ -60,7 +60,7 @@ def _(metadata: OpenMetadata, automation_workflow_name: str):
 
 
 @run_test_connection.register
-def _(automation_workflow: AutomationWorkflow, generated: bool = False):
+def _(automation_workflow: AutomationWorkflow, metadata=None, generated: bool = False):
     """
     注意此种方式调用，需要元数据系统先配置测试连接的配置
     :param automation_workflow:
@@ -72,11 +72,40 @@ def _(automation_workflow: AutomationWorkflow, generated: bool = False):
         automation_workflow.openMetadataServerConnection.secretsManagerLoader,
     )
 
-    metadata = OpenMetadata(
-        config=automation_workflow.openMetadataServerConnection
-    )
+    if not metadata:
+        metadata = OpenMetadata(
+            config=automation_workflow.openMetadataServerConnection
+        )
 
     run_workflow(automation_workflow.request, automation_workflow if not generated else None, metadata)
+
+
+@run_test_connection.register
+def _(metadata: OpenMetadata, request: TestServiceConnectionRequest):
+    run_workflow(request, None, metadata)
+
+
+@run_test_connection.register
+def _(openmetadata_connection: openMetadataConnection.OpenMetadataConnection,
+      service_type: Union[ServiceType, str],
+      service_name: str):
+    metadata = OpenMetadata(
+        config=openmetadata_connection
+    )
+
+    service_type_enum = service_type if isinstance(service_type, ServiceType) else ServiceType(service_type)
+
+    service = get_service_by_metadata(metadata, service_type_enum, service_name)
+    service_connection_type = service.connection.config.type.value
+
+    request: TestServiceConnectionRequest = TestServiceConnectionRequest(
+        connection=service.connection,
+        serviceType=service_type_enum,
+        serviceName=service_name,
+        connectionType=service_connection_type,
+    )
+
+    run_test_connection(metadata, request)
 
 
 def build_automation_workflow(openmetadata_connection: openMetadataConnection.OpenMetadataConnection,
@@ -95,12 +124,12 @@ def build_automation_workflow(openmetadata_connection: openMetadataConnection.Op
         name=f"test_connection_{service_connection_type}_{service_name}",
         workflowType=WorkflowType.TEST_CONNECTION.value,
         openMetadataServerConnection=openmetadata_connection,
-        request={
-            "connection": service.connection,
-            "serviceType": service_type,
-            "serviceName": service_name,
-            "connectionType": service_connection_type,
-        }
+        request=TestServiceConnectionRequest(
+            connection=service.connection,
+            serviceType=service_type,
+            serviceName=service_name,
+            connectionType=service_connection_type,
+        ),
     )
 
     return automation_workflow
