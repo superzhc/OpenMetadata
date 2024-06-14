@@ -356,5 +356,32 @@ setup(
                 ]
             )
         ),
+        "xgit": list(
+            base_requirements.union(
+                *[
+                    requirements
+                    for plugin, requirements in plugins.items()
+                    if plugin in {
+                        "pii-processor",
+                        # database
+                        "clickhouse",
+                        "dbt",
+                        "doris",
+                        "mongo",
+                        "mssql",
+                        "mssql-odbc",
+                        "oracle",
+                        "postgres",
+                        "pymssql",
+                        # messaging
+                        "kafka",
+                        # network
+                        "redis",
+                        "http",
+                        "mqtt"
+                    }
+                ]
+            )
+        ),
     },
 )
