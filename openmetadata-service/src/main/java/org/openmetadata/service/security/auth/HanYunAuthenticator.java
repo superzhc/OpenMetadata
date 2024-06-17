@@ -28,10 +28,16 @@ import org.openmetadata.service.util.*;
 
 @Slf4j
 public class HanYunAuthenticator implements AuthenticatorHandler {
+  private static final String PLATFORM_OAUTH_TOKEN_PATH = "/hanyun/sys/sso/oauth/token";
+  private static final String PLATFORM_OAUTH_USERINFO_PATH = "/hanyun/sys/sso/oauth/user-info";
+  private static final String PLATFORM_ACCESS_TOKEN = "access_token";
+  private static final String PLATFORM_USER = "loginName";
+
   private UserRepository userRepository;
   private TokenRepository tokenRepository;
   private OpenMetadataApplicationConfig config;
   private AuthenticationConfiguration authenticationConfiguration;
+  private String platform_url;
 
   private static final HanYunAuthenticator INSTANCE = new HanYunAuthenticator();
 
@@ -45,6 +51,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
     this.tokenRepository = Entity.getTokenRepository();
     this.config = config;
     this.authenticationConfiguration = config.getAuthenticationConfiguration();
+    this.platform_url = authenticationConfiguration.getAuthority();
   }
 
   @Override
@@ -67,27 +74,22 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
     tokenParams.put("client_secret", authenticationConfiguration.getClientSecret());
     tokenParams.put("grant_type", authenticationConfiguration.getGrantType());
     tokenParams.put("code", code);
-    String tokenUrl =
-        HttpClientUtils.appendParams(
-            authenticationConfiguration.getAuthority() + "/hanyun/sys/sso/oauth/token", tokenParams);
+    String tokenUrl = HttpClientUtils.appendParams(platform_url + PLATFORM_OAUTH_TOKEN_PATH, tokenParams);
     String tokenResult = HttpClientUtils.doPost(tokenUrl);
-    LOG.info("code解析token result: " + tokenResult);
     JsonObject tokenResultJson = JsonUtils.readJson(tokenResult).asJsonObject();
 
-    String accessToken = tokenResultJson.getString("access_token");
-    LOG.info("token result 解析accessToken : " + accessToken);
+    if (!tokenResultJson.containsKey(PLATFORM_ACCESS_TOKEN)) {
+      throw new RuntimeException(String.format("通过授权码 [%s] 的验证信息：%s", code, tokenResultJson));
+    }
 
     Map<String, String> userInfoParams = new HashMap<>();
-    userInfoParams.put("access_token", accessToken);
+    userInfoParams.put("access_token", tokenResultJson.getString(PLATFORM_ACCESS_TOKEN));
     userInfoParams.put("client_id", authenticationConfiguration.getClientId());
-    String userInfoResult =
-        HttpClientUtils.doGet(
-            authenticationConfiguration.getAuthority() + "/hanyun/sys/sso/oauth/user-info", userInfoParams);
-    LOG.info("accessToken 解析 userInfoResult : " + userInfoResult);
-
+    String userInfoResult = HttpClientUtils.doGet(platform_url + PLATFORM_OAUTH_USERINFO_PATH, userInfoParams);
+    LOG.info("汉云平台单点登录用户信息：" + userInfoResult);
     JsonObject userInfoJson = JsonUtils.readJson(userInfoResult).asJsonObject();
 
-    String userName = userInfoJson.getString("loginName");
+    String userName = userInfoJson.getString(PLATFORM_USER);
 
     // 自登录
     User user;

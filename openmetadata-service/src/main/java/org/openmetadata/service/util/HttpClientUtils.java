@@ -6,6 +6,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpConnection;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -16,7 +19,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Slf4j
 public final class HttpClientUtils {
   // 编码格式。发送编码格式统一用UTF-8
   private static final String ENCODING = "UTF-8";
@@ -215,6 +221,8 @@ public final class HttpClientUtils {
   public static String body(HttpRequestBase httpMethod) {
     // 创建 HttpClient 对象
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+      LOG.debug("[{}]-{}", httpClient.hashCode(), httpMethod.toString());
+
       /**
        * setConnectTimeout：设置连接超时时间，单位毫秒。 setConnectionRequestTimeout：设置从connect
        * Manager(连接池)获取Connection超时时间，单位毫秒。这个属性是新加的属性，因为目前版本是可以共享连接池的。 setSocketTimeout：请求获取数据的超时时间(即响应时间)，单位毫秒。
@@ -227,6 +235,7 @@ public final class HttpClientUtils {
       // 创建 httpResponse 对象
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpMethod)) {
         // 获取返回结果
+        LOG.debug("[{}]-{}", httpClient.hashCode(), httpResponse.toString());
         if (httpResponse != null && httpResponse.getStatusLine() != null) {
           if (httpResponse.getEntity() != null) {
             return EntityUtils.toString(httpResponse.getEntity(), ENCODING);
