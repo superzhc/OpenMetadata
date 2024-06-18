@@ -59,8 +59,11 @@ class UniqueCount(QueryMetric):
         unique_count_query = _unique_count_query_mapper[session.bind.dialect.name](
             col, session, sample
         )
-        only_once_cte = unique_count_query.cte("only_once")
-        return session.query(func.count().label(self.name())).select_from(only_once_cte)
+
+        # 2024年6月12日 有必要还要定义为 CTE，直接使用
+        # only_once_cte = unique_count_query.cte("only_once")
+        # return session.query(func.count().label(self.name())).select_from(only_once_cte)
+        return session.query(func.count().label(self.name())).select_from(unique_count_query)
 
     def df_fn(self, dfs=None):
         """

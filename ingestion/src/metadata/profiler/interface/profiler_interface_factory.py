@@ -30,6 +30,9 @@ from metadata.generated.schema.entity.services.connections.database.snowflakeCon
 from metadata.generated.schema.entity.services.connections.database.trinoConnection import (
     TrinoConnection,
 )
+from metadata.generated.schema.entity.services.connections.database.mysqlConnection import (
+    MysqlConnection,
+)
 from metadata.generated.schema.entity.services.databaseService import DatabaseConnection
 from metadata.profiler.interface.pandas.profiler_interface import (
     PandasProfilerInterface,
@@ -49,6 +52,9 @@ from metadata.profiler.interface.sqlalchemy.snowflake.profiler_interface import 
 )
 from metadata.profiler.interface.sqlalchemy.trino.profiler_interface import (
     TrinoProfilerInterface,
+)
+from metadata.profiler.interface.sqlalchemy.mysql.profiler_interface import (
+    MysqlProfilerInterface,
 )
 
 
@@ -86,3 +92,4 @@ profiler_interface_factory.register(
     SnowflakeConnection.__name__, SnowflakeProfilerInterface
 )
 profiler_interface_factory.register(TrinoConnection.__name__, TrinoProfilerInterface)
+profiler_interface_factory.register(MysqlConnection.__name__, MysqlProfilerInterface)

@@ -21,6 +21,9 @@ from metadata.generated.schema.entity.services.connections.database.bigQueryConn
 from metadata.generated.schema.entity.services.connections.database.datalakeConnection import (
     DatalakeConnection,
 )
+from metadata.generated.schema.entity.services.connections.database.mysqlConnection import (
+    MysqlConnection,
+)
 from metadata.generated.schema.entity.services.connections.database.trinoConnection import (
     TrinoConnection,
 )
@@ -29,6 +32,7 @@ from metadata.profiler.processor.sampler.pandas.sampler import DatalakeSampler
 from metadata.profiler.processor.sampler.sqlalchemy.bigquery.sampler import (
     BigQuerySampler,
 )
+from metadata.profiler.processor.sampler.sqlalchemy.mysql.sampler import MysqlSampler
 from metadata.profiler.processor.sampler.sqlalchemy.sampler import SQASampler
 from metadata.profiler.processor.sampler.sqlalchemy.trino.sampler import TrinoSampler
 
@@ -58,4 +62,6 @@ sampler_factory_ = SamplerFactory()
 sampler_factory_.register(DatabaseConnection.__name__, SQASampler)
 sampler_factory_.register(BigQueryConnection.__name__, BigQuerySampler)
 sampler_factory_.register(DatalakeConnection.__name__, DatalakeSampler)
+# 2024年6月7日 新增 Mysql类型采样器
+sampler_factory_.register(MysqlConnection.__name__, MysqlSampler)
 sampler_factory_.register(TrinoConnection.__name__, TrinoSampler)
