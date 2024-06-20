@@ -2,12 +2,11 @@ import time
 import json
 import uuid
 from typing import Union
+
+from metadata.generated.schema.metadataIngestion.workflow import LogLevels
 from metadata.ingestion.ometa.ometa_api import OpenMetadata
 from metadata.generated.schema.entity.type import (
     entityReference
-)
-from metadata.generated.schema.metadataIngestion import (
-    workflow
 )
 from metadata.generated.schema.entity.services.serviceType import ServiceType
 from metadata.generated.schema.entity.services.connections.metadata import (
@@ -16,6 +15,7 @@ from metadata.generated.schema.entity.services.connections.metadata import (
 from metadata.generated.schema.entity.services.ingestionPipelines.ingestionPipeline import (
     IngestionPipeline,
     PipelineType,
+    AirflowConfig,
 )
 from metadata.generated.schema.entity.services.dashboardService import DashboardService
 from metadata.generated.schema.entity.services.databaseService import DatabaseService
@@ -26,6 +26,32 @@ from metadata.generated.schema.entity.services.pipelineService import PipelineSe
 from metadata.generated.schema.entity.services.searchService import SearchService
 from metadata.generated.schema.entity.services.storageService import StorageService
 from metadata.generated.schema.entity.services.networkService import NetworkService
+from metadata.generated.schema.metadataIngestion import (
+    applicationPipeline,
+    dashboardServiceMetadataPipeline,
+    databaseServiceMetadataPipeline,
+    databaseServiceProfilerPipeline,
+    databaseServiceQueryLineagePipeline,
+    databaseServiceQueryUsagePipeline,
+    dataInsightPipeline,
+    dbtPipeline,
+    messagingServiceMetadataPipeline,
+    metadataToElasticSearchPipeline,
+    mlmodelServiceMetadataPipeline,
+    pipelineServiceMetadataPipeline,
+    searchServiceMetadataPipeline,
+    storageServiceMetadataPipeline,
+    testSuitePipeline,
+)
+from metadata.generated.schema.metadataIngestion.workflow import (
+    SourceConfig,
+    LogLevels,
+)
+from metadata.generated.schema.metadataIngestion.testSuitePipeline import (
+    TestSuiteConfigType,
+    TestSuitePipeline,
+)
+from metadata.generated.schema.type.entityReference import EntityReference
 from openmetadata_managed_apis.workflows.ingestion.common import (
     metadata_ingestion_workflow,
 )
@@ -48,9 +74,6 @@ from openmetadata_managed_apis.workflows.ingestion.lineage import (
     build_lineage_workflow_config,
 )
 from metadata.utils.secrets.secrets_manager_factory import SecretsManagerFactory
-
-TOKEN = "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6IkFsbEF1dGgiLCJlbWFpbCI6IkFsbEF1dGhAeGdpdC5jb20iLCJpc0JvdCI6dHJ1ZSwidG9rZW5UeXBlIjoiQk9UIiwiaWF0IjoxNzA4NDk2MTExLCJleHAiOm51bGx9.GRsZtM6i-ty1w71wg6HOxFmYQHDFXDH278x-G861jmaxuDLSCiIjRE0UiVlbNlsKQXoDbQIAT20eehfjgJ2Bp2HwUYBF8obunkTAkPv6WACJ741y5PQ-a59AWBYQlNhYviKxlUtneqDbQs88wN0iJL8FR_pdaMhYzLraSZs1FdA6mC_bLjfLyU6aSHrnmh7C6vEYBZS4NKDXmAp9iqp_upm_p0bmk7KUbY540TbA7ilcAAvYoZtxfYp86irtTOEq-yVni2J37XMLyVqNy3cVFT9ZcNS5sPDsTFB011fqKW-aaSFM45nXGt5A0eYEHaBrKLM_kUrdt-WRL2gjIXDpKg"
-TOKEN_249 = "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6Imhhbnl1bi1tZXRhZGF0YSIsImVtYWlsIjoiaGFueXVuLW1ldGFkYXRhQG9wZW5tZXRhZGF0YS5vcmciLCJpc0JvdCI6dHJ1ZSwidG9rZW5UeXBlIjoiQk9UIiwiaWF0IjoxNzExNDUyNDIzLCJleHAiOm51bGx9.G2Y5iFXaln0Li5TdsW6Xv9iEl-t9KHlpU_98rGc3y_9eSJnGIb3pPbeylIvF-PsW_L9LokuGAvZiCY9f0fCik9t3PQjsJxYiUA64iJPNJkr-zOA5AfmipqwMamNe-SrBdGVlk-p4XtLahTAc3tK3jVz-rCB3P28q1lxIoOy6yn2hEMrqUWJqc1HfeCispeAe8GRI7cy9hhj_3uetIZW1uaYvVtMPBZ4K4LMRWED9Hm3CcvNoNRIMzBVyLAmorpKO_iewlYH9FZBypc4vCAxv5LN9dQghsz0hry2rXr03KhAPUtF7wWARj03QoS6dJzirSXqvc9TomR8A48BRma9hTQ"
 
 SERVICE_TYPE_CLASS_MAP = {
     ServiceType.Database: DatabaseService,
@@ -104,7 +127,6 @@ def build_openmetadataConnection(host_port: str,
     return openMetadataServerConnection
 
 
-
 def get_service_by_metadata(metadata: OpenMetadata,
                             service_type: ServiceType,
                             service_name: str,
@@ -118,126 +140,104 @@ def get_service_by_metadata(metadata: OpenMetadata,
     return service
 
 
-def run_metadata_database(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                          service_name: str,
-                          logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
-                          **kwargs
-                          ):
-    # from metadata.generated.schema.metadataIngestion.databaseServiceMetadataPipeline import (
-    #     DatabaseServiceMetadataPipeline,
-    # )
-    #
-    # source_config = DatabaseServiceMetadataPipeline(**kwargs)
-    run_metadata(openmetadataServerConnection=openmetadataServerConnection,
-                 service_type=ServiceType.Database,
-                 service_name=service_name,
-                 logger_level=logger_level,
-                 # **source_config.dict()
-                 **kwargs
-                 )
-
-
-def run_metadata_messaging(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                           service_name: str,
-                           logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
-                           **kwargs
-                           ):
-    run_metadata(openmetadataServerConnection=openmetadataServerConnection,
-                 service_type=ServiceType.Messaging,
-                 service_name=service_name,
-                 logger_level=logger_level,
-                 **kwargs
-                 )
-
-
-def run_metadata(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                 service_type: ServiceType,
-                 service_name: str,
-                 logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
-                 **source_config
-                 ):
-    run_by_custom(openmetadataServerConnection=openmetadataServerConnection,
-                  service_type=service_type,
-                  service_name=service_name,
-                  pipeline_type="metadata",
-                  logger_level=logger_level,
-                  **source_config
-                  )
-
-
-def run_profiler_database(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                          service_name: str,
-                          logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
-                          **source_config
-                          ):
-    run_profiler(openmetadataServerConnection,
-                 ServiceType.Database,
-                 service_name,
-                 logger_level=logger_level,
-                 **source_config
-                 )
-
-
-def run_profiler_messaging(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                           service_name: str,
-                           logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
-                           **source_config
-                           ):
-    run_profiler(openmetadataServerConnection,
-                 ServiceType.Messaging,
-                 service_name,
-                 logger_level=logger_level,
-                 **source_config
-                 )
-
-
-def run_profiler(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                 service_type: ServiceType,
-                 service_name: str,
-                 logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
-                 **source_config
-                 ):
-    run_by_custom(openmetadataServerConnection=openmetadataServerConnection,
-                  service_type=service_type,
-                  service_name=service_name,
-                  pipeline_type="profiler",
-                  logger_level=logger_level,
-                  **source_config
-                  )
-
-
 def run_by_custom(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
-                  service_type: ServiceType,
                   service_name: str,
+                  service_type: str = "Database",
                   pipeline_type: str = "metadata",
-                  logger_level: workflow.LogLevels = workflow.LogLevels.DEBUG,
                   **source_config
                   ):
+    """
+    自定义提取任务进行执行
+    :param service_name:
+    :param service_type: 支持 Database，Messaging
+    :param pipeline_type: 支持 metadata，profiler
+    :param source_config:
+    :return:
+    """
+
     metadata = OpenMetadata(openmetadataServerConnection)
-    service = get_service_by_metadata(metadata, service_type, service_name)
 
-    ingestion_pipeline_config = {
-        "name": "{}_{}".format(service_name, uuid.uuid1()),
-        "pipelineType": pipeline_type,
-        "loggerLevel": logger_level,
-        "airflowConfig": {},
-        "openMetadataServerConnection": openmetadataServerConnection,
-        "service": {
-            "id": service.id,
-            "fullyQualifiedName": service.fullyQualifiedName.__root__,
-            "name": service.name.__root__,
-            # "type": SERVICE_TYPE_CLASS_MAP.get(service_type).__name__, #Bug:首字母要小写
-            "type": "{}Service".format(service_type.value.lower()),
-            "deleted": service.deleted,
-        },
-        "sourceConfig": workflow.SourceConfig(**{
-            "config": json.loads(
-                source_config.get("source_config_str")) if "source_config_str" in source_config else source_config,
-        }),
-    }
+    serviceType: ServiceType = ServiceType(service_type)
+    service = get_service_by_metadata(metadata, serviceType, service_name)
 
-    ingestion_pipeline = IngestionPipeline(**ingestion_pipeline_config)
-    _run(ingestion_pipeline)
+    ingestion_pipeline_name = f"{service_name}_{pipeline_type}"
+    ingestion_pipeline_fullname = f"{service_name}.{ingestion_pipeline_name}"
+
+    sourceConfig = SourceConfig()
+    if PipelineType(pipeline_type) is PipelineType.metadata:
+        if serviceType is ServiceType.Database:
+            sourceConfig.config = databaseServiceMetadataPipeline.DatabaseServiceMetadataPipeline(**source_config)
+        elif serviceType is ServiceType.Messaging:
+            sourceConfig.config = messagingServiceMetadataPipeline.MessagingServiceMetadataPipeline(**source_config)
+        else:
+            raise Exception(f"尚不支持服务类型[{serviceType.value()}]的[{pipeline_type}]类型任务处理")
+    elif PipelineType(pipeline_type) is PipelineType.profiler:
+        sourceConfig.config = databaseServiceProfilerPipeline.DatabaseServiceProfilerPipeline(**source_config)
+    else:
+        raise Exception(f"尚不支持当前任务类型[{pipeline_type}]的处理")
+
+    ingestion_pipeline = IngestionPipeline(
+        name=ingestion_pipeline_name,
+        fullyQualifiedName=ingestion_pipeline_fullname,
+        loggerLevel=LogLevels.DEBUG,
+        pipelineType=PipelineType(pipeline_type),
+        openMetadataServerConnection=openmetadataServerConnection,
+        airflowConfig=AirflowConfig(),
+        service=EntityReference(
+            id=service.id,
+            type="{}Service".format(serviceType.value.lower()),
+            name=service.name.__root__,
+            fullyQualifiedName=service.fullyQualifiedName.__root__,
+        ),
+        sourceConfig=sourceConfig,
+    )
+
+    _run(ingestion_pipeline, False)
+
+
+def run_testSuite(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
+                  service_name: str,
+                  database: str,
+                  schema: str,
+                  table: str,
+                  ):
+    table_fullname = f"{service_name}.{database}.{schema}.{table}"
+    ingestion_pipeline_service_type = "testSuite"
+    ingestion_pipeline_service_name = f"{table_fullname}.{ingestion_pipeline_service_type}"
+    ingestion_pipeline_name = f"{table}_{''.join(ingestion_pipeline_service_type[:1].upper() + ingestion_pipeline_service_type[1:])}"
+    ingestion_pipeline_fullname = f"{ingestion_pipeline_service_name}.{ingestion_pipeline_name}"
+
+    ingestion_pipeline = IngestionPipeline(
+        name=ingestion_pipeline_name,
+        fullyQualifiedName=ingestion_pipeline_fullname,
+        loggerLevel=LogLevels.DEBUG,
+        pipelineType=PipelineType.TestSuite,
+        sourceConfig=SourceConfig(
+            config=TestSuitePipeline(
+                type=TestSuiteConfigType.TestSuite,
+                entityFullyQualifiedName=table_fullname
+            )
+        ),
+        openMetadataServerConnection=openmetadataServerConnection,
+        airflowConfig=AirflowConfig(),
+        service=EntityReference(
+            id=uuid.uuid1(),
+            type=ingestion_pipeline_service_type,
+            name=ingestion_pipeline_service_name,
+        ),
+    )
+
+    _run(ingestion_pipeline, False)
+
+
+def run_testSuite_task(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
+                       service_name: str,
+                       database: str,
+                       schema: str,
+                       table: str,
+                       ):
+    task_fqn = f"{service_name}.{database}.{schema}.{table}.testSuite.{table}_TestSuite"
+    run_by_task(openmetadataServerConnection, task_fqn)
 
 
 def run_by_task(openmetadataServerConnection: openMetadataConnection.OpenMetadataConnection,
@@ -252,7 +252,7 @@ def run_by_task(openmetadataServerConnection: openMetadataConnection.OpenMetadat
         nullable=False
     )
     ingestion_pipeline.openMetadataServerConnection = openmetadataServerConnection
-    _run(ingestion_pipeline)
+    _run(ingestion_pipeline, True)
 
 
 def run_by_config(config: str):
@@ -263,7 +263,7 @@ def run_by_config(config: str):
     _run(ingestion_pipeline)
 
 
-def _run(ingestion_pipeline: IngestionPipeline):
+def _run(ingestion_pipeline: IngestionPipeline, realIngestionPipeline: bool = True):
     # we need to instantiate the secret manager in case secrets are passed
     SecretsManagerFactory(
         ingestion_pipeline.openMetadataServerConnection.secretsManagerProvider,
@@ -275,18 +275,30 @@ def _run(ingestion_pipeline: IngestionPipeline):
 
     if workflow_type == PipelineType.metadata.value:
         workflow_config = build_metadata_workflow_config(ingestion_pipeline)
+        if not realIngestionPipeline:
+            workflow_config.ingestionPipelineFQN = None
         metadata_ingestion_workflow(workflow_config)
     elif workflow_type == PipelineType.profiler.value:
         workflow_config = build_profiler_workflow_config(ingestion_pipeline)
+        if not realIngestionPipeline:
+            workflow_config.ingestionPipelineFQN = None
         profiler_workflow(workflow_config)
     elif workflow_type == PipelineType.TestSuite.value:
         workflow_config = build_test_suite_workflow_config(ingestion_pipeline)
+        if not realIngestionPipeline:
+            workflow_config.ingestionPipelineFQN = None
+        # 因界面无法配置日志级别，此处手动控制
+        workflow_config.workflowConfig.loggerLevel = LogLevels.DEBUG
         test_suite_workflow(workflow_config)
     elif workflow_type == PipelineType.usage.value:
         workflow_config = build_usage_workflow_config(ingestion_pipeline)
+        if not realIngestionPipeline:
+            workflow_config.ingestionPipelineFQN = None
         usage_workflow(workflow_config)
     elif workflow_type == PipelineType.lineage.value:
         workflow_config = build_lineage_workflow_config(ingestion_pipeline)
+        if not realIngestionPipeline:
+            workflow_config.ingestionPipelineFQN = None
         metadata_ingestion_workflow(workflow_config)
     else:
         raise Exception("尚不知当前任务类型【%s】的处理" % workflow_type)
