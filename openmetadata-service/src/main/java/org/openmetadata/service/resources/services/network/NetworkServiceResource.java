@@ -1,6 +1,7 @@
 package org.openmetadata.service.resources.services.network;
 
 import static org.openmetadata.common.utils.CommonUtil.listOf;
+import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,7 @@ import org.openmetadata.schema.entity.services.ServiceType;
 import org.openmetadata.schema.entity.services.connections.TestConnectionResult;
 import org.openmetadata.schema.type.*;
 import org.openmetadata.service.Entity;
+import org.openmetadata.service.jdbi3.ListFilter;
 import org.openmetadata.service.jdbi3.NetworkServiceRepository;
 import org.openmetadata.service.resources.Collection;
 import org.openmetadata.service.resources.services.ServiceEntityResource;
@@ -111,6 +113,8 @@ public class NetworkServiceResource
       @Parameter(description = "Filter services by domain", schema = @Schema(type = "string", example = "Marketing"))
           @QueryParam("domain")
           String domain,
+      @Parameter(description = "数据连接服务类型", schema = @Schema(type = "string")) @QueryParam("serviceType")
+          CreateNetworkService.NetworkServiceType serviceType,
       @Parameter(description = "Limit number services returned. (1 to 1000000, " + "default 10)")
           @DefaultValue("10")
           @Min(0)
@@ -129,7 +133,17 @@ public class NetworkServiceResource
           @QueryParam("include")
           @DefaultValue("non-deleted")
           Include include) {
-    return listInternal(uriInfo, securityContext, fieldsParam, include, domain, limitParam, before, after);
+    ListFilter filter = new ListFilter(include);
+    if (!nullOrEmpty(domain)) {
+      EntityReference domainReference = Entity.getEntityReferenceByName(Entity.DOMAIN, domain, Include.NON_DELETED);
+      filter.addQueryParam("domainId", domainReference.getId().toString());
+    }
+    if (!nullOrEmpty(serviceType)) {
+      filter.addCustomCondition(String.format("serviceType = '%s'", serviceType));
+    }
+    ResultList<NetworkService> services =
+        listInternal(uriInfo, securityContext, fieldsParam, filter, limitParam, before, after);
+    return addHref(uriInfo, decryptOrNullify(securityContext, services));
   }
 
   @GET

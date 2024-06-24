@@ -293,6 +293,10 @@ public class ListFilter {
     return name.replace("'", "''");
   }
 
+  public static String escapeBackslash(String name) {
+    return name.replace("\\", "\\\\");
+  }
+
   public static String escape(String name) {
     // Escape string to be using in LIKE clause
     // "'" is used for indicated start and end of the string. Use "''" to escape it.
