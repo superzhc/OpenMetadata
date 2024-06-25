@@ -1,0 +1,32 @@
+{
+  "name": "HanyunDataDevelopPolicy",
+  "displayName": "Hanyun Data Develop Policy",
+  "fullyQualifiedName": "HanyunDataDevelopPolicy",
+  "description": "离线数据开发权限策略",
+  "enabled": true,
+  "allowDelete": false,
+  "provider": "system",
+  "rules": [
+    {
+      "name": "DataDevelop-ViewAll",
+      "description" : "离线数据开发资源查看权限",
+      "resources" : ["all"],
+      "operations": ["ViewAll"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataDevelop-Create",
+      "description" : "离线数据开发资源新增权限",
+      "resources" : ["databaseService", "messagingService", "networkService"],
+      "operations": ["Create"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataDevelop-Create",
+      "description" : "离线数据开发资源删除权限",
+      "resources" : ["all"],
+      "operations": ["Delete"],
+      "effect": "deny"
+    }
+  ]
+}

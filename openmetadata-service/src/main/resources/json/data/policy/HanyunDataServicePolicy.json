@@ -1,0 +1,32 @@
+{
+  "name": "HanyunDataServicePolicy",
+  "displayName": "Hanyun Data Service Policy",
+  "fullyQualifiedName": "HanyunDataServicePolicy",
+  "description": "数据服务Api权限策略",
+  "enabled": true,
+  "allowDelete": false,
+  "provider": "system",
+  "rules": [
+    {
+      "name": "DataService-ViewAll",
+      "description" : "数据服务Api资源查看权限",
+      "resources" : ["all"],
+      "operations": ["ViewAll"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataService-Create",
+      "description" : "数据服务Api资源新增权限",
+      "resources" : ["all"],
+      "operations": ["Create"],
+      "effect": "deny"
+    },
+    {
+      "name": "DataService-Create",
+      "description" : "数据服务Api资源删除权限",
+      "resources" : ["all"],
+      "operations": ["Delete"],
+      "effect": "deny"
+    }
+  ]
+}

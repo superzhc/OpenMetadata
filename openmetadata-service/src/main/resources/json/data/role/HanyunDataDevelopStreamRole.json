@@ -1,0 +1,13 @@
+{
+  "name": "HanyunDataDevelopStreamRole",
+  "displayName": "Hanyun Data Develop Stream Role",
+  "description": "实时数据开发角色",
+  "allowDelete": false,
+  "provider": "system",
+  "policies" : [
+    {
+      "type" : "policy",
+      "name" : "HanyunDataDevelopStreamPolicy"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "HanyunDataCenterRole",
+  "displayName": "Hanyun Data Center Role",
+  "description": "数仓建模角色",
+  "allowDelete": false,
+  "provider": "system",
+  "policies" : [
+    {
+      "type" : "policy",
+      "name" : "HanyunDataCenterPolicy"
+    }
+  ]
+}

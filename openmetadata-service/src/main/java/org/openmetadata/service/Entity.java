@@ -212,6 +212,20 @@ public final class Entity {
   public static final String DATA_CONSUMER = "DataConsumer";
   public static final String ALL_RESOURCES = "All";
 
+  //
+  // Hanyun
+  //
+  public static final String HANYUN_DATA_CENTER_BOT_NAME = "hanyun-datacenter";
+  public static final String HANYUN_METADATA_BOT_NAME = "hanyun-metadata";
+  public static final String HANYUN_DATA_DEVELOP_BOT_NAME = "hanyun-datadevelop";
+  public static final String HANYUN_DATA_DEVELOP_STREAM_BOT_NAME = "hanyun-datadevelop-stream";
+  public static final String HANYUN_DATA_SERVICE_BOT_NAME = "hanyun-dataservice";
+  public static final String HANYUN_DATA_CENTER_BOT_ROLE = "HanyunDataCenterRole";
+  public static final String HANYUN_METADATA_BOT_ROLE = "HanyunMetadataRole";
+  public static final String HANYUN_DATA_DEVELOP_BOT_ROLE = "HanyunDataDevelopRole";
+  public static final String HANYUN_DATA_DEVELOP_STREAM_BOT_ROLE = "HanyunDataDevelopStreamRole";
+  public static final String HANYUN_DATA_SERVICE_BOT_ROLE = "HanyunDataServiceRole";
+
   public static final String DOCUMENT = "document";
   // ServiceType - Service Entity name map
   static final Map<ServiceType, String> SERVICE_TYPE_ENTITY_MAP = new EnumMap<>(ServiceType.class);

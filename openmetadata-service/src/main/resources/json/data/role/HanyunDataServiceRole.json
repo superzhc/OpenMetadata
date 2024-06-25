@@ -1,0 +1,13 @@
+{
+  "name": "HanyunDataServiceRole",
+  "displayName": "Hanyun Data Service Role",
+  "description": "数据服务Api角色",
+  "allowDelete": false,
+  "provider": "system",
+  "policies" : [
+    {
+      "type" : "policy",
+      "name" : "HanyunDataServicePolicy"
+    }
+  ]
+}

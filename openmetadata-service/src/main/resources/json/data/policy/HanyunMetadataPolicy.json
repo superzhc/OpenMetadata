@@ -1,0 +1,39 @@
+{
+  "name": "HanyunMetadataPolicy",
+  "displayName": "Hanyun Metadata Policy",
+  "fullyQualifiedName": "HanyunMetadataPolicy",
+  "description": "元数据权限策略",
+  "enabled": true,
+  "allowDelete": false,
+  "provider": "system",
+  "rules": [
+    {
+      "name": "Metadata-ViewAll",
+      "description" : "元数据资源查看权限",
+      "resources" : ["all"],
+      "operations": ["ViewAll"],
+      "effect": "allow"
+    },
+    {
+      "name": "Metadata-Create",
+      "description" : "元数据资源新增权限",
+      "resources" : ["all"],
+      "operations": ["Create"],
+      "effect": "allow"
+    },
+    {
+      "name": "Metadata-Delete",
+      "description" : "元数据资源删除权限",
+      "resources" : ["all"],
+      "operations": ["Delete"],
+      "effect": "allow"
+    },
+    {
+      "name": "Metadata-EditAll",
+      "description" : "元数据资源编辑权限",
+      "resources" : ["all"],
+      "operations": ["EditAll"],
+      "effect": "allow"
+    }
+  ]
+}

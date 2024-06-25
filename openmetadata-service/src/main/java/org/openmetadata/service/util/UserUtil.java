@@ -17,6 +17,7 @@ import static org.openmetadata.common.utils.CommonUtil.listOf;
 import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
 import static org.openmetadata.schema.entity.teams.AuthenticationMechanism.AuthType.JWT;
 import static org.openmetadata.service.Entity.ADMIN_USER_NAME;
+import static org.openmetadata.service.Entity.HANYUN_DATA_DEVELOP_BOT_ROLE;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import java.util.HashSet;
@@ -212,8 +213,6 @@ public final class UserUtil {
     String botRole;
     switch (botName) {
       case Entity.INGESTION_BOT_NAME:
-      case "hanyun-datacenter":
-      case "hanyun-metadata":
         botRole = Entity.INGESTION_BOT_ROLE;
         break;
       case Entity.QUALITY_BOT_NAME:
@@ -221,6 +220,21 @@ public final class UserUtil {
         break;
       case Entity.PROFILER_BOT_NAME:
         botRole = Entity.PROFILER_BOT_ROLE;
+        break;
+      case Entity.HANYUN_DATA_CENTER_BOT_NAME:
+        botRole = Entity.HANYUN_DATA_CENTER_BOT_ROLE;
+        break;
+      case Entity.HANYUN_METADATA_BOT_NAME:
+        botRole = Entity.HANYUN_METADATA_BOT_ROLE;
+        break;
+      case Entity.HANYUN_DATA_DEVELOP_BOT_NAME:
+        botRole = HANYUN_DATA_DEVELOP_BOT_ROLE;
+        break;
+      case Entity.HANYUN_DATA_DEVELOP_STREAM_BOT_NAME:
+        botRole = Entity.HANYUN_DATA_DEVELOP_STREAM_BOT_ROLE;
+        break;
+      case Entity.HANYUN_DATA_SERVICE_BOT_NAME:
+        botRole = Entity.HANYUN_DATA_SERVICE_BOT_ROLE;
         break;
       default:
         // 2024年3月25日 框架自身的缺陷，定义 Bot 不能直接设置权限，未系统匹配代码写死的 Bot，直接授予消费者权限

@@ -1,0 +1,13 @@
+{
+  "name": "HanyunMetadataRole",
+  "displayName": "Hanyun Metadata Role",
+  "description": "元数据角色",
+  "allowDelete": false,
+  "provider": "system",
+  "policies" : [
+    {
+      "type" : "policy",
+      "name" : "HanyunMetadataPolicy"
+    }
+  ]
+}

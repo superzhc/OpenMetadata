@@ -1,0 +1,32 @@
+{
+  "name": "HanyunDataDevelopStreamPolicy",
+  "displayName": "Hanyun Data Develop Stream Policy",
+  "fullyQualifiedName": "HanyunDataDevelopStreamPolicy",
+  "description": "实时数据开发权限策略",
+  "enabled": true,
+  "allowDelete": false,
+  "provider": "system",
+  "rules": [
+    {
+      "name": "DataDevelopStream-ViewAll",
+      "description" : "实时数据开发资源查看权限",
+      "resources" : ["all"],
+      "operations": ["ViewAll"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataDevelopStream-Create",
+      "description" : "实时数据开发资源新增权限",
+      "resources" : ["all"],
+      "operations": ["Create"],
+      "effect": "deny"
+    },
+    {
+      "name": "DataDevelopStream-Create",
+      "description" : "实时数据开发资源删除权限",
+      "resources" : ["all"],
+      "operations": ["Delete"],
+      "effect": "deny"
+    }
+  ]
+}

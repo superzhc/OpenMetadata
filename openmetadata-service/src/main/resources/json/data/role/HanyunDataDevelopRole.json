@@ -1,0 +1,13 @@
+{
+  "name": "HanyunDataDevelopRole",
+  "displayName": "Hanyun Data Develop Role",
+  "description": "离线数据开发角色",
+  "allowDelete": false,
+  "provider": "system",
+  "policies" : [
+    {
+      "type" : "policy",
+      "name" : "HanyunDataDevelopPolicy"
+    }
+  ]
+}

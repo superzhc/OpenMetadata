@@ -1,0 +1,78 @@
+{
+  "name": "HanyunDataCenterPolicy",
+  "displayName": "Hanyun Data Center Policy",
+  "fullyQualifiedName": "HanyunDataCenterPolicy",
+  "description": "数仓建模权限策略",
+  "enabled": true,
+  "allowDelete": false,
+  "provider": "system",
+  "rules": [
+    {
+      "name": "DataCenter-ViewAll",
+      "description" : "数仓建模资源查看权限",
+      "resources" : ["all"],
+      "operations": ["ViewAll"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataCenter-Create",
+      "description" : "数仓建模资源新增权限",
+      "resources" : [
+        "classification",
+        "database",
+        "databaseSchema",
+        "databaseService",
+        "glossary",
+        "glossaryTerm",
+        "messagingService",
+        "networkService",
+        "table",
+        "tag",
+        "topic",
+        "type"
+      ],
+      "operations": ["Create"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataCenter-Delete",
+      "description" : "数仓建模资源删除权限",
+      "resources" : [
+        "classification",
+        "database",
+        "databaseSchema",
+        "databaseService",
+        "glossary",
+        "glossaryTerm",
+        "messagingService",
+        "networkService",
+        "table",
+        "tag",
+        "topic",
+        "type"
+      ],
+      "operations": ["Delete"],
+      "effect": "allow"
+    },
+    {
+      "name": "DataCenter-EditAll",
+      "description" : "数仓建模资源编辑权限",
+      "resources" : [
+        "classification",
+        "database",
+        "databaseSchema",
+        "databaseService",
+        "glossary",
+        "glossaryTerm",
+        "messagingService",
+        "networkService",
+        "table",
+        "tag",
+        "topic",
+        "type"
+      ],
+      "operations": ["EditAll"],
+      "effect": "allow"
+    }
+  ]
+}

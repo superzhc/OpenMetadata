@@ -1,0 +1,10 @@
+{
+  "name": "hanyun-datadevelop-stream",
+  "description": "数据实时开发模块",
+  "fullyQualifiedName": "hanyun-datadevelop-stream",
+  "botUser": {
+    "name" : "hanyun-datadevelop-stream",
+    "type" : "user"
+  },
+  "provider": "system"
+}

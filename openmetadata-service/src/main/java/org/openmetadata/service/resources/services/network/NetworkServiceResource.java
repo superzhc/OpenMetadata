@@ -1,6 +1,5 @@
 package org.openmetadata.service.resources.services.network;
 
-import static org.openmetadata.common.utils.CommonUtil.listOf;
 import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
@@ -70,12 +69,6 @@ public class NetworkServiceResource
 
   public NetworkServiceResource(Authorizer authorizer) {
     super(Entity.NETWORK_SERVICE, authorizer, ServiceType.NETWORK);
-  }
-
-  @Override
-  protected List<MetadataOperation> getEntitySpecificOperations() {
-    addViewOperation("pipelines", MetadataOperation.VIEW_BASIC);
-    return listOf(MetadataOperation.VIEW_USAGE, MetadataOperation.EDIT_USAGE);
   }
 
   public static class NetworkServiceList extends ResultList<NetworkService> {
