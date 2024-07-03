@@ -12,7 +12,7 @@
 """
 Validator for table custom SQL Query test case
 """
-
+import decimal
 import traceback
 from abc import abstractmethod
 from enum import Enum
@@ -80,7 +80,8 @@ class BaseTableCustomSQLQueryValidator(BaseTestValidator):
                 msg,
                 [TestResultValue(name=RESULT_ROW_COUNT, value=None)],
             )
-        len_rows = rows if isinstance(rows, int) else len(rows)
+        # 若返回值为 decimal 也认为是 Count 策略
+        len_rows = rows if isinstance(rows, int) or isinstance(rows, decimal.Decimal) else len(rows)
         if len_rows <= threshold:
             status = TestCaseStatus.Success
             result_value = len_rows
