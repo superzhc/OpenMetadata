@@ -40,6 +40,14 @@ def _(elements, compiler, **kwargs):
     return f"CAST(CURRENT_DATE - interval '{interval}' {interval_unit}  AS DATE)"
 
 
+@compiles(DateAddFn, Dialects.Doris)
+def _(elements, compiler, **kwargs):
+    """generic date and datetime function"""
+    interval = elements.clauses.clauses[0].value
+    interval_unit = compiler.process(elements.clauses.clauses[1], **kwargs)
+    return f"CAST(CURRENT_DATE() - interval '{interval}' {interval_unit}  AS DATE)"
+
+
 @compiles(DateAddFn, Dialects.Oracle)
 def _(elements, compiler, **kwargs):
     """generic date and datetime function"""
