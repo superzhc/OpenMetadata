@@ -243,6 +243,12 @@ class DatabaseServiceSource(
         Also, update the self.inspector value to the current db.
         """
 
+    def is_system_database(self, database_name: str) -> bool:
+        """
+        判断是否是系统库
+        """
+        return False
+
     @abstractmethod
     def yield_database_schema(
         self, schema_name: str
@@ -253,6 +259,12 @@ class DatabaseServiceSource(
 
         Also, update the self.inspector value to the current db.
         """
+
+    def is_system_database_schema(self, schema_name: str) -> bool:
+        """
+        判断是否是系统 Schema
+        """
+        return False
 
     @abstractmethod
     def yield_tag(
@@ -414,6 +426,13 @@ class DatabaseServiceSource(
                 database_name=self.context.database.name.__root__,
                 schema_name=schema_name,
             )
+
+            # 添加对系统 Schema 的过滤
+            if self.is_system_database_schema(schema_name):
+                if add_to_status:
+                    self.status.filter(schema_fqn, "System Schema Filtered Out")
+                continue
+
             if filter_by_schema(
                 self.source_config.schemaFilterPattern,
                 schema_fqn if self.source_config.useFqnForFiltering else schema_name,

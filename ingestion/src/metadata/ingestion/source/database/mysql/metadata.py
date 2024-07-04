@@ -50,3 +50,6 @@ class MysqlSource(CommonDbSourceService):
                 f"Expected MysqlConnection, but got {connection}"
             )
         return cls(config, metadata)
+
+    def is_system_database_schema(self, schema_name: str) -> bool:
+        return schema_name.lower() in ["performance_schema", "information_schema", "mysql", "sys"]

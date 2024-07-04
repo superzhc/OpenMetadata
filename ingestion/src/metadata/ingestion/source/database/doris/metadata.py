@@ -145,6 +145,9 @@ class DorisSource(CommonDbSourceService):
             )
         return cls(config, metadata)
 
+    def is_system_database_schema(self, schema_name: str) -> bool:
+        return schema_name.lower() in ["information_schema"]
+
     def query_table_names_and_types(
             self, schema_name: str
     ) -> Iterable[TableNameAndType]:

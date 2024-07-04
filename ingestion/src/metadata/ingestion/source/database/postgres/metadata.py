@@ -163,6 +163,10 @@ class PostgresSource(CommonDbSourceService):
                     database_name=new_database,
                 )
 
+                if self.is_system_database(new_database):
+                    self.status.filter(database_fqn, "System Database Filtered Out")
+                    continue
+
                 if filter_by_database(
                     self.source_config.databaseFilterPattern,
                     database_fqn
@@ -233,3 +237,9 @@ class PostgresSource(CommonDbSourceService):
                     stack_trace=traceback.format_exc(),
                 )
             )
+
+    def is_system_database(self, database_name: str) -> bool:
+        return database_name.lower() in ["template0", "template1"]
+
+    def is_system_database_schema(self, schema_name: str) -> bool:
+        return schema_name.lower() in ["information_schema"]
