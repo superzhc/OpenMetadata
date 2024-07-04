@@ -37,7 +37,7 @@ class MysqlProfilerInterface(SQAProfilerInterface):
         Returns:
             dictionnary of results
         """
-        if get_version(self.session) >= 8:
+        if get_version(runner.session) >= 8:
             return super()._compute_window_metrics(metrics, runner, column, session, *args, **kwargs)
 
         return None
