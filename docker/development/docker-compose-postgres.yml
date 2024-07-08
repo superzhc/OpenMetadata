@@ -45,9 +45,13 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     container_name: openmetadata_elasticsearch
+    deploy:
+      resources:
+        limits:
+          memory: 8192m
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1024m -Xmx1024m -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+      - ES_JAVA_OPTS=-Xms4086m -Xmx4086m -XX:+PrintGCDetails -XX:+PrintGCDateStamps
       - xpack.security.enabled=false
     networks:
       - local_app_net
