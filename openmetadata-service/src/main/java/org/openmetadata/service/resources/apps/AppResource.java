@@ -113,7 +113,7 @@ public class AppResource extends EntityResource<App, AppRepository> {
 
       // Get Create App Requests
       List<CreateApp> createAppsReq =
-          getEntitiesFromSeedData(APPLICATION, String.format(".*json/data/%s/.*\\.json$", entityType), CreateApp.class);
+          getEntitiesFromSeedData(APPLICATION, String.format(".*json/data/%s/zh/.*\\.json$", entityType), CreateApp.class);
       for (CreateApp createApp : createAppsReq) {
         try {
           AppMarketPlaceDefinition definition =

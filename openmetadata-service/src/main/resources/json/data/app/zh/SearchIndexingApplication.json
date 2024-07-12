@@ -1,0 +1,36 @@
+{
+  "name": "SearchIndexingApplication",
+  "appConfiguration": {
+    "entities": [
+      "table",
+      "topic",
+      "user",
+      "team",
+      "glossaryTerm",
+      "tag",
+      "classification",
+      "query",
+      "container",
+      "database",
+      "databaseSchema",
+      "testCase",
+      "testSuite",
+      "chart",
+      "databaseService",
+      "messagingService",
+      "entityReportData",
+      "webAnalyticEntityViewReportData",
+      "webAnalyticUserActivityReportData",
+      "domain",
+      "storedProcedure",
+      "dataProduct"
+    ],
+    "recreateIndex": true,
+    "batchSize": "100",
+    "searchIndexMappingLanguage": "EN"
+  },
+  "appSchedule": {
+    "scheduleType": "Custom",
+    "cronExpression": "0 0 0 1 1 ? *"
+  }
+}

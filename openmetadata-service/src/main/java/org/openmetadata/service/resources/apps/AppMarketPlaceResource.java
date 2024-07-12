@@ -1,6 +1,7 @@
 package org.openmetadata.service.resources.apps;
 
 import static org.openmetadata.service.Entity.APPLICATION;
+import static org.openmetadata.service.Entity.APP_MARKET_PLACE_DEF;
 import static org.openmetadata.service.jdbi3.EntityRepository.getEntitiesFromSeedData;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
@@ -75,7 +76,7 @@ public class AppMarketPlaceResource extends EntityResource<AppMarketPlaceDefinit
       // Initialize Default Installed Applications
       List<CreateAppMarketPlaceDefinitionReq> createAppMarketPlaceDefinitionReqs =
           getEntitiesFromSeedData(
-              APPLICATION,
+              APP_MARKET_PLACE_DEF,
               String.format(".*json/data/%s/.*\\.json$", entityType),
               CreateAppMarketPlaceDefinitionReq.class);
       for (CreateAppMarketPlaceDefinitionReq definitionReq : createAppMarketPlaceDefinitionReqs) {

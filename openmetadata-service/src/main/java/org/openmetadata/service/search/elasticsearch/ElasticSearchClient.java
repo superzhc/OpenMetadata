@@ -199,7 +199,8 @@ public class ElasticSearchClient implements SearchClient {
         CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
         LOG.debug("{} Created {}", indexMapping.getIndexName(), createIndexResponse.isAcknowledged());
         // creating alias for indexes
-        createAliases(indexMapping);
+        // 2024年7月9日 独立进行别名创建、更新操作
+        // createAliases(indexMapping);
       } catch (Exception e) {
         LOG.error("Failed to create Elastic Search indexes due to", e);
         return false;
