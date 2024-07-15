@@ -151,6 +151,12 @@ def _(elements, compiler, **kwargs):
     return clickhouse_function(elements, compiler, **kwargs)
 
 
+@compiles(DatetimeAddFn, Dialects.Doris)
+def _(elements, compiler, **kwargs):
+    """Doris datetime function"""
+    return doris_function(elements, compiler, **kwargs)
+
+
 @compiles(DatetimeAddFn, Dialects.AzureSQL)
 @compiles(DatetimeAddFn, Dialects.MSSQL)
 @compiles(DatetimeAddFn, Dialects.Snowflake)
@@ -219,8 +225,14 @@ def _(elements, compiler, **kwargs):
 
 @compiles(TimestampAddFn, Dialects.ClickHouse)
 def _(elements, compiler, **kwargs):
-    """Clickhouse datetime function"""
+    """Clickhouse timestamp function"""
     return clickhouse_function(elements, compiler, **kwargs)
+
+
+@compiles(TimestampAddFn, Dialects.Doris)
+def _(elements, compiler, **kwargs):
+    """Doris timestamp function"""
+    return doris_function(elements, compiler, **kwargs)
 
 
 @compiles(TimestampAddFn, Dialects.AzureSQL)
@@ -261,6 +273,15 @@ def mysql_function(elements, compiler, **kwargs):
     interval_unit = compiler.process(elements.clauses.clauses[1], **kwargs)
     return (
         f"CAST(CURRENT_TIMESTAMP - interval '{interval}' {interval_unit} AS DATETIME)"
+    )
+
+
+def doris_function(elements, compiler, **kwargs):
+    """Doris timestamp and datetime function"""
+    interval = elements.clauses.clauses[0].value
+    interval_unit = compiler.process(elements.clauses.clauses[1], **kwargs)
+    return (
+        f"CAST(CURRENT_TIMESTAMP() - interval '{interval}' {interval_unit} AS DATETIME)"
     )
 
 
