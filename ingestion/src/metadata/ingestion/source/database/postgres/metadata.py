@@ -149,6 +149,9 @@ class PostgresSource(CommonDbSourceService):
     def get_database_names(self) -> Iterable[str]:
         if not self.config.serviceConnection.__root__.config.ingestAllDatabases:
             configured_db = self.config.serviceConnection.__root__.config.database
+            # 若用户将提取所有数据库设置为false且未设置提取的指定数据库，则默认提取 postgres
+            if configured_db is None:
+                configured_db = "postgres"
             self.set_inspector(database_name=configured_db)
             yield configured_db
         else:
