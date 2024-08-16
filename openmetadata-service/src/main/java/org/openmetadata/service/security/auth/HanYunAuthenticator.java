@@ -105,7 +105,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
               .withFullyQualifiedName(userName)
               .withEmail(email)
               .withIsBot(false)
-              .withIsAdmin(false)
+              .withIsAdmin(true)
               .withIsEmailVerified(true)
               .withUpdatedBy(userName)
               .withUpdatedAt(System.currentTimeMillis())
@@ -113,7 +113,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
           //                  .withRoles(EntityUtil.toEntityReferences(create.getRoles(), Entity.ROLE))
           ;
 
-      String genPWD = PasswordUtil.generateRandomPassword();
+      String genPWD = String.format("%s@lowcode")/*PasswordUtil.generateRandomPassword()*/;
       LOG.info("用户：{}，密码：{}", userName, genPWD);
       String newHashedPwd = BCrypt.withDefaults().hashToString(12, genPWD.toCharArray());
       newUser.withAuthenticationMechanism(
