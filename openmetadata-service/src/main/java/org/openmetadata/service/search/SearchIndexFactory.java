@@ -19,55 +19,13 @@ import org.openmetadata.schema.entity.data.Table;
 import org.openmetadata.schema.entity.data.Topic;
 import org.openmetadata.schema.entity.domains.DataProduct;
 import org.openmetadata.schema.entity.domains.Domain;
-import org.openmetadata.schema.entity.services.DashboardService;
-import org.openmetadata.schema.entity.services.DatabaseService;
-import org.openmetadata.schema.entity.services.MessagingService;
-import org.openmetadata.schema.entity.services.MetadataService;
-import org.openmetadata.schema.entity.services.MlModelService;
-import org.openmetadata.schema.entity.services.PipelineService;
-import org.openmetadata.schema.entity.services.SearchService;
-import org.openmetadata.schema.entity.services.StorageService;
+import org.openmetadata.schema.entity.services.*;
 import org.openmetadata.schema.entity.teams.Team;
 import org.openmetadata.schema.entity.teams.User;
 import org.openmetadata.schema.tests.TestCase;
 import org.openmetadata.schema.tests.TestSuite;
 import org.openmetadata.service.Entity;
-import org.openmetadata.service.search.indexes.AggregatedCostAnalysisReportDataIndex;
-import org.openmetadata.service.search.indexes.ChartIndex;
-import org.openmetadata.service.search.indexes.ClassificationIndex;
-import org.openmetadata.service.search.indexes.ContainerIndex;
-import org.openmetadata.service.search.indexes.DashboardDataModelIndex;
-import org.openmetadata.service.search.indexes.DashboardIndex;
-import org.openmetadata.service.search.indexes.DashboardServiceIndex;
-import org.openmetadata.service.search.indexes.DataProductIndex;
-import org.openmetadata.service.search.indexes.DatabaseIndex;
-import org.openmetadata.service.search.indexes.DatabaseSchemaIndex;
-import org.openmetadata.service.search.indexes.DatabaseServiceIndex;
-import org.openmetadata.service.search.indexes.DomainIndex;
-import org.openmetadata.service.search.indexes.EntityReportDataIndex;
-import org.openmetadata.service.search.indexes.GlossaryTermIndex;
-import org.openmetadata.service.search.indexes.MessagingServiceIndex;
-import org.openmetadata.service.search.indexes.MetadataServiceIndex;
-import org.openmetadata.service.search.indexes.MlModelIndex;
-import org.openmetadata.service.search.indexes.MlModelServiceIndex;
-import org.openmetadata.service.search.indexes.PipelineIndex;
-import org.openmetadata.service.search.indexes.PipelineServiceIndex;
-import org.openmetadata.service.search.indexes.QueryIndex;
-import org.openmetadata.service.search.indexes.RawCostAnalysisReportDataIndex;
-import org.openmetadata.service.search.indexes.SearchEntityIndex;
-import org.openmetadata.service.search.indexes.SearchIndex;
-import org.openmetadata.service.search.indexes.SearchServiceIndex;
-import org.openmetadata.service.search.indexes.StorageServiceIndex;
-import org.openmetadata.service.search.indexes.StoredProcedureIndex;
-import org.openmetadata.service.search.indexes.TableIndex;
-import org.openmetadata.service.search.indexes.TagIndex;
-import org.openmetadata.service.search.indexes.TeamIndex;
-import org.openmetadata.service.search.indexes.TestCaseIndex;
-import org.openmetadata.service.search.indexes.TestSuiteIndex;
-import org.openmetadata.service.search.indexes.TopicIndex;
-import org.openmetadata.service.search.indexes.UserIndex;
-import org.openmetadata.service.search.indexes.WebAnalyticEntityViewReportDataIndex;
-import org.openmetadata.service.search.indexes.WebAnalyticUserActivityReportDataIndex;
+import org.openmetadata.service.search.indexes.*;
 
 @Slf4j
 public class SearchIndexFactory {
@@ -135,6 +93,8 @@ public class SearchIndexFactory {
         return new DataProductIndex((DataProduct) entity);
       case Entity.METADATA_SERVICE:
         return new MetadataServiceIndex((MetadataService) entity);
+      case Entity.NETWORK_SERVICE:
+        return new NetworkServiceIndex((NetworkService) entity);
       case Entity.ENTITY_REPORT_DATA:
         return new EntityReportDataIndex((ReportData) entity);
       case Entity.WEB_ANALYTIC_ENTITY_VIEW_REPORT_DATA:

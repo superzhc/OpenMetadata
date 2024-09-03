@@ -208,5 +208,11 @@
     "indexMappingFile": "/elasticsearch/%s/mlmodel_service_index_mapping.json",
     "alias": "mlModelService",
     "parentAliases": ["all"]
+  },
+  "networkService": {
+    "indexName": "network_service_search_index",
+    "indexMappingFile": "/elasticsearch/%s/network_service_index_mapping.json",
+    "alias": "networkService",
+    "parentAliases": ["all"]
   }
 }

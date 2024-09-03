@@ -17,7 +17,7 @@ public class NetworkServiceRepository extends ServiceEntityRepository<NetworkSer
         NetworkConnection.class,
         UPDATE_FIELDS,
         ServiceType.NETWORK);
-    // 不支持搜索
-    supportsSearch = false;
+    // 2024年9月3日 网络服务支持索引搜索
+    supportsSearch = true;
   }
 }
