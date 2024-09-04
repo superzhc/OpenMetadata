@@ -2361,6 +2361,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
 
         updateColumnDescription(stored, updated);
         updateColumnDisplayName(stored, updated);
+        updateColumnDataTypeDisplay(stored, updated);
         updateColumnDataLength(stored, updated);
         updateColumnPrecision(stored, updated);
         updateColumnScale(stored, updated);
@@ -2381,23 +2382,30 @@ public abstract class EntityRepository<T extends EntityInterface> {
     }
 
     private void updateColumnDescription(Column origColumn, Column updatedColumn) {
-      if (operation.isPut() && !nullOrEmpty(origColumn.getDescription()) && updatedByBot()) {
+      // 2024年9月4日 去掉Bot不支持更新的限制
+      /*if (operation.isPut() && !nullOrEmpty(origColumn.getDescription()) && updatedByBot()) {
         // Revert the non-empty task description if being updated by a bot
         updatedColumn.setDescription(origColumn.getDescription());
         return;
-      }
+      }*/
       String columnField = getColumnField(origColumn, FIELD_DESCRIPTION);
       recordChange(columnField, origColumn.getDescription(), updatedColumn.getDescription());
     }
 
     private void updateColumnDisplayName(Column origColumn, Column updatedColumn) {
-      if (operation.isPut() && !nullOrEmpty(origColumn.getDisplayName()) && updatedByBot()) {
+      // 2024年9月4日 去掉Bot不支持更新的限制
+      /*if (operation.isPut() && !nullOrEmpty(origColumn.getDisplayName()) && updatedByBot()) {
         // Revert the non-empty task display name if being updated by a bot
         updatedColumn.setDisplayName(origColumn.getDisplayName());
         return;
-      }
+      }*/
       String columnField = getColumnField(origColumn, FIELD_DISPLAY_NAME);
       recordChange(columnField, origColumn.getDisplayName(), updatedColumn.getDisplayName());
+    }
+
+    private void updateColumnDataTypeDisplay(Column origColumn, Column updatedColumn) {
+      String columnField = getColumnField(origColumn, "dataTypeDisplay");
+      recordChange(columnField, origColumn.getDataTypeDisplay(), updatedColumn.getDataTypeDisplay());
     }
 
     private void updateColumnConstraint(Column origColumn, Column updatedColumn) {
