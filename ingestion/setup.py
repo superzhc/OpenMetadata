@@ -240,7 +240,7 @@ plugins: Dict[str, Set[str]] = {
     "pymssql": {"pymssql~=2.2.0"},
     "quicksight": {VERSIONS["boto3"]},
     "redash": {VERSIONS["packaging"]},
-    "redis": {"redis"},
+    "redis": {"redis==5.0.8"},
     "redpanda": {*COMMONS["kafka"]},
     "redshift": {
         # Going higher has memory and performance issues
