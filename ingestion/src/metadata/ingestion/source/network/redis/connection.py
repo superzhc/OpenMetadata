@@ -27,7 +27,7 @@ def get_connection(
         db=connection.db,
         protocol=protocol,
         username=connection.username,
-        password=connection.password.get_secret_value(),
+        password=connection.password.get_secret_value() if connection.password else None,
     )
     return pool
 
