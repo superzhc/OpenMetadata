@@ -14,8 +14,8 @@
     },
     "redisProtocolVersion": {
       "description": "Defines Redis protocol version. Available values: RESP2, RESP3. Default value: RESP2",
-      "type": "integer",
-      "enum": [2,3],
+      "type": "string",
+      "enum": ["RESP2","RESP3"],
       "javaEnums": [
         {
           "name": "RESP2"
@@ -61,7 +61,7 @@
     "protocol": {
       "title": "Protocol",
       "$ref": "#/definitions/redisProtocolVersion",
-      "default": 2
+      "default": "RESP2"
     }
   },
   "additionalProperties": false,

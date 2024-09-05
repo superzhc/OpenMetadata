@@ -4,7 +4,7 @@ from metadata.generated.schema.entity.automations.workflow import (
     Workflow as AutomationWorkflow,
 )
 from metadata.generated.schema.entity.services.connections.network.redisConnection import (
-    RedisConnection
+    RedisConnection, RedisProtocolVersion
 )
 from metadata.ingestion.connections.test_connections import test_connection_steps
 from metadata.ingestion.ometa.ometa_api import OpenMetadata
@@ -16,11 +16,16 @@ logger = ingestion_logger()
 def get_connection(
         connection: RedisConnection
 ) -> redis.ConnectionPool:
+    if RedisProtocolVersion.RESP3 == connection.protocol:
+        protocol = 3
+    else:
+        protocol = 2
+
     pool = redis.ConnectionPool(
         host=connection.host,
         port=connection.port,
         db=connection.db,
-        protocol=connection.protocol.value if connection.protocol else 2,
+        protocol=protocol,
         username=connection.username,
         password=connection.password.get_secret_value(),
     )
