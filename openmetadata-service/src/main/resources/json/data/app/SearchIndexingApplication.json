@@ -26,6 +26,7 @@
       "dashboardService",
       "pipelineService",
       "mlmodelService",
+      "networkService",
       "searchService",
       "entityReportData",
       "webAnalyticEntityViewReportData",

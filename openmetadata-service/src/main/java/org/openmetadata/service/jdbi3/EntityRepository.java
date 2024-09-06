@@ -2098,6 +2098,10 @@ public abstract class EntityRepository<T extends EntityInterface> {
       return recordChange(field, orig, updated, false, objectMatch, true);
     }
 
+    public final <K> boolean recordChange(String field, K orig, K updated, BiPredicate<K, K> typeMatch) {
+      return recordChange(field, orig, updated, false, typeMatch, true);
+    }
+
     public final <K> boolean recordChange(String field, K orig, K updated, boolean jsonValue) {
       return recordChange(field, orig, updated, jsonValue, objectMatch, true);
     }

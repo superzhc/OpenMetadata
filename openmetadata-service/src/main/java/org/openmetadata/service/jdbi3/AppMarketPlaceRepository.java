@@ -38,4 +38,24 @@ public class AppMarketPlaceRepository extends EntityRepository<AppMarketPlaceDef
 
   @Override
   public void storeRelationships(AppMarketPlaceDefinition entity) {}
+
+  @Override
+  public EntityUpdater getUpdater(
+      AppMarketPlaceDefinition original, AppMarketPlaceDefinition updated, Operation operation) {
+    return new AppMarketPlaceUpdater(original, updated, operation);
+  }
+
+  public class AppMarketPlaceUpdater extends EntityUpdater {
+
+    public AppMarketPlaceUpdater(
+        AppMarketPlaceDefinition original, AppMarketPlaceDefinition updated, Operation operation) {
+      super(original, updated, operation);
+    }
+
+    @Override
+    public void entitySpecificUpdate() {
+      recordChange("appClassName", original.getClassName(), updated.getClassName());
+      recordChange("appConfiguration", original.getAppConfiguration(), updated.getAppConfiguration());
+    }
+  }
 }

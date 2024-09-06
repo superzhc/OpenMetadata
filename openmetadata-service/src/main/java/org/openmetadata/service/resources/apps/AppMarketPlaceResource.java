@@ -1,6 +1,5 @@
 package org.openmetadata.service.resources.apps;
 
-import static org.openmetadata.service.Entity.APPLICATION;
 import static org.openmetadata.service.Entity.APP_MARKET_PLACE_DEF;
 import static org.openmetadata.service.jdbi3.EntityRepository.getEntitiesFromSeedData;
 

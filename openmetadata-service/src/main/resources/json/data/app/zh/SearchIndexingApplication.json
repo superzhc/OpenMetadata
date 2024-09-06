@@ -23,7 +23,8 @@
       "webAnalyticUserActivityReportData",
       "domain",
       "storedProcedure",
-      "dataProduct"
+      "dataProduct",
+      "networkService"
     ],
     "recreateIndex": true,
     "batchSize": "100",

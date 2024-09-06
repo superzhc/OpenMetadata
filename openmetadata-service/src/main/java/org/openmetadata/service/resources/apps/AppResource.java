@@ -113,20 +113,22 @@ public class AppResource extends EntityResource<App, AppRepository> {
 
       // Get Create App Requests
       List<CreateApp> createAppsReq =
-          getEntitiesFromSeedData(APPLICATION, String.format(".*json/data/%s/zh/.*\\.json$", entityType), CreateApp.class);
+          getEntitiesFromSeedData(
+              APPLICATION, String.format(".*json/data/%s/zh/.*\\.json$", entityType), CreateApp.class);
       for (CreateApp createApp : createAppsReq) {
         try {
-          AppMarketPlaceDefinition definition =
-              repository
-                  .getMarketPlace()
-                  .getByName(
-                      null, createApp.getName(), new EntityUtil.Fields(repository.getMarketPlace().getAllowedFields()));
-
           String existingJson = repository.getDao().findJsonByFqn(createApp.getName(), ALL);
 
           App app;
 
           if (existingJson == null) {
+            AppMarketPlaceDefinition definition =
+                repository
+                    .getMarketPlace()
+                    .getByName(
+                        null,
+                        createApp.getName(),
+                        new EntityUtil.Fields(repository.getMarketPlace().getAllowedFields()));
             app = getApplication(definition, createApp, "admin").withFullyQualifiedName(createApp.getName());
             repository.initializeEntity(app);
           } else {
