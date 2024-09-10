@@ -85,6 +85,7 @@
         "SMALLINT",
         "INT",
         "BIGINT",
+        "LARGEINT",
         "BYTEINT",
         "BYTES",
         "FLOAT",
