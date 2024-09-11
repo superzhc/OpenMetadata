@@ -25,6 +25,7 @@ import org.openmetadata.schema.entity.services.ingestionPipelines.AirflowConfig;
 import org.openmetadata.schema.entity.services.ingestionPipelines.IngestionPipeline;
 import org.openmetadata.schema.entity.services.ingestionPipelines.PipelineStatus;
 import org.openmetadata.schema.metadataIngestion.LogLevels;
+import org.openmetadata.schema.metadataIngestion.SourceConfig;
 import org.openmetadata.schema.services.connections.metadata.OpenMetadataConnection;
 import org.openmetadata.schema.type.ChangeDescription;
 import org.openmetadata.schema.type.ChangeEvent;
@@ -39,6 +40,7 @@ import org.openmetadata.service.OpenMetadataApplicationConfig;
 import org.openmetadata.service.resources.services.ingestionpipelines.IngestionPipelineResource;
 import org.openmetadata.service.secrets.SecretsManager;
 import org.openmetadata.service.secrets.SecretsManagerFactory;
+import org.openmetadata.service.secrets.converter.ClassConverterFactory;
 import org.openmetadata.service.util.EntityUtil;
 import org.openmetadata.service.util.EntityUtil.Fields;
 import org.openmetadata.service.util.FullyQualifiedName;
@@ -90,6 +92,10 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
 
   @Override
   public void prepare(IngestionPipeline ingestionPipeline, boolean update) {
+    ingestionPipeline.setSourceConfig(
+        (SourceConfig)
+            ClassConverterFactory.getConverter(SourceConfig.class).convert(ingestionPipeline.getSourceConfig()));
+
     EntityReference entityReference = Entity.getEntityReference(ingestionPipeline.getService(), Include.NON_DELETED);
     ingestionPipeline.setService(entityReference);
   }
