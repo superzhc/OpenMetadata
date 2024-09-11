@@ -19,6 +19,7 @@ import org.openmetadata.schema.auth.SSOAuthMechanism;
 import org.openmetadata.schema.entity.automations.TestServiceConnectionRequest;
 import org.openmetadata.schema.entity.automations.Workflow;
 import org.openmetadata.schema.metadataIngestion.DbtPipeline;
+import org.openmetadata.schema.metadataIngestion.SourceConfig;
 import org.openmetadata.schema.metadataIngestion.dbtconfig.DbtGCSConfig;
 import org.openmetadata.schema.security.credentials.GCPCredentials;
 import org.openmetadata.schema.services.connections.dashboard.LookerConnection;
@@ -65,6 +66,8 @@ public final class ClassConverterFactory {
             Map.entry(SupersetConnection.class, new SupersetConnectionClassConverter()),
             Map.entry(TableauConnection.class, new TableauConnectionClassConverter()),
             Map.entry(TestServiceConnectionRequest.class, new TestServiceConnectionRequestClassConverter()),
+            // 2024年9月11日 新增集成任务配置参数校验
+            Map.entry(SourceConfig.class, new SourceConfigClassConverter()),
             Map.entry(Workflow.class, new WorkflowClassConverter()));
   }
 
