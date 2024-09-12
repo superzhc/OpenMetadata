@@ -17,16 +17,23 @@
     {
       "name": "DataDevelopStream-Create",
       "description" : "实时数据开发资源新增权限",
-      "resources" : ["all"],
+      "resources" : ["databaseService", "database", "databaseSchema", "table", "messagingService", "topic", "networkService"],
       "operations": ["Create"],
-      "effect": "deny"
+      "effect": "allow"
     },
     {
-      "name": "DataDevelopStream-Create",
+      "name": "DataDevelopStream-Delete",
       "description" : "实时数据开发资源删除权限",
-      "resources" : ["all"],
+      "resources" : ["databaseService", "database", "databaseSchema", "table", "messagingService", "topic", "networkService"],
       "operations": ["Delete"],
-      "effect": "deny"
+      "effect": "allow"
+    },
+    {
+      "name": "DataDevelopStream-EditAll",
+      "description" : "实时数据开发资源编辑权限",
+      "resources" : ["databaseService", "database", "databaseSchema", "table", "messagingService", "topic", "networkService"],
+      "operations": ["EditAll"],
+      "effect": "allow"
     }
   ]
 }

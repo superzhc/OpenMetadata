@@ -22,10 +22,17 @@
       "effect": "deny"
     },
     {
-      "name": "DataService-Create",
+      "name": "DataService-Delete",
       "description" : "数据服务Api资源删除权限",
       "resources" : ["all"],
       "operations": ["Delete"],
+      "effect": "deny"
+    },
+    {
+      "name": "DataService-EditAll",
+      "description" : "数据服务Api资源删除权限",
+      "resources" : ["all"],
+      "operations": ["EditAll"],
       "effect": "deny"
     }
   ]

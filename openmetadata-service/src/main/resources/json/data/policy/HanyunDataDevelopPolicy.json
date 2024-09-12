@@ -17,16 +17,23 @@
     {
       "name": "DataDevelop-Create",
       "description" : "离线数据开发资源新增权限",
-      "resources" : ["databaseService", "messagingService", "networkService"],
+      "resources" : ["databaseService", "database", "databaseSchema", "table", "messagingService", "topic", "networkService"],
       "operations": ["Create"],
       "effect": "allow"
     },
     {
-      "name": "DataDevelop-Create",
+      "name": "DataDevelop-Delete",
       "description" : "离线数据开发资源删除权限",
-      "resources" : ["all"],
+      "resources" : ["databaseService", "database", "databaseSchema", "table", "messagingService", "topic", "networkService"],
       "operations": ["Delete"],
-      "effect": "deny"
+      "effect": "allow"
+    },
+    {
+      "name": "DataDevelop-EditAll",
+      "description" : "离线数据开发资源编辑权限",
+      "resources" : ["databaseService", "database", "databaseSchema", "table", "messagingService", "topic", "networkService"],
+      "operations": ["EditAll"],
+      "effect": "allow"
     }
   ]
 }
