@@ -15,6 +15,7 @@ package org.openmetadata.service.resources.types;
 
 import static org.openmetadata.common.utils.CommonUtil.listOrEmpty;
 import static org.openmetadata.service.Entity.ADMIN_USER_NAME;
+import static org.openmetadata.service.util.JsonUtils.JSON_FILE_EXTENSION;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +26,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.json.JsonPatch;
 import javax.validation.Valid;
@@ -48,6 +53,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.openmetadata.common.utils.CommonUtil;
 import org.openmetadata.schema.api.CreateType;
 import org.openmetadata.schema.entity.Type;
 import org.openmetadata.schema.entity.type.Category;
@@ -63,6 +69,7 @@ import org.openmetadata.service.resources.Collection;
 import org.openmetadata.service.resources.EntityResource;
 import org.openmetadata.service.security.Authorizer;
 import org.openmetadata.service.security.policyevaluator.OperationContext;
+import org.openmetadata.service.util.EntityUtil;
 import org.openmetadata.service.util.EntityUtil.Fields;
 import org.openmetadata.service.util.JsonUtils;
 import org.openmetadata.service.util.RestUtil.PutResponse;
@@ -96,9 +103,37 @@ public class TypeResource extends EntityResource<Type, TypeRepository> {
     // Load types defined in OpenMetadata schemas
     long now = System.currentTimeMillis();
     List<Type> types = JsonUtils.getTypes();
+
+    // 2024年9月12日 自定义属性
+    Map<String, List<CustomProperty>> entityCustomProperties = new HashMap<>();
+    try {
+      List<String> jsonDataFiles = EntityUtil.getJsonDataResources(".*json/data/customProperties/.*\\.json$");
+      jsonDataFiles.forEach(
+          jsonDataFile -> {
+            try {
+              String json = CommonUtil.getResourceAsStream(TypeResource.class.getClassLoader(), jsonDataFile);
+              String entityName =
+                  Paths.get(jsonDataFile).getFileName().toString().replace(" ", "").replace(JSON_FILE_EXTENSION, "");
+              List<CustomProperty> customProperties = JsonUtils.readObjects(json, CustomProperty.class);
+              for (CustomProperty customProperty : customProperties) {
+                customProperty.setPropertyType(
+                    this.repository.getReferenceByName(
+                        customProperty.getPropertyType().getName(), Include.NON_DELETED));
+              }
+              entityCustomProperties.put(entityName, customProperties);
+            } catch (IOException e) {
+              LOG.warn("Failed to initialize the custom property from file {}", jsonDataFile, e);
+            }
+          });
+    } catch (Exception e) {
+      LOG.error("Failed in initializing Custom Property");
+    }
+
     types.forEach(
         type -> {
           type.withId(UUID.randomUUID()).withUpdatedBy(ADMIN_USER_NAME).withUpdatedAt(now);
+          // 设置默认的自定义属性
+          type.setCustomProperties(entityCustomProperties.get(type.getName()));
           LOG.info("Loading type {}", type.getName());
           try {
             Fields fields = getFields(PROPERTIES_FIELD);

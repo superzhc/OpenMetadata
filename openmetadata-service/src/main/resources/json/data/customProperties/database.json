@@ -1,0 +1,16 @@
+[
+  {
+    "name": "createTime",
+    "description": "创建时间",
+    "propertyType": {
+      "name": "string"
+    }
+  },
+  {
+    "name": "updateTime",
+    "description": "更新时间",
+    "propertyType": {
+      "name": "string"
+    }
+  }
+]
