@@ -39,8 +39,7 @@
     "date_detection": false,
     "properties": {
       "id": {
-        "type": "text",
-        "index": false
+        "type": "text"
       },
       "name": {
         "type": "text",
@@ -79,8 +78,7 @@
         "analyzer": "om_analyzer"
       },
       "version": {
-        "type": "float",
-        "index": false
+        "type": "float"
       },
       "updatedAt": {
         "type": "date",
@@ -476,8 +474,7 @@
         }
       },
       "deleted": {
-        "type": "text",
-        "index": false
+        "type": "text"
       },
       "followers": {
         "type": "keyword"

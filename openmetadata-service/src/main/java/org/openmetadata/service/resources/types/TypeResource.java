@@ -133,7 +133,9 @@ public class TypeResource extends EntityResource<Type, TypeRepository> {
         type -> {
           type.withId(UUID.randomUUID()).withUpdatedBy(ADMIN_USER_NAME).withUpdatedAt(now);
           // 设置默认的自定义属性
-          type.setCustomProperties(entityCustomProperties.get(type.getName()));
+          if (null != entityCustomProperties.get(type.getName())) {
+            type.setCustomProperties(entityCustomProperties.get(type.getName()));
+          }
           LOG.info("Loading type {}", type.getName());
           try {
             Fields fields = getFields(PROPERTIES_FIELD);

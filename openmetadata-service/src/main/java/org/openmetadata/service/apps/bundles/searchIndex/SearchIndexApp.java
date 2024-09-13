@@ -167,23 +167,23 @@ public class SearchIndexApp extends AbstractNativeApplication {
             failed = 0;
           }
         } catch (ProcessorException px) {
-          handleProcessorError(
-              px.getMessage(),
+          String errorMsg =
               String.format(
                   ENTITY_TYPE_ERROR_MSG,
                   paginatedEntitiesSource.getEntityType(),
                   px.getCause(),
-                  ExceptionUtils.getStackTrace(px)),
-              currentTime);
+                  ExceptionUtils.getStackTrace(px));
+          LOG.error("ReIndex Error {}", errorMsg);
+          handleProcessorError(px.getMessage(), errorMsg, currentTime);
         } catch (SinkException wx) {
-          handleEsSinkError(
-              wx.getMessage(),
+          String errorMsg =
               String.format(
                   ENTITY_TYPE_ERROR_MSG,
                   paginatedEntitiesSource.getEntityType(),
                   wx.getCause(),
-                  ExceptionUtils.getStackTrace(wx)),
-              currentTime);
+                  ExceptionUtils.getStackTrace(wx));
+          LOG.error("ReIndex Error {}", errorMsg);
+          handleEsSinkError(wx.getMessage(), errorMsg, currentTime);
         } finally {
           updateStats(
               success,
@@ -236,32 +236,32 @@ public class SearchIndexApp extends AbstractNativeApplication {
             failed = 0;
           }
         } catch (SourceException rx) {
-          handleSourceError(
-              rx.getMessage(),
+          String errorMsg =
               String.format(
                   ENTITY_TYPE_ERROR_MSG,
                   paginatedDataInsightSource.getEntityType(),
                   rx.getCause(),
-                  ExceptionUtils.getStackTrace(rx)),
-              currentTime);
+                  ExceptionUtils.getStackTrace(rx));
+          LOG.error("ReIndex Error {}", errorMsg);
+          handleSourceError(rx.getMessage(), errorMsg, currentTime);
         } catch (ProcessorException px) {
-          handleProcessorError(
-              px.getMessage(),
+          String errorMsg =
               String.format(
                   ENTITY_TYPE_ERROR_MSG,
                   paginatedDataInsightSource.getEntityType(),
                   px.getCause(),
-                  ExceptionUtils.getStackTrace(px)),
-              currentTime);
+                  ExceptionUtils.getStackTrace(px));
+          LOG.error("ReIndex Error {}", errorMsg);
+          handleProcessorError(px.getMessage(), errorMsg, currentTime);
         } catch (SinkException wx) {
-          handleEsSinkError(
-              wx.getMessage(),
+          String errorMsg =
               String.format(
                   ENTITY_TYPE_ERROR_MSG,
                   paginatedDataInsightSource.getEntityType(),
                   wx.getCause(),
-                  ExceptionUtils.getStackTrace(wx)),
-              currentTime);
+                  ExceptionUtils.getStackTrace(wx));
+          LOG.error("ReIndex Error {}", errorMsg);
+          handleEsSinkError(wx.getMessage(), errorMsg, currentTime);
         } finally {
           updateStats(
               success,
@@ -329,6 +329,7 @@ public class SearchIndexApp extends AbstractNativeApplication {
     searchRepository.deleteIndex(indexType);
     // Create index
     searchRepository.createIndex(indexType);
+    LOG.info("Entity[{}] index [{}] reindexing", entityType, indexType.getIndexName());
   }
 
   private void handleErrorsOs(

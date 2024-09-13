@@ -26,7 +26,7 @@
       "dataProduct",
       "networkService"
     ],
-    "recreateIndex": true,
+    "recreateIndex": false,
     "batchSize": "100",
     "searchIndexMappingLanguage": "EN"
   },

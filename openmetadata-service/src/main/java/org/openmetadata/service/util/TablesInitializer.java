@@ -108,6 +108,11 @@ public final class TablesInitializer {
     OPTIONS.addOption(
         null, SchemaMigrationOption.ES_DROP.toString(), false, "Drop all the indexes in the elastic search");
     OPTIONS.addOption(null, SchemaMigrationOption.ES_MIGRATE.toString(), false, "Update Elastic Search index mapping");
+    OPTIONS.addOption(
+        null,
+        SchemaMigrationOption.ES_REINDEX.toString(),
+        false,
+        "Drop all the indexes and creates all the indexes in the elastic search");
   }
 
   private TablesInitializer() {}
@@ -329,6 +334,10 @@ public final class TablesInitializer {
       case ES_DROP:
         searchRepository.dropIndexes();
         break;
+      case ES_REINDEX:
+        searchRepository.dropIndexes();
+        searchRepository.createIndexes();
+        break;
       default:
         throw new SQLException("SchemaMigrationHelper unable to execute the option : " + schemaMigrationOption);
     }
@@ -380,7 +389,8 @@ public final class TablesInitializer {
     REPAIR("repair"),
     ES_DROP("es-drop"),
     ES_CREATE("es-create"),
-    ES_MIGRATE("es-migrate");
+    ES_MIGRATE("es-migrate"),
+    ES_REINDEX("es-reindex");
     private final String value;
 
     SchemaMigrationOption(String schemaMigrationOption) {
