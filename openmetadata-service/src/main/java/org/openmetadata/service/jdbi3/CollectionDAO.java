@@ -69,23 +69,7 @@ import org.openmetadata.schema.entity.app.AppMarketPlaceDefinition;
 import org.openmetadata.schema.entity.automations.Workflow;
 import org.openmetadata.schema.entity.classification.Classification;
 import org.openmetadata.schema.entity.classification.Tag;
-import org.openmetadata.schema.entity.data.Chart;
-import org.openmetadata.schema.entity.data.Container;
-import org.openmetadata.schema.entity.data.Dashboard;
-import org.openmetadata.schema.entity.data.DashboardDataModel;
-import org.openmetadata.schema.entity.data.Database;
-import org.openmetadata.schema.entity.data.DatabaseSchema;
-import org.openmetadata.schema.entity.data.Glossary;
-import org.openmetadata.schema.entity.data.GlossaryTerm;
-import org.openmetadata.schema.entity.data.Metrics;
-import org.openmetadata.schema.entity.data.MlModel;
-import org.openmetadata.schema.entity.data.Pipeline;
-import org.openmetadata.schema.entity.data.Query;
-import org.openmetadata.schema.entity.data.Report;
-import org.openmetadata.schema.entity.data.SearchIndex;
-import org.openmetadata.schema.entity.data.StoredProcedure;
-import org.openmetadata.schema.entity.data.Table;
-import org.openmetadata.schema.entity.data.Topic;
+import org.openmetadata.schema.entity.data.*;
 import org.openmetadata.schema.entity.domains.DataProduct;
 import org.openmetadata.schema.entity.domains.Domain;
 import org.openmetadata.schema.entity.events.EventSubscription;
@@ -252,6 +236,9 @@ public interface CollectionDAO {
 
   @CreateSqlObject
   MlModelServiceDAO mlModelServiceDAO();
+
+  @CreateSqlObject
+  UniversalDataModelDAO universalDataModelDAO();
 
   @CreateSqlObject
   DashboardServiceDAO dashboardServiceDAO();
@@ -1821,6 +1808,23 @@ public interface CollectionDAO {
     @Override
     default String getNameHashColumn() {
       return "nameHash";
+    }
+  }
+
+  interface UniversalDataModelDAO extends EntityDAO<UniversalDataModel> {
+    @Override
+    default String getTableName() {
+      return "universal_data_model_entity";
+    }
+
+    @Override
+    default Class<UniversalDataModel> getEntityClass() {
+      return UniversalDataModel.class;
+    }
+
+    @Override
+    default String getNameHashColumn() {
+      return "fqnHash";
     }
   }
 

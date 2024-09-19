@@ -1,0 +1,80 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/data/universalDataModel.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UniversalDataModel",
+  "description": "This schema defines the Universal Data Model entity.",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.entity.data.UniversalDataModel",
+  "javaInterfaces": ["org.openmetadata.schema.EntityInterface"],
+  "definitions": {
+    "content": {
+      "javaType": "org.openmetadata.schema.type.UniversalData",
+      "description": "universalDataModel real information",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "id": {
+      "description": "Unique identifier that identifies this universal data model.",
+      "$ref": "../../type/basic.json#/definitions/uuid"
+    },
+    "name": {
+      "description": "Name that identifies this universal data model instance uniquely.",
+      "$ref": "../../type/basic.json#/definitions/entityName"
+    },
+    "fullyQualifiedName": {
+      "description": "A unique name that identifies a universal data in the format 'UniversalDataModelName'.",
+      "$ref": "../../type/basic.json#/definitions/fullyQualifiedEntityName"
+    },
+    "displayName": {
+      "description": "Display Name that identifies this UniversalDataModel. It could be title or label from the source services.",
+      "type": "string"
+    },
+    "content": {
+      "description": "universalDataModel real information",
+      "$ref": "#/definitions/content"
+    },
+    "description": {
+      "description": "Description of this universalDataModel instance.",
+      "$ref": "../../type/basic.json#/definitions/markdown"
+    },
+    "source": {
+      "description": "the entity from source",
+      "type": "string"
+    },
+    "version": {
+      "description": "Metadata version of the entity.",
+      "$ref": "../../type/entityHistory.json#/definitions/entityVersion"
+    },
+    "updatedAt": {
+      "description": "Last update time corresponding to the new version of the entity in Unix epoch time milliseconds.",
+      "$ref": "../../type/basic.json#/definitions/timestamp"
+    },
+    "updatedBy": {
+      "description": "User who made the update.",
+      "type": "string"
+    },
+    "href": {
+      "description": "Link to the resource corresponding to this universalDataModel.",
+      "$ref": "../../type/basic.json#/definitions/href"
+    },
+    "owner": {
+      "description": "Owner of this pipeline.",
+      "$ref": "../../type/entityReference.json"
+    },
+    "changeDescription": {
+      "description": "Change that lead to this version of the entity.",
+      "$ref": "../../type/entityHistory.json#/definitions/changeDescription"
+    },
+    "deleted": {
+      "description": "When `true` indicates the entity has been soft deleted.",
+      "type": "boolean",
+      "default": false
+    },
+    "votes" : {
+      "$ref": "../../type/votes.json"
+    }
+  },
+  "required": ["id", "name"],
+  "additionalProperties": false
+}

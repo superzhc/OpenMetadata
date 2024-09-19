@@ -1,0 +1,37 @@
+{
+  "$id": "https://open-metadata.org/schema/api/data/createUniversalDataModel.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateUniversalDataModelRequest",
+  "description": "Create UniversalDataModel entity request",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.api.data.CreateUniversalDataModel",
+  "javaInterfaces": ["org.openmetadata.schema.CreateEntity"],
+  "properties": {
+    "name": {
+      "description": "Name that identifies this universalDataModel.",
+      "$ref": "../../type/basic.json#/definitions/entityName"
+    },
+    "displayName": {
+      "description": "Display Name that identifies this universalDataModel.",
+      "type": "string"
+    },
+    "content": {
+      "description": "universalDataModel real information",
+      "$ref": "../../entity/data/universalDataModel.json#/definitions/content"
+    },
+    "description": {
+      "description": "Description of the universalDataModel instance.",
+      "$ref": "../../type/basic.json#/definitions/markdown"
+    },
+    "source": {
+      "description": "the entity from source",
+      "type": "string"
+    },
+    "owner": {
+      "description": "Owner of this universalDataModel",
+      "$ref": "../../type/entityReference.json"
+    }
+  },
+  "required": ["name", "description"],
+  "additionalProperties": false
+}
