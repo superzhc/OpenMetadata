@@ -1,0 +1,45 @@
+{
+  "createGlossary": {
+    "name": "DataWarehouse",
+    "displayName": "数仓分层",
+    "description": "数据仓库分层",
+    "provider": "system",
+    "mutuallyExclusive": "true"
+  },
+  "createTerms": [
+    {
+      "name": "ODS",
+      "displayName": "数据贴源层",
+      "description": "ODS（Operation Data Store）：存放未经过处理的原始数据至数据仓库系统，结构上与源系统保持一致，是数据仓库的数据准备区。",
+      "synonyms": ["原始数据层"]
+    },
+    {
+      "name": "DWD",
+      "displayName": "数据明细层",
+      "description": "DWD（Data Warehouse Detail）：对ODS层数据进行清洗（去除空值，脏数据，超过极限范围的数据，行式存储改为列存储，改压缩格式） 解决一些数据质量问题和数据的完整度问题",
+      "synonyms": ["基础数据层"]
+    },
+    {
+      "name": "DWS",
+      "displayName": "数据服务层",
+      "description": "DWS（Data Warehouse Summary）：轻度汇总层（面向分析型应用进行细粒度的统计和沉淀），对DWD层的操作数据进行轻度综合和汇总统计",
+      "synonyms": ["轻度汇总层"]
+    },
+    {
+      "name": "ADS",
+      "displayName": "数据应用层",
+      "description": "ADS（Application Data Store）：用于输出报表数据，根据业务需求组织数据"
+    },
+    {
+      "name": "DIM",
+      "displayName": "维度层",
+      "description": "DIM（Dimension）：为DWD、DWS、ADS提供维度字段说明，如国家代码和国家名、地理位置、中文名、国旗图片等信息",
+      "synonyms": ["公共维表层"]
+    },
+    {
+      "name": "TMP",
+      "displayName": "临时表层",
+      "description": "TMP（Temp）：每一层的计算都会有很多临时表，专设TMP层来存储数据仓库的临时表"
+    }
+  ]
+}
