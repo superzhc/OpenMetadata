@@ -80,8 +80,11 @@ class BaseTableCustomSQLQueryValidator(BaseTestValidator):
                 msg,
                 [TestResultValue(name=RESULT_ROW_COUNT, value=None)],
             )
-        # 若返回值为 decimal 也认为是 Count 策略
-        len_rows = rows if isinstance(rows, int) or isinstance(rows, decimal.Decimal) else len(rows)
+        # 若无返回值，则不管是什么策略，计数都为 0
+        len_rows = 0 if rows is None else (
+            # 若返回值为 decimal 也认为是 Count 策略
+            rows if isinstance(rows, int) or isinstance(rows, decimal.Decimal) else len(rows)
+        )
         if len_rows <= threshold:
             status = TestCaseStatus.Success
             result_value = len_rows

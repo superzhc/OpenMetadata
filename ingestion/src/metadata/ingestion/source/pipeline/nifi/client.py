@@ -65,7 +65,8 @@ class NifiClient:
             self.verify = ca_file_path if ca_file_path else False
             self.client_cert = (client_cert_path, client_key_path)
             self.headers = self.content_headers
-            access = self.get("access")
+            # access = self.get("access")
+            access = self.get("flow/about")
             logger.debug(access)
 
     @property
