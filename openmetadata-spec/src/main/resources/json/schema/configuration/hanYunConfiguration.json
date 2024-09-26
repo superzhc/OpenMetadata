@@ -1,0 +1,41 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/configuration/elasticSearchConfiguration.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HanYunConfiguration",
+  "description": "This schema defines the HanYun Configuration.",
+  "type": "object",
+  "javaType": "org.openmetadata.api.configuration.HanYunConfiguration",
+  "definitions": {
+    "sso": {
+      "description": "HanYun SSO Configuration",
+      "type": "object",
+      "javaType": "org.openmetadata.api.configuration.hanyun.SSOConfiguration",
+      "properties": {
+        "cas": {
+          "description": "Central Authentication Service",
+          "type": "string"
+        },
+        "grantType": {
+          "description": "Grant Type",
+          "type": "string"
+        },
+        "clientId": {
+          "description": "Client Id",
+          "type": "string"
+        },
+        "clientSecret": {
+          "description": "Client Secret",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "sso": {
+      "$ref": "#/definitions/sso"
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.UUID;
 import javax.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.openmetadata.api.configuration.hanyun.SSOConfiguration;
 import org.openmetadata.schema.api.security.AuthenticationConfiguration;
 import org.openmetadata.schema.auth.BasicAuthMechanism;
 import org.openmetadata.schema.auth.LoginRequest;
@@ -36,6 +38,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
   private UserRepository userRepository;
   private TokenRepository tokenRepository;
   private OpenMetadataApplicationConfig config;
+  private SSOConfiguration hanYunSSOConfiguration;
   private AuthenticationConfiguration authenticationConfiguration;
   private String platform_url;
 
@@ -50,8 +53,10 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
     this.userRepository = (UserRepository) Entity.getEntityRepository(Entity.USER);
     this.tokenRepository = Entity.getTokenRepository();
     this.config = config;
+    this.hanYunSSOConfiguration =
+        (null == config.getHanYunConfiguration() ? null : config.getHanYunConfiguration().getSso());
     this.authenticationConfiguration = config.getAuthenticationConfiguration();
-    this.platform_url = authenticationConfiguration.getAuthority();
+    this.platform_url = getCAS();
   }
 
   @Override
@@ -70,9 +75,9 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
     String code = loginRequest.getEmail();
 
     Map<String, String> tokenParams = new HashMap<>();
-    tokenParams.put("client_id", authenticationConfiguration.getClientId());
-    tokenParams.put("client_secret", authenticationConfiguration.getClientSecret());
-    tokenParams.put("grant_type", authenticationConfiguration.getGrantType());
+    tokenParams.put("client_id", getClientId());
+    tokenParams.put("client_secret", getClientSecret());
+    tokenParams.put("grant_type", getGrantType());
     tokenParams.put("code", code);
     String tokenUrl = HttpClientUtils.appendParams(platform_url + PLATFORM_OAUTH_TOKEN_PATH, tokenParams);
     String tokenResult = HttpClientUtils.doPost(tokenUrl);
@@ -84,7 +89,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
 
     Map<String, String> userInfoParams = new HashMap<>();
     userInfoParams.put("access_token", tokenResultJson.getString(PLATFORM_ACCESS_TOKEN));
-    userInfoParams.put("client_id", authenticationConfiguration.getClientId());
+    userInfoParams.put("client_id", getClientId());
     String userInfoResult = HttpClientUtils.doGet(platform_url + PLATFORM_OAUTH_USERINFO_PATH, userInfoParams);
     LOG.info("汉云平台单点登录用户信息：" + userInfoResult);
     JsonObject userInfoJson = JsonUtils.readJson(userInfoResult).asJsonObject();
@@ -113,7 +118,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
           //                  .withRoles(EntityUtil.toEntityReferences(create.getRoles(), Entity.ROLE))
           ;
 
-      String genPWD = String.format("%s@lowcode")/*PasswordUtil.generateRandomPassword()*/;
+      String genPWD = String.format("%s@lowcode") /*PasswordUtil.generateRandomPassword()*/;
       LOG.info("用户：{}，密码：{}", userName, genPWD);
       String newHashedPwd = BCrypt.withDefaults().hashToString(12, genPWD.toCharArray());
       newUser.withAuthenticationMechanism(
@@ -152,5 +157,33 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
 
     return userRepository.getByName(
         null, userName, new EntityUtil.Fields(Set.of(USER_PROTECTED_FIELDS), USER_PROTECTED_FIELDS));
+  }
+
+  private String getCAS() {
+    if (null != this.hanYunSSOConfiguration && StringUtils.isNotBlank(this.hanYunSSOConfiguration.getCas())) {
+      return this.hanYunSSOConfiguration.getCas();
+    }
+    return this.authenticationConfiguration.getAuthority();
+  }
+
+  private String getGrantType() {
+    if (null != this.hanYunSSOConfiguration && StringUtils.isNotBlank(this.hanYunSSOConfiguration.getGrantType())) {
+      return this.hanYunSSOConfiguration.getGrantType();
+    }
+    return this.authenticationConfiguration.getGrantType();
+  }
+
+  private String getClientId() {
+    if (null != this.hanYunSSOConfiguration && StringUtils.isNotBlank(this.hanYunSSOConfiguration.getClientId())) {
+      return this.hanYunSSOConfiguration.getClientId();
+    }
+    return this.authenticationConfiguration.getClientId();
+  }
+
+  private String getClientSecret() {
+    if (null != this.hanYunSSOConfiguration && StringUtils.isNotBlank(this.hanYunSSOConfiguration.getClientSecret())) {
+      return this.hanYunSSOConfiguration.getClientSecret();
+    }
+    return this.authenticationConfiguration.getClientSecret();
   }
 }

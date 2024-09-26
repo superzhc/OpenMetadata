@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.openmetadata.api.configuration.ApplicationConfiguration;
 import org.openmetadata.api.configuration.ChangeEventConfiguration;
+import org.openmetadata.api.configuration.HanYunConfiguration;
 import org.openmetadata.schema.api.configuration.events.EventHandlerConfiguration;
 import org.openmetadata.schema.api.configuration.pipelineServiceClient.PipelineServiceClientConfiguration;
 import org.openmetadata.schema.api.fernet.FernetConfiguration;
@@ -100,6 +101,9 @@ public class OpenMetadataApplicationConfig extends Configuration {
 
   @JsonProperty("changeEventConfig")
   private ChangeEventConfiguration changeEventConfiguration;
+
+  @JsonProperty("hanyun")
+  private HanYunConfiguration hanYunConfiguration;
 
   @Override
   public String toString() {
