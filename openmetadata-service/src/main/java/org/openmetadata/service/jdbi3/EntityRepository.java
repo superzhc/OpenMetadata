@@ -219,6 +219,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
   @Getter protected final Fields putFields;
 
   protected boolean supportsSearch = false;
+  protected boolean supportsSync = false;
 
   protected EntityRepository(
       String collectionPath,
@@ -757,6 +758,25 @@ public abstract class EntityRepository<T extends EntityInterface> {
     }
   }
 
+  protected void preDelete(T entity, String deletedBy) {
+    // Override this method to perform any operation required after deletion.
+    // For example ingestion pipeline deletes a pipeline in AirFlow.
+  }
+
+  protected void postDelete(T entity) {}
+
+  protected void syncCreate(T entity) {
+    if (supportsSync) {}
+  }
+
+  protected void syncUpdate(T origin, T updated, ChangeDescription changeDescription) {
+    if (supportsSync) {}
+  }
+
+  protected void syncDelete(T entity) {
+    if (supportsSync) {}
+  }
+
   @Transaction
   public PutResponse<T> update(UriInfo uriInfo, T original, T updated) {
     // Get all the fields in the original entity that can be updated during PUT operation
@@ -882,6 +902,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
   public final DeleteResponse<T> delete(String updatedBy, UUID id, boolean recursive, boolean hardDelete) {
     DeleteResponse<T> response = deleteInternal(updatedBy, id, recursive, hardDelete);
     postDelete(response.getEntity());
+    syncDelete(response.getEntity());
     return response;
   }
 
@@ -890,15 +911,9 @@ public abstract class EntityRepository<T extends EntityInterface> {
     name = quoteFqn ? quoteName(name) : name;
     DeleteResponse<T> response = deleteInternalByName(updatedBy, name, recursive, hardDelete);
     postDelete(response.getEntity());
+    syncDelete(response.getEntity());
     return response;
   }
-
-  protected void preDelete(T entity, String deletedBy) {
-    // Override this method to perform any operation required after deletion.
-    // For example ingestion pipeline deletes a pipeline in AirFlow.
-  }
-
-  protected void postDelete(T entity) {}
 
   public void deleteFromSearch(T entity, String changeType) {
     if (supportsSearch) {
@@ -1067,6 +1082,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
     storeRelationshipsInternal(entity);
     setInheritedFields(entity, new Fields(allowedFields));
     postCreate(entity);
+    syncCreate(entity);
     return entity;
   }
 
@@ -1833,6 +1849,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
       // Store the updated entity
       storeUpdate();
       postUpdate(original, updated);
+      syncUpdate(original, updated, changeDescription);
     }
 
     public void entitySpecificUpdate() {
