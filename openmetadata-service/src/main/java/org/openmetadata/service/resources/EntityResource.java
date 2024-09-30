@@ -249,7 +249,6 @@ public abstract class EntityResource<T extends EntityInterface, K extends Entity
     authorizer.authorize(securityContext, operationContext, getResourceContextById(id));
     DeleteResponse<T> response =
         repository.delete(securityContext.getUserPrincipal().getName(), id, recursive, hardDelete);
-    repository.deleteFromSearch(response.getEntity(), response.getChangeType());
     addHref(uriInfo, response.getEntity());
     return response.toResponse();
   }
@@ -260,7 +259,6 @@ public abstract class EntityResource<T extends EntityInterface, K extends Entity
     authorizer.authorize(securityContext, operationContext, getResourceContextByName(name));
     DeleteResponse<T> response =
         repository.deleteByName(securityContext.getUserPrincipal().getName(), name, recursive, hardDelete);
-    repository.deleteFromSearch(response.getEntity(), response.getChangeType());
     addHref(uriInfo, response.getEntity());
     return response.toResponse();
   }
@@ -268,8 +266,7 @@ public abstract class EntityResource<T extends EntityInterface, K extends Entity
   public Response restoreEntity(UriInfo uriInfo, SecurityContext securityContext, UUID id) {
     OperationContext operationContext = new OperationContext(entityType, MetadataOperation.EDIT_ALL);
     authorizer.authorize(securityContext, operationContext, getResourceContextById(id));
-    PutResponse<T> response = repository.restoreEntity(securityContext.getUserPrincipal().getName(), entityType, id);
-    repository.restoreFromSearch(response.getEntity());
+    PutResponse<T> response = repository.restore(securityContext.getUserPrincipal().getName(), entityType, id);
     addHref(uriInfo, response.getEntity());
     LOG.info("Restored {}:{}", Entity.getEntityTypeFromObject(response.getEntity()), response.getEntity().getId());
     return response.toResponse();

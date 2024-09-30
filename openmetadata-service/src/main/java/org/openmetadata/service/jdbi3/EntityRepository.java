@@ -763,7 +763,27 @@ public abstract class EntityRepository<T extends EntityInterface> {
     // For example ingestion pipeline deletes a pipeline in AirFlow.
   }
 
+  protected void postDelete(T entity, boolean hardDelete) {
+    postDelete(entity);
+
+    // 将deleteFromSearch逻辑整合到postDelete中
+    if (supportsSearch) {
+      if (supportsSoftDelete && !hardDelete) {
+        searchRepository.softDeleteOrRestoreEntity(entity, true);
+      } else {
+        searchRepository.deleteEntity(entity);
+      }
+    }
+  }
+
   protected void postDelete(T entity) {}
+
+  protected void postRestore(T entity) {
+    // 将restoreFromSearch逻辑整合到postRestore，不单独指定索引操作，保证扩展性
+    if (supportsSearch) {
+      searchRepository.softDeleteOrRestoreEntity(entity, false);
+    }
+  }
 
   protected void syncCreate(T entity) {
     if (supportsSync) {}
@@ -774,6 +794,10 @@ public abstract class EntityRepository<T extends EntityInterface> {
   }
 
   protected void syncDelete(T entity) {
+    if (supportsSync) {}
+  }
+
+  protected void syncRestore(T entity) {
     if (supportsSync) {}
   }
 
@@ -901,7 +925,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
   @Transaction
   public final DeleteResponse<T> delete(String updatedBy, UUID id, boolean recursive, boolean hardDelete) {
     DeleteResponse<T> response = deleteInternal(updatedBy, id, recursive, hardDelete);
-    postDelete(response.getEntity());
+    postDelete(response.getEntity(), hardDelete);
     syncDelete(response.getEntity());
     return response;
   }
@@ -910,25 +934,9 @@ public abstract class EntityRepository<T extends EntityInterface> {
   public final DeleteResponse<T> deleteByName(String updatedBy, String name, boolean recursive, boolean hardDelete) {
     name = quoteFqn ? quoteName(name) : name;
     DeleteResponse<T> response = deleteInternalByName(updatedBy, name, recursive, hardDelete);
-    postDelete(response.getEntity());
+    postDelete(response.getEntity(), hardDelete);
     syncDelete(response.getEntity());
     return response;
-  }
-
-  public void deleteFromSearch(T entity, String changeType) {
-    if (supportsSearch) {
-      if (changeType.equals(RestUtil.ENTITY_SOFT_DELETED)) {
-        searchRepository.softDeleteOrRestoreEntity(entity, true);
-      } else {
-        searchRepository.deleteEntity(entity);
-      }
-    }
-  }
-
-  public void restoreFromSearch(T entity) {
-    if (supportsSearch) {
-      searchRepository.softDeleteOrRestoreEntity(entity, false);
-    }
   }
 
   @Transaction
@@ -1354,6 +1362,14 @@ public abstract class EntityRepository<T extends EntityInterface> {
 
   public URI getHref(UriInfo uriInfo, UUID id) {
     return RestUtil.getHref(uriInfo, collectionPath, id);
+  }
+
+  public PutResponse<T> restore(String updatedBy, String entityType, UUID id) {
+    PutResponse<T> response = restoreEntity(updatedBy, entityType, id);
+    postRestore(response.getEntity());
+    // 增加同步模块
+    syncRestore(response.getEntity());
+    return response;
   }
 
   @Transaction

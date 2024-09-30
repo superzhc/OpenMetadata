@@ -409,7 +409,8 @@ public class TestSuiteResource extends EntityResource<TestSuite, TestSuiteReposi
     }
     RestUtil.DeleteResponse<TestSuite> response =
         repository.deleteLogicalTestSuite(securityContext, testSuite, hardDelete);
-    repository.deleteFromSearch(response.getEntity(), response.getChangeType());
+    // question: 为什么通过名称删除逻辑TestSuite不需要删除删除索引，待分析
+    // repository.deleteFromSearch(response.getEntity(), response.getChangeType());
     addHref(uriInfo, response.getEntity());
     return response.toResponse();
   }
