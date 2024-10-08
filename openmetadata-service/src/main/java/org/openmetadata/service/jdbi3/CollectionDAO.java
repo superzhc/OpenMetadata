@@ -3575,6 +3575,7 @@ public interface CollectionDAO {
           break;
         case SLACK_BOT:
         case SLACK_INSTALLER:
+        case SYNC_INITIALIZE:
           value = JsonUtils.readValue(json, new TypeReference<HashMap<String, Object>>() {});
           break;
         default:

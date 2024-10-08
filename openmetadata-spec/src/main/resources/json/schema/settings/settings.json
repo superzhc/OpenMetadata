@@ -26,7 +26,8 @@
         "customLogoConfiguration",
         "slackAppConfiguration",
         "slackBot",
-        "slackInstaller"
+        "slackInstaller",
+        "syncInitialize"
       ]
     }
   },

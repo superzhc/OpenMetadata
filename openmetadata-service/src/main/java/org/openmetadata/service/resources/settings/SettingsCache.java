@@ -13,12 +13,13 @@
 
 package org.openmetadata.service.resources.settings;
 
-import static org.openmetadata.schema.settings.SettingsType.CUSTOM_LOGO_CONFIGURATION;
-import static org.openmetadata.schema.settings.SettingsType.EMAIL_CONFIGURATION;
+import static org.openmetadata.schema.settings.SettingsType.*;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.CheckForNull;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +72,16 @@ public class SettingsCache {
         Settings setting = new Settings().withConfigType(CUSTOM_LOGO_CONFIGURATION).withConfigValue(logoConfig);
         systemRepository.createNewSetting(setting);
       }
+    }
+
+    // 2024年10月8日 Add Initialise Sync Setting
+    Settings storedSyncSettings = systemRepository.getConfigWithKey(SYNC_INITIALIZE.toString());
+    if (storedSyncSettings == null) {
+      Map<String, Boolean> syncMap = new HashMap<>();
+      syncMap.put("hanyun", false);
+
+      Settings setting = new Settings().withConfigType(SYNC_INITIALIZE).withConfigValue(syncMap);
+      systemRepository.createNewSetting(setting);
     }
   }
 
