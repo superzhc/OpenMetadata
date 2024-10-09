@@ -118,6 +118,7 @@ public class GlossaryTermResource extends EntityResource<GlossaryTerm, GlossaryT
     for (LoadGlossary loadGlossary : loadGlossaries) {
       Glossary glossary =
           GlossaryResource.getGlossary(glossaryRepository, loadGlossary.getCreateGlossary(), ADMIN_USER_NAME);
+      glossaryRepository.setFullyQualifiedName(glossary);
       glossaryRepository.initializeEntity(glossary);
 
       List<GlossaryTerm> termsToCreate = new ArrayList<>();
