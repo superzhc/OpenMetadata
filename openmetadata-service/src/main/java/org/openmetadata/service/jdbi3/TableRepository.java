@@ -22,6 +22,7 @@ import static org.openmetadata.service.Entity.FIELD_OWNER;
 import static org.openmetadata.service.Entity.FIELD_TAGS;
 import static org.openmetadata.service.Entity.TABLE;
 import static org.openmetadata.service.Entity.getEntity;
+import static org.openmetadata.service.util.EntityUtil.*;
 import static org.openmetadata.service.util.LambdaExceptionUtil.ignoringComparator;
 import static org.openmetadata.service.util.LambdaExceptionUtil.rethrowFunction;
 
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1034,7 +1036,12 @@ public class TableRepository extends EntityRepository<Table> {
       DatabaseUtil.validateColumns(updatedTable.getColumns());
       recordChange("tableType", origTable.getTableType(), updatedTable.getTableType());
       updateConstraints(origTable, updatedTable);
-      updateColumns(COLUMN_FIELD, origTable.getColumns(), updated.getColumns(), EntityUtil.columnMatch);
+      // 2024年10月11日 判断字段是否一致，只比较字段名称是否一样，对于类型或者数组类型只做更新逻辑
+      updateColumns(
+          COLUMN_FIELD,
+          origTable.getColumns(),
+          updated.getColumns(), /*EntityUtil.columnMatch*/
+          EntityUtil.columnNameMatch);
       recordChange("sourceUrl", original.getSourceUrl(), updated.getSourceUrl());
     }
 
@@ -1052,6 +1059,82 @@ public class TableRepository extends EntityRepository<Table> {
       List<TableConstraint> deleted = new ArrayList<>();
       recordListChange(
           "tableConstraints", origConstraints, updatedConstraints, added, deleted, EntityUtil.tableConstraintMatch);
+    }
+
+    @Override
+    public void updateColumns(
+        String fieldName,
+        List<Column> origColumns,
+        List<Column> updatedColumns,
+        BiPredicate<Column, Column> columnMatch) {
+      List<Column> deletedColumns = new ArrayList<>();
+      List<Column> addedColumns = new ArrayList<>();
+      recordListChange(fieldName, origColumns, updatedColumns, addedColumns, deletedColumns, columnMatch);
+
+      // 2024年10月11日 为了兼容元数据版本历史对应前端的展示信息，不使用每个字段来展示，统一展示在 columns 下
+      /*for(Column added:addedColumns){
+        String columnField = getColumnField(added, null);
+        fieldAdded(changeDescription,columnField,JsonUtils.pojoToJson(added));
+      }
+
+      for(Column deleted:deletedColumns){
+        String columnField = getColumnField(deleted, null);
+        fieldDeleted(changeDescription,columnField,JsonUtils.pojoToJson(deleted));
+        // 删除字段相关的 tags
+        daoCollection.tagUsageDAO().deleteTagsByTarget(deleted.getFullyQualifiedName());
+      }*/
+
+      // Delete tags related to deleted columns
+      deletedColumns.forEach(
+          deleted -> daoCollection.tagUsageDAO().deleteTagsByTarget(deleted.getFullyQualifiedName()));
+
+      // Carry forward the user generated metadata from existing columns to new columns
+      for (Column updated : updatedColumns) {
+        // Find stored column matching name, data type and ordinal position
+        Column stored = origColumns.stream().filter(c -> columnMatch.test(c, updated)).findAny().orElse(null);
+        if (stored == null) { // New column added
+          continue;
+        }
+
+        updateColumnDataType(stored, updated);
+        updateColumnArrayDataType(stored, updated);
+        updateColumnDescription(stored, updated);
+        updateColumnDisplayName(stored, updated);
+        updateColumnDataTypeDisplay(stored, updated);
+        updateColumnDataLength(stored, updated);
+        updateColumnPrecision(stored, updated);
+        updateColumnScale(stored, updated);
+        updateTags(
+            stored.getFullyQualifiedName(),
+            EntityUtil.getFieldName(fieldName, updated.getName(), FIELD_TAGS),
+            stored.getTags(),
+            updated.getTags());
+        updateColumnConstraint(stored, updated);
+
+        if (updated.getChildren() != null && stored.getChildren() != null) {
+          String childrenFieldName = EntityUtil.getFieldName(fieldName, updated.getName());
+          updateColumns(childrenFieldName, stored.getChildren(), updated.getChildren(), columnMatch);
+        }
+      }
+
+      // 新增、删除字段都会引起主版本的更新
+      majorVersionChange = majorVersionChange || !deletedColumns.isEmpty() || !addedColumns.isEmpty();
+    }
+
+    private void updateColumnDataType(Column origColumn, Column updatedColumn) {
+      String columnField = getColumnField(origColumn, "dataType");
+      boolean updated = recordChange(columnField, origColumn.getDataType(), updatedColumn.getDataType());
+      if (updated) {
+        majorVersionChange = true;
+      }
+    }
+
+    private void updateColumnArrayDataType(Column origColumn, Column updatedColumn) {
+      String columnField = getColumnField(origColumn, "arrayDataType");
+      boolean updated = recordChange(columnField, origColumn.getArrayDataType(), updatedColumn.getArrayDataType());
+      if (updated) {
+        majorVersionChange = true;
+      }
     }
   }
 }
