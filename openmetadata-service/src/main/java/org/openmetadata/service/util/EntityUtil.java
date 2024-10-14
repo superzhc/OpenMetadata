@@ -450,6 +450,115 @@ public final class EntityUtil {
     change.getFieldsUpdated().add(fieldChange);
   }
 
+  public static FieldChange fieldAdded(ChangeDescription change, String fieldName) {
+    if (change.getFieldsAdded().isEmpty()) {
+      return null;
+    }
+
+    return change.getFieldsAdded().stream()
+        .filter(fieldChange -> fieldChange.getName().equals(fieldName))
+        .findAny()
+        .orElse(null);
+  }
+
+  public static FieldChange fieldUpdated(ChangeDescription change, String fieldName) {
+    if (change.getFieldsUpdated().isEmpty()) {
+      return null;
+    }
+
+    return change.getFieldsUpdated().stream()
+        .filter(fieldChange -> fieldChange.getName().equals(fieldName))
+        .findAny()
+        .orElse(null);
+  }
+
+  public static FieldChange fieldDeleted(ChangeDescription change, String fieldName) {
+    if (change.getFieldsDeleted().isEmpty()) {
+      return null;
+    }
+
+    return change.getFieldsDeleted().stream()
+        .filter(fieldChange -> fieldChange.getName().equals(fieldName))
+        .findAny()
+        .orElse(null);
+  }
+
+  public static List<FieldChange> fieldsAdded(ChangeDescription change, String pattern) {
+    if (change.getFieldsAdded().isEmpty()) {
+      return null;
+    }
+
+    final Pattern p = Pattern.compile(pattern);
+    return change.getFieldsAdded().stream()
+        .filter(fieldChange -> p.matcher(fieldChange.getName()).find())
+        .collect(Collectors.toList());
+  }
+
+  public static List<FieldChange> fieldsUpdated(ChangeDescription change, String pattern) {
+    if (change.getFieldsUpdated().isEmpty()) {
+      return null;
+    }
+
+    final Pattern p = Pattern.compile(pattern);
+    return change.getFieldsUpdated().stream()
+        .filter(fieldChange -> p.matcher(fieldChange.getName()).find())
+        .collect(Collectors.toList());
+  }
+
+  public static List<FieldChange> fieldsDeleted(ChangeDescription change, String pattern) {
+    if (change.getFieldsDeleted().isEmpty()) {
+      return null;
+    }
+
+    final Pattern p = Pattern.compile(pattern);
+    return change.getFieldsDeleted().stream()
+        .filter(fieldChange -> p.matcher(fieldChange.getName()).find())
+        .collect(Collectors.toList());
+  }
+
+  public static boolean isFieldsChanged(ChangeDescription changeDescription) {
+    return !changeDescription.getFieldsAdded().isEmpty()
+        || !changeDescription.getFieldsUpdated().isEmpty()
+        || !changeDescription.getFieldsDeleted().isEmpty();
+  }
+
+  public static boolean containFieldsChanged(ChangeDescription changeDescription, String... patterns) {
+    if (null == patterns || patterns.length == 0) {
+      return isFieldsChanged(changeDescription);
+    }
+
+    List<Pattern> ps = Arrays.stream(patterns).map(Pattern::compile).toList();
+
+    if (!changeDescription.getFieldsAdded().isEmpty()) {
+      for (FieldChange change : changeDescription.getFieldsAdded()) {
+        boolean b = ps.stream().anyMatch(p -> p.matcher(change.getName()).find());
+        if (b) {
+          return true;
+        }
+      }
+    }
+
+    if (!changeDescription.getFieldsUpdated().isEmpty()) {
+      for (FieldChange change : changeDescription.getFieldsUpdated()) {
+        boolean b = ps.stream().anyMatch(p -> p.matcher(change.getName()).find());
+        if (b) {
+          return true;
+        }
+      }
+    }
+
+    if (!changeDescription.getFieldsDeleted().isEmpty()) {
+      for (FieldChange change : changeDescription.getFieldsDeleted()) {
+        boolean b = ps.stream().anyMatch(p -> p.matcher(change.getName()).find());
+        if (b) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   public static MetadataOperation createOrUpdateOperation(ResourceContext resourceContext) {
     return resourceContext.getEntity() == null ? MetadataOperation.CREATE : MetadataOperation.EDIT_ALL;
   }

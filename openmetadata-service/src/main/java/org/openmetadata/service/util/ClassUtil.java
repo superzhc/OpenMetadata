@@ -18,4 +18,8 @@ public final class ClassUtil {
     }
     return methods;
   }
+
+  public static <T> T convert(Object obj) {
+    return (T) obj;
+  }
 }

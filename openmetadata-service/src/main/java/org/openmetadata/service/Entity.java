@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Jdbi;
 import org.openmetadata.schema.EntityInterface;
 import org.openmetadata.schema.EntityTimeSeriesInterface;
+import org.openmetadata.schema.ServiceEntityInterface;
 import org.openmetadata.schema.entity.services.ServiceType;
 import org.openmetadata.schema.type.EntityReference;
 import org.openmetadata.schema.type.Include;
@@ -60,6 +61,8 @@ import org.openmetadata.service.jdbi3.TokenRepository;
 import org.openmetadata.service.jdbi3.UsageRepository;
 import org.openmetadata.service.resources.feeds.MessageParser.EntityLink;
 import org.openmetadata.service.search.SearchRepository;
+import org.openmetadata.service.secrets.SecretsManagerFactory;
+import org.openmetadata.service.sync.SyncRepository;
 import org.openmetadata.service.util.EntityUtil.Fields;
 
 @Slf4j
@@ -80,6 +83,7 @@ public final class Entity {
   @Getter @Setter private static SystemRepository systemRepository;
   @Getter @Setter private static ChangeEventRepository changeEventRepository;
   @Getter @Setter private static SearchRepository searchRepository;
+  @Getter @Setter private static SyncRepository syncRepository;
 
   // List of all the entities
   private static final List<String> ENTITY_LIST = new ArrayList<>();
@@ -420,6 +424,41 @@ public final class Entity {
 
   public static <T> T getEntityByName(String entityType, String fqn, String fields, Include include) {
     return getEntityByName(entityType, fqn, fields, include, true);
+  }
+
+  /** 服务实体获取 */
+  public static <T extends ServiceEntityInterface> T getServiceEntity(
+      ServiceType serviceType, EntityReference ref, String fields, Include include) {
+    return getServiceEntity(serviceType, ref, fields, include, true);
+  }
+
+  public static <T extends ServiceEntityInterface> T getServiceEntity(
+      ServiceType serviceType, EntityReference ref, String fields, Include include, boolean fromCache) {
+    EntityRepository<?> entityRepository = Entity.getServiceEntityRepository(serviceType);
+
+    @SuppressWarnings("unchecked")
+    T entity =
+        (T)
+            (ref.getId() != null
+                ? entityRepository.get(null, ref.getId(), entityRepository.getFields(fields), include, fromCache)
+                : entityRepository.getByName(
+                    null, ref.getFullyQualifiedName(), entityRepository.getFields(fields), include, fromCache));
+
+    if (null == entity) {
+      return null;
+    }
+
+    // 若连接信息内容不为空，则对连接信息内容进行解密
+    if (null != entity.getConnection() && null != entity.getConnection().getConfig()) {
+      entity
+          .getConnection()
+          .setConfig(
+              SecretsManagerFactory.getSecretsManager()
+                  .decryptServiceConnectionConfig(
+                      entity.getConnection().getConfig(), entity.getServiceType().value(), serviceType));
+    }
+
+    return entity;
   }
 
   /** Retrieve the corresponding entity repository for a given entity name. */
