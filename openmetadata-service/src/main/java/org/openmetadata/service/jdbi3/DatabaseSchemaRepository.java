@@ -42,6 +42,7 @@ public class DatabaseSchemaRepository extends EntityRepository<DatabaseSchema> {
         "",
         "");
     supportsSearch = true;
+    supportsSync = true;
   }
 
   @Override

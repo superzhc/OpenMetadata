@@ -110,6 +110,7 @@ import org.openmetadata.service.socket.FeedServlet;
 import org.openmetadata.service.socket.OpenMetadataAssetServlet;
 import org.openmetadata.service.socket.SocketAddressFilter;
 import org.openmetadata.service.socket.WebSocketManager;
+import org.openmetadata.service.sync.SyncRepository;
 import org.openmetadata.service.util.MicrometerBundleSingleton;
 import org.openmetadata.service.util.jdbi.DatabaseAuthenticationProviderFactory;
 import org.quartz.SchedulerException;
@@ -138,6 +139,9 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
     // initialize Search Repository, all repositories use SearchRepository this line should always before initializing
     // repository
     new SearchRepository(catalogConfig.getElasticSearchConfiguration());
+    // initialize Sync Repository, all repositories use SearchRepository this line should always before initializing
+    // repository
+    new SyncRepository(catalogConfig);
     // as first step register all the repositories
     Entity.initializeRepositories(catalogConfig, jdbi);
 

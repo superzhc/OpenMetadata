@@ -117,6 +117,7 @@ public class TableRepository extends EntityRepository<Table> {
         PATCH_FIELDS,
         UPDATE_FIELDS);
     supportsSearch = true;
+    supportsSync = true;
   }
 
   @Override

@@ -42,6 +42,7 @@ public class DatabaseRepository extends EntityRepository<Database> {
         "",
         "");
     supportsSearch = true;
+    supportsSync = true;
   }
 
   @Override

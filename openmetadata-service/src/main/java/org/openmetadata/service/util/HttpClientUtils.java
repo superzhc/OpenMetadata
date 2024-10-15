@@ -191,15 +191,10 @@ public final class HttpClientUtils {
   }
 
   private static String body(HttpEntityEnclosingRequestBase httpMethod, Map<String, String> headers, String json) {
-    try {
-      if (null != json && json.trim().length() > 0) {
-        httpMethod.setEntity(new StringEntity(json));
-      }
-      return body(httpMethod, headers);
-    } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
+    if (null != json && json.trim().length() > 0) {
+      httpMethod.setEntity(new StringEntity(json, ENCODING));
     }
-    return null;
+    return body(httpMethod, headers);
   }
 
   public static String body(HttpRequestBase httpMethod, Map<String, String> headers) {

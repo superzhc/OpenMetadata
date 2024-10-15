@@ -354,6 +354,7 @@ changeEventConfig:
   omUri: ${OM_URI:- "http://localhost:8585"} #openmetadata in om uri for eg http://localhost:8585
 
 hanyun:
+  apiEndpoint: ${HANYUN_API_ENDPOINT:-"http://localhost:7001"}
   sso:
     cas: ${HANYUN_SSO_CAS:-""}
     grantType: ${HANYUN_SSO_GRANT_TYPE:-"authorization_code"}

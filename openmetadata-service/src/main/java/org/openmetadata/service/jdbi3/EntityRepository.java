@@ -134,6 +134,7 @@ import org.openmetadata.service.jdbi3.FeedRepository.TaskWorkflow;
 import org.openmetadata.service.jdbi3.FeedRepository.ThreadContext;
 import org.openmetadata.service.resources.tags.TagLabelUtil;
 import org.openmetadata.service.search.SearchRepository;
+import org.openmetadata.service.sync.SyncRepository;
 import org.openmetadata.service.util.EntityUtil;
 import org.openmetadata.service.util.EntityUtil.Fields;
 import org.openmetadata.service.util.FullyQualifiedName;
@@ -197,6 +198,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
   @Getter protected final EntityDAO<T> dao;
   @Getter protected final CollectionDAO daoCollection;
   @Getter protected final SearchRepository searchRepository;
+  @Getter protected final SyncRepository syncRepository;
   @Getter protected final Set<String> allowedFields;
   public final boolean supportsSoftDelete;
   @Getter protected final boolean supportsTags;
@@ -234,6 +236,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
     this.dao = entityDAO;
     this.daoCollection = Entity.getCollectionDAO();
     this.searchRepository = Entity.getSearchRepository();
+    this.syncRepository = Entity.getSyncRepository();
     this.entityType = entityType;
     this.patchFields = getFields(patchFields);
     this.putFields = getFields(putFields);
@@ -786,19 +789,31 @@ public abstract class EntityRepository<T extends EntityInterface> {
   }
 
   protected void syncCreate(T entity) {
-    if (supportsSync) {}
+    if (supportsSync) {
+      syncRepository.createEntity(entity);
+    }
   }
 
   protected void syncUpdate(T origin, T updated, ChangeDescription changeDescription) {
-    if (supportsSync) {}
+    if (supportsSync) {
+      syncRepository.updateEntity(updated, changeDescription);
+    }
   }
 
-  protected void syncDelete(T entity) {
-    if (supportsSync) {}
+  protected void syncDelete(T entity, boolean hardDelete) {
+    if (supportsSync) {
+      if (supportsSoftDelete && !hardDelete) {
+        syncRepository.softDeleteOrRestoreEntity(entity, true);
+      } else {
+        syncRepository.deleteEntity(entity);
+      }
+    }
   }
 
   protected void syncRestore(T entity) {
-    if (supportsSync) {}
+    if (supportsSync) {
+      syncRepository.softDeleteOrRestoreEntity(entity, false);
+    }
   }
 
   @Transaction
@@ -926,7 +941,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
   public final DeleteResponse<T> delete(String updatedBy, UUID id, boolean recursive, boolean hardDelete) {
     DeleteResponse<T> response = deleteInternal(updatedBy, id, recursive, hardDelete);
     postDelete(response.getEntity(), hardDelete);
-    syncDelete(response.getEntity());
+    syncDelete(response.getEntity(), hardDelete);
     return response;
   }
 
@@ -935,7 +950,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
     name = quoteFqn ? quoteName(name) : name;
     DeleteResponse<T> response = deleteInternalByName(updatedBy, name, recursive, hardDelete);
     postDelete(response.getEntity(), hardDelete);
-    syncDelete(response.getEntity());
+    syncDelete(response.getEntity(), hardDelete);
     return response;
   }
 
@@ -2204,6 +2219,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
         if (stored == null) { // New entry added
           addedItems.add(U);
         } else if (!typeMatch.test(stored, U)) {
+          // 2024年10月11日 note：这是一个一定不会执行的逻辑，更新判断需要一个新的 BiPredicate 才行
           updatedItems.add(U);
         }
       }
@@ -2418,7 +2434,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
       majorVersionChange = majorVersionChange || !deletedColumns.isEmpty();
     }
 
-    private void updateColumnDescription(Column origColumn, Column updatedColumn) {
+    protected void updateColumnDescription(Column origColumn, Column updatedColumn) {
       // 2024年9月4日 去掉Bot不支持更新的限制
       /*if (operation.isPut() && !nullOrEmpty(origColumn.getDescription()) && updatedByBot()) {
         // Revert the non-empty task description if being updated by a bot
@@ -2429,7 +2445,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
       recordChange(columnField, origColumn.getDescription(), updatedColumn.getDescription());
     }
 
-    private void updateColumnDisplayName(Column origColumn, Column updatedColumn) {
+    protected void updateColumnDisplayName(Column origColumn, Column updatedColumn) {
       // 2024年9月4日 去掉Bot不支持更新的限制
       /*if (operation.isPut() && !nullOrEmpty(origColumn.getDisplayName()) && updatedByBot()) {
         // Revert the non-empty task display name if being updated by a bot
@@ -2440,12 +2456,12 @@ public abstract class EntityRepository<T extends EntityInterface> {
       recordChange(columnField, origColumn.getDisplayName(), updatedColumn.getDisplayName());
     }
 
-    private void updateColumnDataTypeDisplay(Column origColumn, Column updatedColumn) {
+    protected void updateColumnDataTypeDisplay(Column origColumn, Column updatedColumn) {
       String columnField = getColumnField(origColumn, "dataTypeDisplay");
       recordChange(columnField, origColumn.getDataTypeDisplay(), updatedColumn.getDataTypeDisplay());
     }
 
-    private void updateColumnConstraint(Column origColumn, Column updatedColumn) {
+    protected void updateColumnConstraint(Column origColumn, Column updatedColumn) {
       String columnField = getColumnField(origColumn, "constraint");
       recordChange(columnField, origColumn.getConstraint(), updatedColumn.getConstraint());
     }
@@ -2463,7 +2479,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
       }
     }
 
-    private void updateColumnPrecision(Column origColumn, Column updatedColumn) {
+    protected void updateColumnPrecision(Column origColumn, Column updatedColumn) {
       String columnField = getColumnField(origColumn, "precision");
       boolean updated = recordChange(columnField, origColumn.getPrecision(), updatedColumn.getPrecision());
       if (origColumn.getPrecision() != null
@@ -2474,7 +2490,7 @@ public abstract class EntityRepository<T extends EntityInterface> {
       }
     }
 
-    private void updateColumnScale(Column origColumn, Column updatedColumn) {
+    protected void updateColumnScale(Column origColumn, Column updatedColumn) {
       String columnField = getColumnField(origColumn, "scale");
       boolean updated = recordChange(columnField, origColumn.getScale(), updatedColumn.getScale());
       if (origColumn.getScale() != null

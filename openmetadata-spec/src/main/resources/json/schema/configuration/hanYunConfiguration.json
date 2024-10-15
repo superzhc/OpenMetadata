@@ -32,6 +32,10 @@
     }
   },
   "properties": {
+    "apiEndpoint": {
+      "description": "HanYun Api Endpoint",
+      "type": "string"
+    },
     "sso": {
       "$ref": "#/definitions/sso"
     }
