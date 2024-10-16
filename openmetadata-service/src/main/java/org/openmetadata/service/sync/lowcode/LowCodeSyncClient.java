@@ -129,6 +129,10 @@ public class LowCodeSyncClient extends SyncClient {
 
   @Override
   public void createSource(ServiceEntityInterface service, EntityInterface entity) {
+    if (!LowCodeSyncUtil.isSync(service)) {
+      return;
+    }
+
     SourceRequest sourceRequest = buildSourceRequest(service, entity);
     if (null == sourceRequest) {
       return;
@@ -144,6 +148,10 @@ public class LowCodeSyncClient extends SyncClient {
 
   @Override
   public void updateSource(ServiceEntityInterface service, EntityInterface entity) {
+    if (!LowCodeSyncUtil.isSync(service)) {
+      return;
+    }
+
     SourceRequest sourceRequest = buildSourceRequest(service, entity);
     if (null == sourceRequest) {
       return;
@@ -163,6 +171,10 @@ public class LowCodeSyncClient extends SyncClient {
 
   @Override
   public void deleteSource(ServiceEntityInterface service, EntityInterface entity) {
+    if (!LowCodeSyncUtil.isSync(service)) {
+      return;
+    }
+
     // 删除数据源
     String sourceCode = sourceCode(entity.getEntityReference());
 
@@ -255,6 +267,10 @@ public class LowCodeSyncClient extends SyncClient {
 
   @Override
   public void createTable(Table table) {
+    if (!LowCodeSyncUtil.isSync(table)) {
+      return;
+    }
+
     TableRequest tableRequest = buildTableRequest(table, table.getColumns(), null);
     createOrUpdateTable(tableRequest);
   }
@@ -272,6 +288,10 @@ public class LowCodeSyncClient extends SyncClient {
 
   @Override
   public void updateTable(Table table, List<Column> addedColumns, List<Column> deletedColumns) {
+    if (!LowCodeSyncUtil.isSync(table)) {
+      return;
+    }
+
     TableRequest tableRequest = buildTableRequest(table, addedColumns, deletedColumns);
     createOrUpdateTable(tableRequest);
   }
@@ -287,6 +307,10 @@ public class LowCodeSyncClient extends SyncClient {
 
   @Override
   public void deleteTable(Table table) {
+    if (!LowCodeSyncUtil.isSync(table)) {
+      return;
+    }
+
     String deleteURL = String.format("%s%s%s", this.serviceURL, API_ENDPOINT, TABLE_DELETE_ENDPOINT);
 
     Map<String, String> headers = new HashMap<>();
