@@ -21,6 +21,7 @@ import org.openmetadata.schema.services.connections.database.PostgresConnection;
 import org.openmetadata.schema.services.connections.database.common.basicAuth;
 import org.openmetadata.schema.type.ChangeDescription;
 import org.openmetadata.schema.type.Column;
+import org.openmetadata.schema.type.EntityReference;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.sync.ServiceUtil;
 import org.openmetadata.service.sync.SyncClient;
@@ -156,7 +157,6 @@ public class LowCodeSyncClient extends SyncClient {
 
     Map<String, String> headers = new HashMap<>();
 
-    LOG.info("Sync Request : [POST] {} [{}]", createOrUpdateURL, JsonUtils.pojoToJson(requestBody));
     String responseBody = HttpClientUtils.doPost(createOrUpdateURL, headers, JsonUtils.pojoToJson(requestBody));
     LOG.debug("Sync Response : {}", responseBody);
   }
@@ -164,7 +164,7 @@ public class LowCodeSyncClient extends SyncClient {
   @Override
   public void deleteSource(ServiceEntityInterface service, EntityInterface entity) {
     // 删除数据源
-    String sourceCode = FullyQualifiedName.buildHash(entity.getFullyQualifiedName());
+    String sourceCode = sourceCode(entity.getEntityReference());
 
     String deleteURL = String.format("%s%s%s", this.serviceURL, API_ENDPOINT, SOURCE_DELETE_ENDPOINT);
 
@@ -173,7 +173,6 @@ public class LowCodeSyncClient extends SyncClient {
     Map<String, String> requestBody = new HashMap<>();
     requestBody.put("code", sourceCode);
 
-    LOG.info("Sync Request :[POST] {} [{}]", deleteURL, JsonUtils.pojoToJson(requestBody));
     String responseBody = HttpClientUtils.doPost(deleteURL, headers, JsonUtils.pojoToJson(requestBody));
     LOG.debug("Sync Response : {}", responseBody);
   }
@@ -203,7 +202,7 @@ public class LowCodeSyncClient extends SyncClient {
     SourceRequest sourceRequest = buildDBServiceSourceRequest(service);
     String sourceDBName = database.getName();
     sourceRequest.setDbName(sourceDBName);
-    sourceRequest.setCode(FullyQualifiedName.buildHash(database.getFullyQualifiedName()));
+    sourceRequest.setCode(sourceCode(database.getEntityReference()));
     sourceRequest.setName(database.getFullyQualifiedName());
     sourceRequest.setRemark(database.getDescription());
 
@@ -214,7 +213,7 @@ public class LowCodeSyncClient extends SyncClient {
     SourceRequest sourceRequest = buildDBServiceSourceRequest(service);
     String sourceDBName = databaseSchema.getName();
     sourceRequest.setDbName(sourceDBName);
-    sourceRequest.setCode(FullyQualifiedName.buildHash(databaseSchema.getFullyQualifiedName()));
+    sourceRequest.setCode(sourceCode(databaseSchema.getEntityReference()));
     sourceRequest.setName(databaseSchema.getFullyQualifiedName());
     sourceRequest.setRemark(databaseSchema.getDescription());
 
@@ -282,7 +281,6 @@ public class LowCodeSyncClient extends SyncClient {
 
     Map<String, String> headers = new HashMap<>();
 
-    LOG.info("Sync Request : [POST] {} [{}]", createOrUpdateURL, JsonUtils.pojoToJson(requestBody));
     String responseBody = HttpClientUtils.doPost(createOrUpdateURL, headers, JsonUtils.pojoToJson(requestBody));
     LOG.debug("Sync Response : {}", responseBody);
   }
@@ -297,7 +295,6 @@ public class LowCodeSyncClient extends SyncClient {
     params.put("dataSourceCode", tableSourceCode(table));
     params.put("tableName", table.getName());
 
-    LOG.info("Sync Request : [GET] {} [{}]", deleteURL, params);
     String responseBody = HttpClientUtils.doGet(deleteURL, headers, params);
     LOG.debug("Sync Response : {}", responseBody);
   }
@@ -355,9 +352,9 @@ public class LowCodeSyncClient extends SyncClient {
   private String tableSourceCode(Table table) {
     String code;
     if (TableUtil.isDatabase(table)) {
-      code = FullyQualifiedName.buildHash(table.getDatabase().getFullyQualifiedName());
+      code = sourceCode(table.getDatabase());
     } else {
-      code = FullyQualifiedName.buildHash(table.getDatabaseSchema().getFullyQualifiedName());
+      code = sourceCode(table.getDatabaseSchema());
     }
     return code;
   }
@@ -373,5 +370,9 @@ public class LowCodeSyncClient extends SyncClient {
 
     columnRequest.setDbType(column.getDataType().value());
     return columnRequest;
+  }
+
+  private String sourceCode(EntityReference entityReference) {
+    return entityReference.getFullyQualifiedName();
   }
 }
