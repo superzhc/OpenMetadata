@@ -18,7 +18,7 @@ public class ListFilter {
   @Getter private final Include include;
   private final Map<String, String> queryParams = new HashMap<>();
   // 2024年3月4日 新增自定义查询条件
-  private final List<String> customConditions = new ArrayList<>();
+  @Deprecated private final List<String> customConditions = new ArrayList<>();
 
   public ListFilter() {
     this(Include.NON_DELETED);
@@ -44,6 +44,7 @@ public class ListFilter {
    * @param customCondition
    * @return
    */
+  @Deprecated
   public ListFilter addCustomCondition(String customCondition) {
     customConditions.add(customCondition);
     return this;
@@ -72,6 +73,7 @@ public class ListFilter {
     condition = addCondition(condition, getTestSuiteTypeCondition());
     condition = addCondition(condition, getTestSuiteFQNCondition());
     condition = addCondition(condition, getDomainCondition());
+    condition = addCondition(condition, getSpecificCondition(tableName));
 
     // 添加自定义查询条件
     for (String customCondition : customConditions) {
@@ -276,11 +278,15 @@ public class ListFilter {
         : String.format("%s.status LIKE '%s%s%%'", tableName, statusPrefix, "");
   }
 
-  private String addCondition(String condition1, String condition2) {
-    if (condition1.isEmpty()) {
+  protected String getSpecificCondition(String tableName) {
+    return "";
+  }
+
+  protected String addCondition(String condition1, String condition2) {
+    if (null == condition1 || condition1.isEmpty()) {
       return condition2;
     }
-    if (condition2.isEmpty()) {
+    if (null == condition2 || condition2.isEmpty()) {
       return condition1;
     }
     return condition1 + " AND " + condition2;
