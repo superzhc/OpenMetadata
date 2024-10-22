@@ -36,6 +36,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.jdbi.v3.core.mapper.MapMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.StatementException;
@@ -305,6 +306,9 @@ public interface CollectionDAO {
 
   @CreateSqlObject
   DocStoreDAO docStoreDAO();
+
+  @CreateSqlObject
+  SearchDAO searchDAO();
 
   interface DashboardDAO extends EntityDAO<Dashboard> {
     @Override
@@ -3972,5 +3976,20 @@ public interface CollectionDAO {
         @Define("nameColumn") String nameColumn,
         @Define("mysqlCond") String mysqlCond,
         @Define("psqlCond") String psqlCond);
+  }
+
+  interface SearchDAO {
+    @SqlQuery("<sql>")
+    @RegisterRowMapper(MapMapper.class)
+    List<Map<String, Object>> query(@Define("sql") String sql);
+
+    @SqlQuery("SELECT * FROM (<sql>) AS temp_table LIMIT :limit OFFSET :offset")
+    @RegisterRowMapper(MapMapper.class)
+    List<Map<String, Object>> queryWithOffset(
+        @Define("sql") String sql, @Bind("limit") int limit, @Bind("offset") int offset);
+
+    default List<Map<String, Object>> queryWithOffset(String sql, int limit) {
+      return queryWithOffset(sql, limit, 0);
+    }
   }
 }

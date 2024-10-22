@@ -74,7 +74,8 @@
       "type": "string",
       "enum": [
         "elasticsearch",
-        "opensearch"
+        "opensearch",
+        "db"
       ],
       "default": "elasticsearch"
     }

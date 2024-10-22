@@ -362,6 +362,14 @@ public interface EntityDAO<T extends EntityInterface> {
     return listAfter(getTableName(), getNameHashColumn(), filter.getCondition(), limit, offset);
   }
 
+  default List<String> searchListWithOffset(ListFilter filter, int limit, int offset) {
+    return searchListWithOffset(filter.getCondition(), limit, offset, "updatedat DESC");
+  }
+
+  default List<String> searchListWithOffset(String condition, int limit, int offset, String orders) {
+    return listAfter(getTableName(), orders, condition, limit, offset);
+  }
+
   default void exists(UUID id) {
     if (!exists(getTableName(), id)) {
       String entityType = Entity.getEntityTypeFromClass(getEntityClass());

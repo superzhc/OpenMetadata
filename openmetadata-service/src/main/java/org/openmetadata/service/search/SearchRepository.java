@@ -47,6 +47,7 @@ import org.openmetadata.schema.type.FieldChange;
 import org.openmetadata.schema.type.UsageDetails;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.exception.UnhandledServerException;
+import org.openmetadata.service.search.database.DBSearchClient;
 import org.openmetadata.service.search.elasticsearch.ElasticSearchClient;
 import org.openmetadata.service.search.indexes.SearchIndex;
 import org.openmetadata.service.search.models.IndexMapping;
@@ -82,8 +83,11 @@ public class SearchRepository {
     elasticSearchConfiguration = config;
     if (config != null && config.getSearchType() == ElasticSearchConfiguration.SearchType.OPENSEARCH) {
       searchClient = new OpenSearchClient(config);
-    } else {
+    } else if (config != null && config.getSearchType() == ElasticSearchConfiguration.SearchType.ELASTICSEARCH) {
       searchClient = new ElasticSearchClient(config);
+    } else {
+      // 默认不使用搜索引擎
+      searchClient = new DBSearchClient(config);
     }
     this.language = config != null ? config.getSearchIndexMappingLanguage().value() : "en";
     loadIndexMappings();
@@ -104,8 +108,8 @@ public class SearchRepository {
       assert in != null;
       JsonObject jsonPayload = JsonUtils.readJson(new String(in.readAllBytes())).asJsonObject();
       Set<String> entities = jsonPayload.keySet();
-      for (String s : entities) {
-        entityIndexMap.put(s, JsonUtils.readValue(jsonPayload.get(s).toString(), IndexMapping.class));
+      for (String entityType : entities) {
+        entityIndexMap.put(entityType, JsonUtils.readValue(jsonPayload.get(entityType).toString(), IndexMapping.class));
       }
     } catch (Exception e) {
       throw new RuntimeException("Failed to load indexMapping.json");
@@ -131,6 +135,12 @@ public class SearchRepository {
   public void dropIndexes() {
     for (String entityType : entityIndexMap.keySet()) {
       deleteIndex(entityIndexMap.get(entityType));
+    }
+  }
+
+  public void reCreateIndexes() {
+    for (String entityType : entityIndexMap.keySet()) {
+      reCreateIndex(entityIndexMap.get(entityType));
     }
   }
 
@@ -175,6 +185,20 @@ public class SearchRepository {
       }
     } catch (Exception e) {
       LOG.error(String.format("Failed to Delete Index for entity %s due to ", indexMapping.getIndexName()), e);
+    }
+  }
+
+  public void reCreateIndex(IndexMapping indexMapping) {
+    try {
+      if (indexExists(indexMapping)) {
+        searchClient.deleteIndex(indexMapping);
+      }
+
+      String indexMappingContent = getIndexMapping(indexMapping);
+      searchClient.createIndex(indexMapping, indexMappingContent);
+      searchClient.createAliases(indexMapping);
+    } catch (Exception e) {
+      LOG.error(String.format("Failed to ReIndex for entity %s due to ", indexMapping.getIndexName()), e);
     }
   }
 
@@ -412,6 +436,7 @@ public class SearchRepository {
       case Entity.MLMODEL_SERVICE:
       case Entity.STORAGE_SERVICE:
       case Entity.SEARCH_SERVICE:
+      case Entity.NETWORK_SERVICE:
         searchClient.deleteEntityByFields(indexMapping.getAlias(), List.of(new ImmutablePair<>("service.id", docId)));
         break;
       default:
@@ -432,6 +457,7 @@ public class SearchRepository {
       case Entity.MLMODEL_SERVICE:
       case Entity.STORAGE_SERVICE:
       case Entity.SEARCH_SERVICE:
+      case Entity.NETWORK_SERVICE:
         searchClient.softDeleteOrRestoreChildren(
             indexMapping.getAlias(), scriptTxt, List.of(new ImmutablePair<>("service.id", docId)));
         break;

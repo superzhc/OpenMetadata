@@ -647,6 +647,26 @@ public abstract class EntityRepository<T extends EntityInterface> {
     return getResultList(entities, beforeCursor, afterCursor, total);
   }
 
+  public ResultList<T> searchListWithOffset(ListFilter filter, int limit, int offset) {
+    return searchListWithOffset(getFields("*"), filter, limit, offset);
+  }
+
+  public ResultList<T> searchListWithOffset(Fields fields, ListFilter filter, int limit, int offset) {
+    int total = dao.listCount(filter);
+    List<T> entities = new ArrayList<>();
+
+    // 对列表进行这样的操作，查询耗时较大，待优化
+    List<String> jsons = dao.searchListWithOffset(filter, limit, offset);
+    for (String json : jsons) {
+      T entity = JsonUtils.readValue(json, entityClass);
+      entity = setFieldsInternal(entity, fields);
+      entity = clearFieldsInternal(entity, fields);
+      entities.add(entity);
+    }
+
+    return getResultList(entities, null, null, total);
+  }
+
   public T getVersion(UUID id, String version) {
     Double requestedVersion = Double.parseDouble(version);
     String extension = EntityUtil.getVersionExtension(entityType, requestedVersion);

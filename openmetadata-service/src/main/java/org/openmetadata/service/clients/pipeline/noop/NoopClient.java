@@ -28,15 +28,19 @@ import org.openmetadata.sdk.exception.PipelineServiceClientException;
 
 public class NoopClient extends PipelineServiceClient {
 
-  static final String EXCEPTION_MSG = "The NoopClient does not implement the %s method";
+  static final String EXCEPTION_MSG = "未配置提取服务，不支持[%s]操作"; // "The NoopClient does not implement the %s method";
+  private static final String PLATFORM = "Noop";
+  private static final String VERSION = "0.0.1";
 
   public NoopClient(PipelineServiceClientConfiguration pipelineServiceClientConfiguration) {
     super(pipelineServiceClientConfiguration);
+
+    this.setPlatform(PLATFORM);
   }
 
   @Override
   public PipelineServiceClientResponse getServiceStatusInternal() {
-    return null;
+    return buildHealthyStatus(VERSION);
   }
 
   @Override
@@ -51,7 +55,9 @@ public class NoopClient extends PipelineServiceClient {
 
   @Override
   public PipelineServiceClientResponse validateAppRegistration(AppMarketPlaceDefinition app) {
-    return null;
+    // return null;
+    // 对于Noop直接返回一个响应，无实际含义
+    return new PipelineServiceClientResponse().withCode(200).withReason("Success").withPlatform(this.getPlatform());
   }
 
   @Override
