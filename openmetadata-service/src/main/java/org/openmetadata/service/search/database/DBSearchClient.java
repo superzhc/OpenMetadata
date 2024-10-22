@@ -17,12 +17,12 @@ import org.openmetadata.service.search.models.IndexMapping;
 
 public class DBSearchClient implements SearchClient {
 
-  private final CollectionDAO dao;
-  private final CollectionDAO.SearchDAO searchDao;
+   private final CollectionDAO dao;
+   // private final CollectionDAO.SearchDAO searchDao;
 
   public DBSearchClient(ElasticSearchConfiguration config) {
     this.dao = Entity.getCollectionDAO();
-    this.searchDao = this.dao.searchDAO();
+    // this.searchDao = Entity.getCollectionDAO().searchDAO();
   }
 
   @Override
