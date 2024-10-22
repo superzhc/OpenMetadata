@@ -132,7 +132,7 @@ public final class TablesInitializer {
       if (commandLine.hasOption(schemaMigrationOption.toString())) {
         if (isSchemaMigrationOptionSpecified) {
           printToConsoleMandatory(
-              "Only one operation can be execute at once, please select one of 'create', ',migrate', "
+              "Only one operation can be execute at once, please select one of 'create', 'migrate', "
                   + "'validate', 'info', 'drop', 'repair', 'check-connection'.");
           System.exit(1);
         }
@@ -234,6 +234,7 @@ public final class TablesInitializer {
             + "ValidateOnMigrate:"
             + validateOnMigrate);
     String location = "filesystem:" + scriptRootPath + File.separator + dbSubType;
+    printToConsoleInDebug("Location: " + location);
     return Flyway.configure()
         .encoding(StandardCharsets.UTF_8)
         .table("DATABASE_CHANGE_LOG")
@@ -264,6 +265,8 @@ public final class TablesInitializer {
     jdbi.installPlugin(new SqlObjectPlugin());
     jdbi.getConfig(SqlObjects.class)
         .setSqlLocator(new ConnectionAwareAnnotationSqlLocator(config.getDataSourceFactory().getDriverClass()));
+    // 将 CollectionDAO 注册
+    Entity.setCollectionDAO(jdbi.onDemand(CollectionDAO.class));
     SearchRepository searchRepository = new SearchRepository(config.getElasticSearchConfiguration());
 
     // Initialize secrets manager
