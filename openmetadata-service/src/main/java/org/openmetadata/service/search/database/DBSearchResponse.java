@@ -11,7 +11,7 @@ import org.openmetadata.schema.EntityInterface;
 /** 类似Elasticsearch的返回结果格式 */
 public class DBSearchResponse {
   static class Hits {
-    @Getter @Setter Total total;
+    @Getter @Setter Total total = new Total();
     @Getter @Setter List<Hit> hits = new ArrayList<>();
   }
 
