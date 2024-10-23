@@ -17,8 +17,8 @@ import org.openmetadata.service.search.models.IndexMapping;
 
 public class DBSearchClient implements SearchClient {
 
-   private final CollectionDAO dao;
-   // private final CollectionDAO.SearchDAO searchDao;
+  private final CollectionDAO dao;
+  // private final CollectionDAO.SearchDAO searchDao;
 
   public DBSearchClient(ElasticSearchConfiguration config) {
     this.dao = Entity.getCollectionDAO();
@@ -82,22 +82,22 @@ public class DBSearchClient implements SearchClient {
       default:
         break;
     }
-    return Response.status(Response.Status.OK).entity(null).build();
+    return Response.status(Response.Status.OK).entity(DBSearchResponse.emptyResponse()).build();
   }
 
   @Override
   public Response searchBySourceUrl(String sourceUrl) throws IOException {
-    return null;
+    return Response.status(Response.Status.OK).entity(DBSearchResponse.emptyResponse()).build();
   }
 
   @Override
   public Response searchByField(String fieldName, String fieldValue, String index) throws IOException {
-    return null;
+    return Response.status(Response.Status.OK).entity(DBSearchResponse.emptyResponse()).build();
   }
 
   @Override
   public Response aggregate(String index, String fieldName, String value, String query) throws IOException {
-    return null;
+    return Response.status(Response.Status.OK).entity(DBSearchResponse.emptyResponse()).build();
   }
 
   @Override
