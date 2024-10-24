@@ -16,7 +16,7 @@ import org.openmetadata.service.util.FullyQualifiedName;
 
 public class ListFilter {
   @Getter private final Include include;
-  private final Map<String, String> queryParams = new HashMap<>();
+  protected final Map<String, String> queryParams = new HashMap<>();
   // 2024年3月4日 新增自定义查询条件
   @Deprecated private final List<String> customConditions = new ArrayList<>();
 

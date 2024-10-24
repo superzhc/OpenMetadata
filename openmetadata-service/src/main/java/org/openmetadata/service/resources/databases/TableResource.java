@@ -122,6 +122,45 @@ public class TableResource extends EntityResource<Table, TableRepository> {
         MetadataOperation.EDIT_LINEAGE);
   }
 
+  public static class TableListFilter extends ListFilter {
+
+    public TableListFilter() {
+      super();
+    }
+
+    public TableListFilter(Include include) {
+      super(include);
+    }
+
+    @Override
+    protected String getSpecificCondition(String tableName) {
+      String condition = super.getSpecificCondition(tableName);
+      condition = addCondition(condition, getTagsCondition(tableName));
+      return condition;
+    }
+
+    private String getTagsCondition(String tableName) {
+      String tags = queryParams.get("tags");
+      if (nullOrEmpty(tags)) {
+        return "";
+      }
+
+      String tagCondition = null;
+      String[] tagArr = tags.split(",");
+      for (String tag : tagArr) {
+        tagCondition =
+            addCondition(
+                tagCondition,
+                tableName == null
+                    ? String.format("fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tag)
+                    : String.format(
+                        "%s.fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tableName, tag));
+      }
+
+      return tagCondition;
+    }
+  }
+
   public static class TableList extends ResultList<Table> {
     /* Required for serde */
   }
@@ -170,7 +209,11 @@ public class TableResource extends EntityResource<Table, TableRepository> {
               schema = @Schema(type = "string", example = "snowflakeWestCoast.financeDB.schema"))
           @QueryParam("databaseSchema")
           String databaseSchemaParam,
-      @Parameter(schema = @Schema(type = "string", example = "数仓分层.DWS汇总层")) @QueryParam("tagfqn") String tagfqn,
+      @Parameter(
+              description = "表设置的标签、术语过滤查询，支持多个标签，多个标签之间使用英文逗号进行分割",
+              schema = @Schema(type = "string", example = "DataWarehouse.ODS,DataShare.Share"))
+          @QueryParam("tagfqn")
+          String tagfqn,
       @Parameter(
               description =
                   "Include tables with an empty test suite (i.e. no test cases have been created for this table). Default to true",
@@ -197,16 +240,11 @@ public class TableResource extends EntityResource<Table, TableRepository> {
           @DefaultValue("non-deleted")
           Include include) {
     ListFilter filter =
-        new ListFilter(include)
+        new TableListFilter(include)
             .addQueryParam("database", databaseParam)
             .addQueryParam("databaseSchema", databaseSchemaParam)
-            .addQueryParam("includeEmptyTestSuite", includeEmptyTestSuite);
-
-    // 2024年3月11日 对查询表进行标签条件设置，低效查询方式，待优化
-    if (!nullOrEmpty(tagfqn)) {
-      filter.addCustomCondition(
-          String.format("fqnhash in (select targetfqnhash from tag_usage where tagfqn='%s')", tagfqn));
-    }
+            .addQueryParam("includeEmptyTestSuite", includeEmptyTestSuite)
+            .addQueryParam("tags", tagfqn);
 
     return super.listInternal(uriInfo, securityContext, fieldsParam, filter, limitParam, before, after);
   }
