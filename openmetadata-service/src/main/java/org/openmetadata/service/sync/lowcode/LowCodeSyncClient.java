@@ -21,6 +21,7 @@ import org.openmetadata.schema.services.connections.database.PostgresConnection;
 import org.openmetadata.schema.services.connections.database.common.basicAuth;
 import org.openmetadata.schema.type.ChangeDescription;
 import org.openmetadata.schema.type.Column;
+import org.openmetadata.schema.type.ColumnDataType;
 import org.openmetadata.schema.type.EntityReference;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.sync.ServiceUtil;
@@ -66,6 +67,7 @@ public class LowCodeSyncClient extends SyncClient {
     @Getter @Setter private String dbFieldTxt;
     @Getter @Setter private int dbIsPersist = 1;
     @Getter @Setter private String dbLength;
+    @Getter @Setter private Integer dbPointLength;
     @Getter @Setter private String dbType;
     @Getter @Setter private int isShowList = 0;
     @Getter @Setter private OperateType optType;
@@ -388,8 +390,18 @@ public class LowCodeSyncClient extends SyncClient {
     columnRequest.setDbFieldName(column.getName());
     columnRequest.setDbFieldTxt(column.getDescription());
 
-    if (column.getDataLength() != null) {
+    // fix 列的长度不正确的 Bug
+    if (column.getDataType() == ColumnDataType.CHAR
+        || column.getDataType() == ColumnDataType.VARCHAR
+        || column.getDataType() == ColumnDataType.BINARY
+        || column.getDataType() == ColumnDataType.VARBINARY) {
       columnRequest.setDbLength(String.valueOf(column.getDataLength()));
+    } else if (column.getPrecision() != null) {
+      columnRequest.setDbLength(String.valueOf(column.getPrecision()));
+
+      if (column.getScale() != null) {
+        columnRequest.setDbPointLength(column.getScale());
+      }
     }
 
     columnRequest.setDbType(column.getDataType().value());
