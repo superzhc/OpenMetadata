@@ -250,6 +250,41 @@ public class TableResource extends EntityResource<Table, TableRepository> {
   }
 
   @GET
+  @Path("/tree")
+  public Response tree(
+      @Context UriInfo uriInfo,
+      @Context SecurityContext securityContext,
+      @Parameter(
+              description = "Filter tables by database fully qualified name",
+              schema = @Schema(type = "string", example = "snowflakeWestCoast.financeDB"))
+          @QueryParam("database")
+          String databaseParam,
+      @Parameter(
+              description = "Filter tables by databaseSchema fully qualified name",
+              schema = @Schema(type = "string", example = "snowflakeWestCoast.financeDB.schema"))
+          @QueryParam("databaseSchema")
+          String databaseSchemaParam,
+      @Parameter(
+              description = "表设置的标签、术语过滤查询，支持多个标签，多个标签之间使用英文逗号进行分割",
+              schema = @Schema(type = "string", example = "DataWarehouse.ODS,DataShare.Share"))
+          @QueryParam("tagfqn")
+          String tagfqn,
+      @Parameter(
+              description = "Include all, deleted, or non-deleted entities.",
+              schema = @Schema(implementation = Include.class))
+          @QueryParam("include")
+          @DefaultValue("non-deleted")
+          Include include) {
+    ListFilter filter =
+        new TableListFilter(include)
+            .addQueryParam("database", databaseParam)
+            .addQueryParam("databaseSchema", databaseSchemaParam)
+            .addQueryParam("tags", tagfqn);
+
+    return repository.treeByGlossary("DataWarehouse", filter);
+  }
+
+  @GET
   @Path("/{id}")
   @Operation(
       operationId = "getTableByID",

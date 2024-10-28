@@ -40,6 +40,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -49,6 +50,8 @@ import org.openmetadata.schema.EntityInterface;
 import org.openmetadata.schema.api.data.CreateTableProfile;
 import org.openmetadata.schema.api.feed.ResolveTask;
 import org.openmetadata.schema.entity.data.DatabaseSchema;
+import org.openmetadata.schema.entity.data.Glossary;
+import org.openmetadata.schema.entity.data.GlossaryTerm;
 import org.openmetadata.schema.entity.data.Table;
 import org.openmetadata.schema.tests.CustomMetric;
 import org.openmetadata.schema.tests.TestSuite;
@@ -118,6 +121,53 @@ public class TableRepository extends EntityRepository<Table> {
         UPDATE_FIELDS);
     supportsSearch = true;
     supportsSync = true;
+  }
+
+  public Response treeByGlossary(String glossaryName, ListFilter filter) {
+    // 一次性直接从数据库读取所有的数据表
+    List<String> jsons = dao.listAfter(filter, Integer.MAX_VALUE, "");
+    final Map<String, Object> map = new HashMap<>();
+    for (String json : jsons) {
+      Table entity = JsonUtils.readValue(json, Table.class);
+
+      Map<String, Object> entityVO = new HashMap<>();
+      entityVO.put("name", entity.getName());
+      entityVO.put("columns", entity.getColumns());
+      map.put(FullyQualifiedName.buildHash(entity.getFullyQualifiedName()), entityVO);
+    }
+
+    Map<String, List<Object>> glossaryUsages = new HashMap<>();
+    // 获取指定术语库
+    Glossary glossary = Entity.getCollectionDAO().glossaryDAO().findEntityByName(glossaryName);
+
+    // 获取指定术语下的所有术语
+    List<String> glossaryTermJsons =
+        Entity.getCollectionDAO()
+            .glossaryTermDAO()
+            .listAfter(
+                new ListFilter(Include.NON_DELETED).addQueryParam("parent", glossary.getFullyQualifiedName()),
+                Integer.MAX_VALUE,
+                "");
+
+    // 一次性直接从数据库获取指定术语下的所有使用
+    List<Map<String, Object>> targetFQNs =
+        Entity.getCollectionDAO().tagUsageDAO().getTargetFQNsWithChildren(1, glossary.getFullyQualifiedName());
+
+    for (String glossaryTermJson : glossaryTermJsons) {
+      GlossaryTerm glossaryTerm = JsonUtils.readValue(glossaryTermJson, GlossaryTerm.class);
+
+      List<Object> tableWithGlossaryTerm = new ArrayList<>();
+      for (Map<String, Object> targetFQNsPart : targetFQNs) {
+        if (glossaryTerm.getFullyQualifiedName().equals(targetFQNsPart.get("tagfqn"))) {
+          if (null != targetFQNsPart.get("targetfqnhash") && map.containsKey(targetFQNsPart.get("targetfqnhash"))) {
+            tableWithGlossaryTerm.add(map.get(targetFQNsPart.get("targetfqnhash")));
+          }
+        }
+      }
+      glossaryUsages.put(glossaryTerm.getFullyQualifiedName(), tableWithGlossaryTerm);
+    }
+
+    return Response.status(Response.Status.OK).entity(glossaryUsages).build();
   }
 
   @Override
