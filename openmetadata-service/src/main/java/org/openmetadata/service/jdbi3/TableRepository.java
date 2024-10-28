@@ -124,19 +124,18 @@ public class TableRepository extends EntityRepository<Table> {
   }
 
   public Response treeByGlossary(String glossaryName, ListFilter filter) {
+    final Map<String, Object> tableMap = new HashMap<>();
     // 一次性直接从数据库读取所有的数据表
     List<String> jsons = dao.listAfter(filter, Integer.MAX_VALUE, "");
-    final Map<String, Object> map = new HashMap<>();
     for (String json : jsons) {
       Table entity = JsonUtils.readValue(json, Table.class);
 
-      Map<String, Object> entityVO = new HashMap<>();
-      entityVO.put("name", entity.getName());
-      entityVO.put("columns", entity.getColumns());
-      map.put(FullyQualifiedName.buildHash(entity.getFullyQualifiedName()), entityVO);
+      //      Map<String, Object> entityVO = new HashMap<>();
+      //      entityVO.put("name", entity.getName());
+      //      entityVO.put("columns", entity.getColumns());
+      tableMap.put(FullyQualifiedName.buildHash(entity.getFullyQualifiedName()), entity);
     }
 
-    Map<String, List<Object>> glossaryUsages = new HashMap<>();
     // 获取指定术语库
     Glossary glossary = Entity.getCollectionDAO().glossaryDAO().findEntityByName(glossaryName);
 
@@ -149,25 +148,65 @@ public class TableRepository extends EntityRepository<Table> {
                 Integer.MAX_VALUE,
                 "");
 
+    final Map<String, List<Object>> tagUsageMap = new HashMap<>();
     // 一次性直接从数据库获取指定术语下的所有使用
     List<Map<String, Object>> targetFQNs =
         Entity.getCollectionDAO().tagUsageDAO().getTargetFQNsWithChildren(1, glossary.getFullyQualifiedName());
+    for (Map<String, Object> targetFQN : targetFQNs) {
+      String targetFQNHash = (String) targetFQN.get("targetfqnhash");
+      // 判断设置标签的实体是否是表，如果不是直接跳过
+      if (!tableMap.containsKey(targetFQNHash)) {
+        continue;
+      }
+
+      String tagFQN = (String) targetFQN.get("tagfqn");
+      List<Object> tableWithGlossaryTerm = tagUsageMap.getOrDefault(tagFQN, new ArrayList<>());
+      tableWithGlossaryTerm.add(tableMap.get(targetFQNHash));
+      tagUsageMap.put(tagFQN, tableWithGlossaryTerm);
+    }
+
+    Map<String, Object> glossaryTree = new HashMap<>();
+    glossaryTree.put("children", new ArrayList<>());
 
     for (String glossaryTermJson : glossaryTermJsons) {
       GlossaryTerm glossaryTerm = JsonUtils.readValue(glossaryTermJson, GlossaryTerm.class);
 
-      List<Object> tableWithGlossaryTerm = new ArrayList<>();
-      for (Map<String, Object> targetFQNsPart : targetFQNs) {
-        if (glossaryTerm.getFullyQualifiedName().equals(targetFQNsPart.get("tagfqn"))) {
-          if (null != targetFQNsPart.get("targetfqnhash") && map.containsKey(targetFQNsPart.get("targetfqnhash"))) {
-            tableWithGlossaryTerm.add(map.get(targetFQNsPart.get("targetfqnhash")));
+      String glossaryTermFQN = glossaryTerm.getFullyQualifiedName();
+      String[] glossaryTermFQNSplit = FullyQualifiedName.split(glossaryTermFQN);
+
+      String currentPrefix = glossaryTermFQNSplit[0];
+      Map<String, Object> currentParentGlossaryTermTree = glossaryTree;
+      for (int i = 1, len = glossaryTermFQNSplit.length; i < len; i++) {
+        currentPrefix = String.join(Entity.SEPARATOR, currentPrefix, glossaryTermFQNSplit[i]);
+        Map<String, Object> innerGlossaryTermTree = null;
+
+        List<Object> children = (List<Object>) currentParentGlossaryTermTree.get("children");
+        for (Object child : children) {
+          Map<String, Object> childGlossaryTermTree = (Map<String, Object>) child;
+          if (currentPrefix.equals(childGlossaryTermTree.get("tagFullName"))) {
+            innerGlossaryTermTree = childGlossaryTermTree;
           }
         }
+
+        if (null == innerGlossaryTermTree) {
+          innerGlossaryTermTree = new HashMap<>();
+          innerGlossaryTermTree.put("tagFullName", currentPrefix);
+          innerGlossaryTermTree.put("children", new ArrayList<>());
+          children.add(innerGlossaryTermTree);
+        }
+
+        currentParentGlossaryTermTree = innerGlossaryTermTree;
       }
-      glossaryUsages.put(glossaryTerm.getFullyQualifiedName(), tableWithGlossaryTerm);
+
+      currentParentGlossaryTermTree.put("name", glossaryTerm.getName());
+      currentParentGlossaryTermTree.put("displayName", glossaryTerm.getDisplayName());
+      currentParentGlossaryTermTree.put("id", glossaryTerm.getId());
+      // currentParentGlossaryTermTree.put("tagFullName", glossaryTerm.getFullyQualifiedName());
+      currentParentGlossaryTermTree.put(
+          "tables", tagUsageMap.getOrDefault(glossaryTerm.getFullyQualifiedName(), new ArrayList<>()));
     }
 
-    return Response.status(Response.Status.OK).entity(glossaryUsages).build();
+    return Response.status(Response.Status.OK).entity(glossaryTree.get("children")).build();
   }
 
   @Override
