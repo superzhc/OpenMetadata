@@ -118,7 +118,7 @@ public class HanYunAuthenticator implements AuthenticatorHandler {
           //                  .withRoles(EntityUtil.toEntityReferences(create.getRoles(), Entity.ROLE))
           ;
 
-      String genPWD = String.format("%s@lowcode") /*PasswordUtil.generateRandomPassword()*/;
+      String genPWD = String.format("%s@lowcode", userName);
       LOG.info("用户：{}，密码：{}", userName, genPWD);
       String newHashedPwd = BCrypt.withDefaults().hashToString(12, genPWD.toCharArray());
       newUser.withAuthenticationMechanism(
