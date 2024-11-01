@@ -62,6 +62,8 @@ class BaseColumnValuesMissingCountValidator(BaseTestValidator):
             self.test_case.parameterValues,  # type: ignore
             "missingValueMatch",
             literal_eval,
+            # 2024年11月1日 特殊值处理，ast.literal_eval 直接转换 NULL 字符串会报错
+            pre_processor=lambda value: value if "null" != str.lower(value) else "[\"{}\"]".format(value)
         )
 
         missing_count_value = self.get_test_case_param_value(
