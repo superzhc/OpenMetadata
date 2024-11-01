@@ -34,11 +34,12 @@ class TableColumnToMatchSetValidator(
 ):
     """Validator for table column name to match set test case"""
 
-    def _run_results(self) -> Optional[int]:
+    def _run_results(self):
         """compute result of the test case"""
-        names = inspect(self.runner.table).c
-        if not names:
+        columns = inspect(self.runner.table).c
+        if not columns:
             raise ValueError(
                 f"Column names for test case {self.test_case.name} returned None"
             )
-        return names
+        # 2024年11月1日 返回名称列表不是列对象
+        return [column.name for column in columns]
