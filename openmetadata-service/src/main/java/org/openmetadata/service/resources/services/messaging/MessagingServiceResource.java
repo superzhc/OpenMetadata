@@ -421,7 +421,8 @@ public class MessagingServiceResource
     return repository
         .copy(new MessagingService(), create, user)
         .withConnection(create.getConnection())
-        .withServiceType(create.getServiceType());
+        .withServiceType(create.getServiceType())
+        .withTags(create.getTags());
   }
 
   @Override

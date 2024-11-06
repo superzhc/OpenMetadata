@@ -429,7 +429,8 @@ public class NetworkServiceResource
     return repository
         .copy(new NetworkService(), create, user)
         .withServiceType(create.getServiceType())
-        .withConnection(create.getConnection());
+        .withConnection(create.getConnection())
+        .withTags(create.getTags());
   }
 
   @Override

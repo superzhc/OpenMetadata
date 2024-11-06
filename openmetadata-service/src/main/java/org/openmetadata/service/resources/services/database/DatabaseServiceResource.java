@@ -456,7 +456,8 @@ public class DatabaseServiceResource
     return repository
         .copy(new DatabaseService(), create, user)
         .withServiceType(create.getServiceType())
-        .withConnection(create.getConnection());
+        .withConnection(create.getConnection())
+        .withTags(create.getTags());
   }
 
   @Override
