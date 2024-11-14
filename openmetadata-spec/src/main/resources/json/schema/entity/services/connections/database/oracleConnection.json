@@ -119,6 +119,10 @@
       "title": "Connection Arguments",
       "$ref": "../connectionBasicType.json#/definitions/connectionArguments"
     },
+    "jdbcArguments": {
+      "title": "JDBC Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/jdbcArguments"
+    },
     "supportsMetadataExtraction": {
       "title": "Supports Metadata Extraction",
       "$ref": "../connectionBasicType.json#/definitions/supportsMetadataExtraction"

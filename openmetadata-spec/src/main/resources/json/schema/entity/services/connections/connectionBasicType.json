@@ -20,6 +20,35 @@
         ".{1,}": { "type": "string" }
       }
     },
+    "lowcodeArguments": {
+      "javaType": "org.openmetadata.schema.services.connections.common.LowcodeArguments",
+      "description": "Additional lowcode platform properties.",
+      "type": "object",
+      "properties": {
+        "tenantId": {
+          "description": "Tenant Id"
+        }
+      },
+      "additionalProperties": true
+    },
+    "jdbcArguments": {
+      "javaType": "org.openmetadata.schema.services.connections.database.JDBCArguments",
+      "description": "Additional JDBC arguments.",
+      "type": "object",
+      "properties": {
+        "driver": {
+          "description": "JDBC Driver",
+          "type": "string"
+        },
+        "url": {
+          "description": "JDBC URL",
+          "type": "string"
+        },
+        "arguments": {
+          "$ref": "#/definitions/lowcodeArguments"
+        }
+      }
+    },
     "supportsMetadataExtraction": {
       "description": "Supports Metadata Extraction.",
       "type": "boolean",
