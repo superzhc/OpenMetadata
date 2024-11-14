@@ -62,6 +62,10 @@
       "title": "Protocol",
       "$ref": "#/definitions/redisProtocolVersion",
       "default": "RESP2"
+    },
+    "arguments": {
+      "title": "Lowcode Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/lowcodeArguments"
     }
   },
   "additionalProperties": false,

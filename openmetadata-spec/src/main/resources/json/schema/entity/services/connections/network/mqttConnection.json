@@ -43,6 +43,10 @@
     "topic": {
       "title": "Topic",
       "type": "string"
+    },
+    "arguments": {
+      "title": "Lowcode Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/lowcodeArguments"
     }
   },
   "additionalProperties": false,

@@ -68,6 +68,10 @@
       "default": {},
       "additionalProperties": true
     },
+    "arguments": {
+      "title": "Lowcode Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/lowcodeArguments"
+    },
     "supportsMetadataExtraction": {
       "title": "Supports Metadata Extraction",
       "$ref": "../connectionBasicType.json#/definitions/supportsMetadataExtraction"
