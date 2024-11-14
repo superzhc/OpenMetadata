@@ -221,6 +221,7 @@ public final class Entity {
   // Hanyun
   //
   public static final String HANYUN_DATA_CENTER_BOT_NAME = "hanyun-datacenter";
+  public static final String HANYUN_DATA_LOWCODE_BOT_NAME="hanyun-lowcode";
   public static final String HANYUN_METADATA_BOT_NAME = "hanyun-metadata";
   public static final String HANYUN_DATA_DEVELOP_BOT_NAME = "hanyun-datadevelop";
   public static final String HANYUN_DATA_DEVELOP_STREAM_BOT_NAME = "hanyun-datadevelop-stream";

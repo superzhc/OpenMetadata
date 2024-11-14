@@ -222,6 +222,7 @@ public final class UserUtil {
         botRole = Entity.PROFILER_BOT_ROLE;
         break;
       case Entity.HANYUN_DATA_CENTER_BOT_NAME:
+      case Entity.HANYUN_DATA_LOWCODE_BOT_NAME:
         botRole = Entity.HANYUN_DATA_CENTER_BOT_ROLE;
         break;
       case Entity.HANYUN_METADATA_BOT_NAME:

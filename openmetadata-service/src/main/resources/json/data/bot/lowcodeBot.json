@@ -1,0 +1,10 @@
+{
+  "name": "hanyun-lowcode",
+  "description": "低代码平台",
+  "fullyQualifiedName": "hanyun-lowcode",
+  "botUser": {
+    "name" : "hanyun-lowcode",
+    "type" : "user"
+  },
+  "provider": "system"
+}
