@@ -1,0 +1,9 @@
+{
+  "createGlossary": {
+    "name": "LowcodeGlossary",
+    "displayName": "低代码标签库",
+    "description": "低代码标签库",
+    "provider": "system",
+    "mutuallyExclusive": "false"
+  }
+}

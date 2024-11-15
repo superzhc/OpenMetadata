@@ -26,7 +26,8 @@
       "type": "object",
       "properties": {
         "tenantId": {
-          "description": "Tenant Id"
+          "description": "Tenant Id",
+          "type": "string"
         }
       },
       "additionalProperties": true
