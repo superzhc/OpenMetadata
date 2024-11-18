@@ -60,12 +60,15 @@ public class ListFilter {
 
   public String getCondition(String tableName) {
     String condition = getIncludeCondition(tableName);
+    condition = addCondition(condition, getNameCondition(tableName));
+    condition = addCondition(condition, getDisplayNameCondition(tableName));
     condition = addCondition(condition, getDatabaseCondition(tableName));
     condition = addCondition(condition, getDatabaseSchemaCondition(tableName));
     condition = addCondition(condition, getServiceCondition(tableName));
     condition = addCondition(condition, getPipelineTypeCondition(tableName));
     condition = addCondition(condition, getParentCondition(tableName));
     condition = addCondition(condition, getDisabledCondition(tableName));
+    condition = addCondition(condition, getTagsCondition(tableName));
     condition = addCondition(condition, getCategoryCondition(tableName));
     condition = addCondition(condition, getWebhookCondition(tableName));
     condition = addCondition(condition, getWebhookTypeCondition(tableName));
@@ -92,6 +95,33 @@ public class ListFilter {
       return columnName + " = TRUE";
     }
     return "";
+  }
+
+  public String getNameCondition(String tableName) {
+    String name = queryParams.get("name");
+    if (null == name) {
+      return "";
+    }
+
+    return tableName == null
+        ? String.format("name like '%%%s%%'", escape(name))
+        : String.format("%s.name like '%%%s%%'", tableName, escape(name));
+  }
+
+  public String getDisplayNameCondition(String tableName) {
+    String displayName = queryParams.get("displayName");
+    if (null == displayName) {
+      return "";
+    }
+
+    if (DatasourceConfig.getInstance().isMySQL()) {
+      return tableName == null
+          ? String.format("(JSON_EXTRACT(json, '$.displayName') like '%%%s%%')", escape(displayName))
+          : String.format("(JSON_EXTRACT(%s.json, '$.displayName') like '%%%s%%')", tableName, escape(displayName));
+    }
+    return tableName == null
+        ? String.format("(json->>'displayName' like '%%%s%%')", escape(displayName))
+        : String.format("(%s.json->>'displayName' like '%%%s%%')", tableName, escape(displayName));
   }
 
   public String getDatabaseCondition(String tableName) {
@@ -153,6 +183,21 @@ public class ListFilter {
       }
     }
     return disabledCondition;
+  }
+
+  public String getTagsCondition(String tableName) {
+    String tags = queryParams.get("tags");
+    if (null == tags) {
+      return "";
+    }
+
+    String andCondition =
+        Arrays.stream(escape(tags).split(","))
+            .map(s -> String.format(" tagfqn='%s' ", s))
+            .collect(Collectors.joining(" AND "));
+    return tableName == null
+        ? String.format("fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", andCondition)
+        : String.format("%s.fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", tableName, andCondition);
   }
 
   public String getCategoryCondition(String tableName) {
@@ -252,7 +297,7 @@ public class ListFilter {
         : String.format("%s.json->>'pipelineType' IN (%s)", tableName, inCondition);
   }
 
-  private String getInConditionFromString(String condition) {
+  protected String getInConditionFromString(String condition) {
     return Arrays.stream(condition.split(",")).map(s -> String.format("'%s'", s)).collect(Collectors.joining(","));
   }
 

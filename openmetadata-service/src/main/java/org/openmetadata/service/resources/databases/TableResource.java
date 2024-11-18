@@ -14,7 +14,6 @@
 package org.openmetadata.service.resources.databases;
 
 import static org.openmetadata.common.utils.CommonUtil.listOf;
-import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -124,10 +123,6 @@ public class TableResource extends EntityResource<Table, TableRepository> {
 
   public static class TableListFilter extends ListFilter {
 
-    public TableListFilter() {
-      super();
-    }
-
     public TableListFilter(Include include) {
       super(include);
     }
@@ -135,29 +130,7 @@ public class TableResource extends EntityResource<Table, TableRepository> {
     @Override
     protected String getSpecificCondition(String tableName) {
       String condition = super.getSpecificCondition(tableName);
-      condition = addCondition(condition, getTagsCondition(tableName));
       return condition;
-    }
-
-    private String getTagsCondition(String tableName) {
-      String tags = queryParams.get("tags");
-      if (nullOrEmpty(tags)) {
-        return "";
-      }
-
-      String tagCondition = null;
-      String[] tagArr = tags.split(",");
-      for (String tag : tagArr) {
-        tagCondition =
-            addCondition(
-                tagCondition,
-                tableName == null
-                    ? String.format("fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tag)
-                    : String.format(
-                        "%s.fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tableName, tag));
-      }
-
-      return tagCondition;
     }
   }
 

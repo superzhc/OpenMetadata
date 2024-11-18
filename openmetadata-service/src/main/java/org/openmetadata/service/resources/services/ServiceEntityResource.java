@@ -44,6 +44,30 @@ public abstract class ServiceEntityResource<
 
   @Getter private final ServiceEntityRepository<T, S> serviceEntityRepository;
 
+  public static class ServiceListFilter extends ListFilter {
+    public ServiceListFilter(Include include) {
+      super(include);
+    }
+
+    @Override
+    protected String getSpecificCondition(String tableName) {
+      String condition = super.getSpecificCondition(tableName);
+      condition = addCondition(condition, getServiceTypeCondition(tableName));
+      return condition;
+    }
+
+    public String getServiceTypeCondition(String tableName) {
+      String serviceType = queryParams.get("serviceType");
+      if (null == serviceType) {
+        return "";
+      }
+
+      return tableName == null
+          ? String.format("serviceType = '%s'", serviceType)
+          : String.format("%s.serviceType = '%s'", tableName, serviceType);
+    }
+  }
+
   private final ServiceType serviceType;
 
   protected ServiceEntityResource(String entityType, Authorizer authorizer, ServiceType serviceType) {

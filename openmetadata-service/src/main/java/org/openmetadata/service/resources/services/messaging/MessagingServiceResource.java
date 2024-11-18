@@ -13,6 +13,8 @@
 
 package org.openmetadata.service.resources.services.messaging;
 
+import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
+
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,11 +53,9 @@ import org.openmetadata.schema.entity.services.DatabaseService;
 import org.openmetadata.schema.entity.services.MessagingService;
 import org.openmetadata.schema.entity.services.ServiceType;
 import org.openmetadata.schema.entity.services.connections.TestConnectionResult;
-import org.openmetadata.schema.type.EntityHistory;
-import org.openmetadata.schema.type.Include;
-import org.openmetadata.schema.type.MessagingConnection;
-import org.openmetadata.schema.type.MetadataOperation;
+import org.openmetadata.schema.type.*;
 import org.openmetadata.service.Entity;
+import org.openmetadata.service.jdbi3.ListFilter;
 import org.openmetadata.service.jdbi3.MessagingServiceRepository;
 import org.openmetadata.service.resources.Collection;
 import org.openmetadata.service.resources.services.ServiceEntityResource;
@@ -107,6 +107,20 @@ public class MessagingServiceResource
       @Parameter(description = "Filter services by domain", schema = @Schema(type = "string", example = "Marketing"))
           @QueryParam("domain")
           String domain,
+      @Parameter(description = "Fuzzy matching services by service name", schema = @Schema(type = "string"))
+          @QueryParam("name")
+          String name,
+      @Parameter(description = "Fuzzy matching services by service displayName", schema = @Schema(type = "string"))
+          @QueryParam("displayName")
+          String displayName,
+      @Parameter(description = "Filter services by service type", schema = @Schema(type = "string"))
+          @QueryParam("serviceType")
+          CreateMessagingService.MessagingServiceType serviceType,
+      @Parameter(
+              description = "Services bind Tags, support multi tag use comma",
+              schema = @Schema(type = "string", example = "DataWarehouse.ODS,DataShare.Share"))
+          @QueryParam("tags")
+          String tags,
       @Parameter(description = "Limit number services returned. (1 to 1000000, " + "default 10)")
           @DefaultValue("10")
           @Min(0)
@@ -125,7 +139,31 @@ public class MessagingServiceResource
           @QueryParam("include")
           @DefaultValue("non-deleted")
           Include include) {
-    return listInternal(uriInfo, securityContext, fieldsParam, include, domain, limitParam, before, after);
+    ListFilter filter = new ServiceListFilter(include);
+
+    if (!nullOrEmpty(name)) {
+      filter.addQueryParam("name", name);
+    }
+
+    if (!nullOrEmpty(displayName)) {
+      filter.addQueryParam("displayName", displayName);
+    }
+
+    if (!nullOrEmpty(serviceType)) {
+      filter.addQueryParam("serviceType", serviceType.value());
+    }
+
+    if (!nullOrEmpty(tags)) {
+      filter.addQueryParam("tags", tags);
+    }
+
+    if (!nullOrEmpty(domain)) {
+      EntityReference domainReference = Entity.getEntityReferenceByName(Entity.DOMAIN, domain, Include.NON_DELETED);
+      filter.addQueryParam("domainId", domainReference.getId().toString());
+    }
+    ResultList<MessagingService> services =
+        listInternal(uriInfo, securityContext, fieldsParam, filter, limitParam, before, after);
+    return addHref(uriInfo, decryptOrNullify(securityContext, services));
   }
 
   @GET

@@ -103,11 +103,22 @@ public class NetworkServiceResource
               schema = @Schema(type = "string", example = FIELDS))
           @QueryParam("fields")
           String fieldsParam,
+      @Parameter(description = "Fuzzy matching services by service name", schema = @Schema(type = "string"))
+          @QueryParam("name")
+          String name,
+      @Parameter(description = "Fuzzy matching services by service displayName", schema = @Schema(type = "string"))
+          @QueryParam("displayName")
+          String displayName,
       @Parameter(description = "Filter services by domain", schema = @Schema(type = "string", example = "Marketing"))
           @QueryParam("domain")
           String domain,
       @Parameter(description = "数据连接服务类型", schema = @Schema(type = "string")) @QueryParam("serviceType")
           CreateNetworkService.NetworkServiceType serviceType,
+      @Parameter(
+              description = "Services bind Tags, support multi tag use comma",
+              schema = @Schema(type = "string", example = "DataWarehouse.ODS,DataShare.Share"))
+          @QueryParam("tags")
+          String tags,
       @Parameter(description = "Limit number services returned. (1 to 1000000, " + "default 10)")
           @DefaultValue("10")
           @Min(0)
@@ -126,14 +137,24 @@ public class NetworkServiceResource
           @QueryParam("include")
           @DefaultValue("non-deleted")
           Include include) {
-    ListFilter filter = new ListFilter(include);
-    if (!nullOrEmpty(domain)) {
-      EntityReference domainReference = Entity.getEntityReferenceByName(Entity.DOMAIN, domain, Include.NON_DELETED);
-      filter.addQueryParam("domainId", domainReference.getId().toString());
+    ListFilter filter = new ServiceListFilter(include);
+
+    if (!nullOrEmpty(name)) {
+      filter.addQueryParam("name", name);
     }
+
+    if (!nullOrEmpty(displayName)) {
+      filter.addQueryParam("displayName", displayName);
+    }
+
     if (!nullOrEmpty(serviceType)) {
-      filter.addCustomCondition(String.format("serviceType = '%s'", serviceType));
+      filter.addQueryParam("serviceType", serviceType.value());
     }
+
+    if (!nullOrEmpty(tags)) {
+      filter.addQueryParam("tags", tags);
+    }
+
     ResultList<NetworkService> services =
         listInternal(uriInfo, securityContext, fieldsParam, filter, limitParam, before, after);
     return addHref(uriInfo, decryptOrNullify(securityContext, services));
