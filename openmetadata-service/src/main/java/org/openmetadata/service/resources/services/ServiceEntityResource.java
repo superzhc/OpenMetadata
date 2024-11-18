@@ -16,6 +16,8 @@ package org.openmetadata.service.resources.services;
 import static org.openmetadata.common.utils.CommonUtil.listOrEmpty;
 import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import lombok.Getter;
@@ -35,9 +37,6 @@ import org.openmetadata.service.secrets.SecretsUtil;
 import org.openmetadata.service.secrets.masker.EntityMaskerFactory;
 import org.openmetadata.service.security.Authorizer;
 import org.openmetadata.service.util.ResultList;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public abstract class ServiceEntityResource<
         T extends ServiceEntityInterface,
@@ -66,13 +65,16 @@ public abstract class ServiceEntityResource<
         return "";
       }
 
-      String andCondition =
-              Arrays.stream(escape(tags).split(","))
-                      .map(s -> String.format(" tagfqn='%s' ", s))
-                      .collect(Collectors.joining(" AND "));
-      return tableName == null
-              ? String.format("namehash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", andCondition)
-              : String.format("%s.namehash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", tableName, andCondition);
+      String tagsCondition =
+          Arrays.stream(escape(tags).split(","))
+              .map(
+                  tag ->
+                      tableName == null
+                          ? String.format("namehash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tag)
+                          : String.format(
+                              "%s.namehash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tableName, tag))
+              .collect(Collectors.joining(" AND "));
+      return tagsCondition;
     }
 
     public String getServiceTypeCondition(String tableName) {

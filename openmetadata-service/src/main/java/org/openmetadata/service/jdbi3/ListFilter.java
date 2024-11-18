@@ -191,13 +191,16 @@ public class ListFilter {
       return "";
     }
 
-    String andCondition =
+    String tagsCondition =
         Arrays.stream(escape(tags).split(","))
-            .map(s -> String.format(" tagfqn='%s' ", s))
+            .map(
+                tag ->
+                    tableName == null
+                        ? String.format("namehash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tag)
+                        : String.format(
+                            "%s.namehash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tableName, tag))
             .collect(Collectors.joining(" AND "));
-    return tableName == null
-        ? String.format("fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", andCondition)
-        : String.format("%s.fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", tableName, andCondition);
+    return tagsCondition;
   }
 
   public String getCategoryCondition(String tableName) {
