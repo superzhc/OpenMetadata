@@ -36,6 +36,9 @@ import org.openmetadata.service.secrets.masker.EntityMaskerFactory;
 import org.openmetadata.service.security.Authorizer;
 import org.openmetadata.service.util.ResultList;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public abstract class ServiceEntityResource<
         T extends ServiceEntityInterface,
         R extends ServiceEntityRepository<T, S>,
@@ -54,6 +57,22 @@ public abstract class ServiceEntityResource<
       String condition = super.getSpecificCondition(tableName);
       condition = addCondition(condition, getServiceTypeCondition(tableName));
       return condition;
+    }
+
+    @Override
+    public String getTagsCondition(String tableName) {
+      String tags = queryParams.get("tags");
+      if (null == tags) {
+        return "";
+      }
+
+      String andCondition =
+              Arrays.stream(escape(tags).split(","))
+                      .map(s -> String.format(" tagfqn='%s' ", s))
+                      .collect(Collectors.joining(" AND "));
+      return tableName == null
+              ? String.format("namehash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", andCondition)
+              : String.format("%s.namehash IN (SELECT targetfqnhash FROM tag_usage WHERE %s)", tableName, andCondition);
     }
 
     public String getServiceTypeCondition(String tableName) {
