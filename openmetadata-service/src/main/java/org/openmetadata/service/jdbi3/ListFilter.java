@@ -196,9 +196,9 @@ public class ListFilter {
             .map(
                 tag ->
                     tableName == null
-                        ? String.format("namehash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tag)
+                        ? String.format("fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tag)
                         : String.format(
-                            "%s.namehash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tableName, tag))
+                            "%s.fqnhash IN (SELECT targetfqnhash FROM tag_usage WHERE tagfqn='%s')", tableName, tag))
             .collect(Collectors.joining(" AND "));
     return tagsCondition;
   }
