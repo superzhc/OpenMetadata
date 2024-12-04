@@ -132,11 +132,6 @@ public class TypeResource extends EntityResource<Type, TypeRepository> {
     types.forEach(
         type -> {
           type.withId(UUID.randomUUID()).withUpdatedBy(ADMIN_USER_NAME).withUpdatedAt(now);
-          // 设置默认的自定义属性
-          if (null != entityCustomProperties.get(type.getName())) {
-            type.setCustomProperties(entityCustomProperties.get(type.getName()));
-          }
-          LOG.info("Loading type {}", type.getName());
           try {
             Fields fields = getFields(PROPERTIES_FIELD);
             try {
@@ -144,7 +139,29 @@ public class TypeResource extends EntityResource<Type, TypeRepository> {
               type.setId(storedType.getId());
               // If entity type already exists, then carry forward custom properties
               if (storedType.getCategory().equals(Category.Entity)) {
-                type.setCustomProperties(storedType.getCustomProperties());
+                // 2024年12月4日 内置属性自动填充到实体内，即使删除再重启后也会重新添加
+                List<CustomProperty> storedCustomProperties = storedType.getCustomProperties();
+                if (null != entityCustomProperties.get(type.getName())) {
+                  List<CustomProperty> defaultCustomProperties = entityCustomProperties.get(type.getName());
+
+                  if (null == storedCustomProperties || storedCustomProperties.isEmpty()) {
+                    storedCustomProperties = defaultCustomProperties;
+                  } else {
+                    for (CustomProperty defaultCustomProperty : defaultCustomProperties) {
+                      long existCount =
+                          storedCustomProperties.stream()
+                              .filter(
+                                  storedCustomProperty ->
+                                      defaultCustomProperty.getName().equals(storedCustomProperty.getName()))
+                              .count();
+                      if (existCount == 0) {
+                        storedCustomProperties.add(defaultCustomProperty);
+                      }
+                    }
+                  }
+                }
+
+                type.setCustomProperties(storedCustomProperties);
               }
             } catch (Exception e) {
               LOG.debug("Creating entity that does not exist ", e);
