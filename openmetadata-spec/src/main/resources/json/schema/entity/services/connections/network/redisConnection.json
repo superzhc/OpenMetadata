@@ -1,5 +1,5 @@
 {
-  "$id": "https://open-metadata.org/schema/entity/services/connections/mlmodel/mlflowConnection.json",
+  "$id": "https://open-metadata.org/schema/entity/services/connections/network/redisConnection.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RedisConnection",
   "description": "Redis Connection Config",

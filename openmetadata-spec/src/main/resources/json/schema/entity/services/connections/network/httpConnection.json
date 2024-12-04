@@ -1,5 +1,5 @@
 {
-  "$id": "https://open-metadata.org/schema/entity/services/connections/mlmodel/mlflowConnection.json",
+  "$id": "https://open-metadata.org/schema/entity/services/connections/network/httpConnection.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "HttpConnection",
   "description": "Http Connection Config",
@@ -103,9 +103,7 @@
       "title": "Headers",
       "description": "Request Headers",
       "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      }
+      "additionalProperties": true
     },
     "query": {
       "title": "Query Parameters",
@@ -119,6 +117,10 @@
       "title": "Body",
       "description": "Request Body",
       "type": "string"
+    },
+    "arguments": {
+      "title": "Lowcode Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/lowcodeArguments"
     }
   },
   "additionalProperties": false,
