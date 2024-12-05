@@ -66,6 +66,10 @@ public class DBSearchClient implements SearchClient {
   public Response search(SearchRequest request) throws IOException {
     // 2024年10月18日 多索引使用逗号进行分割，结果需要合并
     switch (request.getIndex()) {
+      case "tag_search_index":
+        // 标签搜索
+      case "glossary_term_search_index":
+        // 术语搜索
       case "database_service_search_index":
       case "database_search_index":
       case "database_schema_search_index":
@@ -78,7 +82,6 @@ public class DBSearchClient implements SearchClient {
       case "messaging_service_search_index":
       case "topic_search_index":
       case "network_service_search_index":
-      case "glossary_term_search_index":
       default:
         break;
     }
