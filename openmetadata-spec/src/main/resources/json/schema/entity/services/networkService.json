@@ -14,7 +14,7 @@
       "description": "Type of Network service",
       "type": "string",
       "javaInterfaces": ["org.openmetadata.schema.EnumInterface"],
-      "enum": ["Http", "Redis", "Mqtt", "CustomConnection"],
+      "enum": ["Http", "Redis", "Mqtt", "Custom"],
       "javaEnums": [
         {
           "name": "Http"
@@ -26,7 +26,7 @@
           "name": "Mqtt"
         },
         {
-          "name": "CustomConnection"
+          "name": "Custom"
         }
       ]
     },

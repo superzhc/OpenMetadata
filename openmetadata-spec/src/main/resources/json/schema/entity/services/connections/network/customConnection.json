@@ -10,9 +10,9 @@
       "description": "Service type.",
       "type": "string",
       "enum": [
-        "CustomConnection"
+        "Custom"
       ],
-      "default": "CustomConnection"
+      "default": "Custom"
     }
   },
   "properties": {
@@ -20,7 +20,7 @@
       "title": "Service Type",
       "description": "Service Type",
       "$ref": "#/definitions/customType",
-      "default": "CustomConnection"
+      "default": "Custom"
     },
     "arguments": {
       "title": "Lowcode Arguments",
