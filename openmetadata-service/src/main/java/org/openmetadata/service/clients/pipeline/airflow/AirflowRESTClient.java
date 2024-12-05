@@ -268,11 +268,13 @@ public class AirflowRESTClient extends PipelineServiceClient {
         JSONObject responseJSON = new JSONObject(response.body());
         String ingestionVersion = responseJSON.getString("version");
 
-        if (Boolean.TRUE.equals(validServerClientVersions(ingestionVersion))) {
-          return buildHealthyStatus(ingestionVersion);
-        } else {
-          return buildUnhealthyStatus(buildVersionMismatchErrorMessage(ingestionVersion, SERVER_VERSION));
-        }
+        // 2024年12月5日 集成服务独立化，非必须版本一致，只要给出正确响应，并返回集成服务版本即可
+        //        if (Boolean.TRUE.equals(validServerClientVersions(ingestionVersion))) {
+        //          return buildHealthyStatus(ingestionVersion);
+        //        } else {
+        //          return buildUnhealthyStatus(buildVersionMismatchErrorMessage(ingestionVersion, SERVER_VERSION));
+        //        }
+        return buildHealthyStatus(ingestionVersion);
       }
 
       // Auth error when accessing the APIs
