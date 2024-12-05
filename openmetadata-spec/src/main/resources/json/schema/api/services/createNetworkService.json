@@ -1,12 +1,11 @@
 {
-  "$id": "https://open-metadata.org/schema/api/services/createMlmodelService.json",
+  "$id": "https://open-metadata.org/schema/api/services/createNetworkService.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CreateNetworkServiceRequest",
-  "description": "Create Network service entity request",
+  "description": "Create network service entity request",
   "type": "object",
   "javaType": "org.openmetadata.schema.api.services.CreateNetworkService",
   "javaInterfaces": ["org.openmetadata.schema.CreateEntity"],
-
   "properties": {
     "name": {
       "description": "Name that identifies the this entity instance uniquely",
@@ -35,11 +34,11 @@
       "default": null
     },
     "owner": {
-      "description": "Owner of this mlModel service.",
+      "description": "Owner of this network service.",
       "$ref": "../../type/entityReference.json"
     },
     "domain" : {
-      "description": "Fully qualified name of the domain the MLModel Service belongs to.",
+      "description": "Fully qualified name of the domain the Network Service belongs to.",
       "type": "string"
     }
   },

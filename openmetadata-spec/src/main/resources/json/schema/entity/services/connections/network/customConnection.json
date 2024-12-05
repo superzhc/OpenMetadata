@@ -1,0 +1,31 @@
+{
+  "$id": "https://open-metadata.org/schema/entity/services/connections/network/customConnection.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CustomConnection",
+  "description": "Custom Connection Config",
+  "type": "object",
+  "javaType": "org.openmetadata.schema.services.connections.network.CustomConnection",
+  "definitions": {
+    "customType": {
+      "description": "Service type.",
+      "type": "string",
+      "enum": [
+        "CustomConnection"
+      ],
+      "default": "CustomConnection"
+    }
+  },
+  "properties": {
+    "type": {
+      "title": "Service Type",
+      "description": "Service Type",
+      "$ref": "#/definitions/customType",
+      "default": "CustomConnection"
+    },
+    "arguments": {
+      "title": "Lowcode Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/lowcodeArguments"
+    }
+  },
+  "additionalProperties": false
+}

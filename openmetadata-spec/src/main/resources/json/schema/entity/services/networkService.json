@@ -1,5 +1,5 @@
 {
-  "$id": "https://open-metadata.org/schema/entity/services/mlmodelService.json",
+  "$id": "https://open-metadata.org/schema/entity/services/networkService.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "NetworkService",
   "description": "Network Service Entity, such as HTTP.",
@@ -14,7 +14,7 @@
       "description": "Type of Network service",
       "type": "string",
       "javaInterfaces": ["org.openmetadata.schema.EnumInterface"],
-      "enum": ["Http", "Redis", "Mqtt"],
+      "enum": ["Http", "Redis", "Mqtt", "CustomConnection"],
       "javaEnums": [
         {
           "name": "Http"
@@ -24,6 +24,9 @@
         },
         {
           "name": "Mqtt"
+        },
+        {
+          "name": "CustomConnection"
         }
       ]
     },
@@ -46,6 +49,9 @@
             },
             {
               "$ref": "./connections/network/mqttConnection.json"
+            },
+            {
+              "$ref": "./connections/network/customConnection.json"
             }
           ]
         }
