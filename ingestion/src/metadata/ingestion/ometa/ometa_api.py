@@ -165,8 +165,9 @@ class OpenMetadata(
         )
         self.client = REST(client_config)
         self._use_raw_data = raw_data
-        if self.config.enableVersionValidation:
-            self.validate_versions()
+        # 2024年12月6日 关闭服务器和客户端之间的版本校验
+        # if self.config.enableVersionValidation:
+        #     self.validate_versions()
 
     @staticmethod
     def get_suffix(entity: Type[T]) -> str:

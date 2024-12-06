@@ -36,7 +36,8 @@ def get_client_version_from_string(raw_version: str) -> str:
     :return: Clean version string
     """
     try:
-        return re.match(r"\d+.\d+.\d+.\d+", raw_version).group(0)
+        # 2024年12月6日 版本支持前缀任意字符串
+        return re.match(r"\S*\d+.\d+.\d+.\d+", raw_version).group(0)
     except AttributeError as err:
         raise VersionParsingException(
             f"Can't extract client version from {raw_version}: {err}"
@@ -51,7 +52,8 @@ def get_server_version_from_string(raw_version: str) -> str:
     :return: Clean version string
     """
     try:
-        return re.match(r"\d+.\d+.\d+", raw_version).group(0)
+        # 2024年12月6日 版本支持前缀任意字符串
+        return re.match(r"\S*\d+.\d+.\d+", raw_version).group(0)
     except AttributeError as err:
         raise VersionParsingException(
             f"Can't extract server version from {raw_version}: {err}"
