@@ -29,6 +29,10 @@
     "connectionOptions": {
       "title": "Connection Options",
       "$ref": "../connectionBasicType.json#/definitions/connectionOptions"
+    },
+    "jdbcArguments": {
+      "title": "JDBC Arguments",
+      "$ref": "../connectionBasicType.json#/definitions/jdbcArguments"
     }
   },
   "additionalProperties": false,
