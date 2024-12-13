@@ -355,6 +355,31 @@ public class NetworkServiceResource
     return response;
   }
 
+  @PUT
+  @Path("/{id}")
+  @Operation(
+      operationId = "updateNetworkService",
+      summary = "Update Network service",
+      description = "update an existing network service identified by `Id`.",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Network service instance",
+            content =
+                @Content(mediaType = "application/json", schema = @Schema(implementation = NetworkService.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request")
+      })
+  public Response update(
+      @Context UriInfo uriInfo,
+      @Context SecurityContext securityContext,
+      @Parameter(description = "Id of the Network service", schema = @Schema(type = "UUID")) @PathParam("id") UUID id,
+      @Valid CreateNetworkService update) {
+    NetworkService service = getService(update, securityContext.getUserPrincipal().getName());
+    Response response = update(uriInfo, securityContext, id, service);
+    decryptOrNullify(securityContext, (NetworkService) response.getEntity());
+    return response;
+  }
+
   @PATCH
   @Path("/{id}")
   @Operation(

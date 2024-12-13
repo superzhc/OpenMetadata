@@ -363,6 +363,31 @@ public class MessagingServiceResource
     return response;
   }
 
+  @PUT
+  @Path("/{id}")
+  @Operation(
+      operationId = "updateMessagingService",
+      summary = "Update messaging service",
+      description = "update an existing messaging service identified by `Id`.",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Messaging service instance",
+            content =
+                @Content(mediaType = "application/json", schema = @Schema(implementation = MessagingService.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request")
+      })
+  public Response update(
+      @Context UriInfo uriInfo,
+      @Context SecurityContext securityContext,
+      @Parameter(description = "Id of the Network service", schema = @Schema(type = "UUID")) @PathParam("id") UUID id,
+      @Valid CreateMessagingService update) {
+    MessagingService service = getService(update, securityContext.getUserPrincipal().getName());
+    Response response = update(uriInfo, securityContext, id, service);
+    decryptOrNullify(securityContext, (MessagingService) response.getEntity());
+    return response;
+  }
+
   @PATCH
   @Path("/{id}")
   @Operation(

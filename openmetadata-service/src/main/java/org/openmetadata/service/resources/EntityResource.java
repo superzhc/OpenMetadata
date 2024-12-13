@@ -235,6 +235,16 @@ public abstract class EntityResource<T extends EntityInterface, K extends Entity
     return response.toResponse();
   }
 
+  public Response update(UriInfo uriInfo, SecurityContext securityContext, UUID id, T entity) {
+    repository.prepareInternal(entity, true);
+
+    OperationContext operationContext = new OperationContext(entityType, MetadataOperation.EDIT_ALL);
+    authorizer.authorize(securityContext, operationContext, getResourceContextById(id));
+    PutResponse<T> response = repository.update(uriInfo, id, entity);
+    addHref(uriInfo, response.getEntity());
+    return response.toResponse();
+  }
+
   public Response patchInternal(UriInfo uriInfo, SecurityContext securityContext, UUID id, JsonPatch patch) {
     OperationContext operationContext = new OperationContext(entityType, patch);
     authorizer.authorize(securityContext, operationContext, getResourceContextById(id));

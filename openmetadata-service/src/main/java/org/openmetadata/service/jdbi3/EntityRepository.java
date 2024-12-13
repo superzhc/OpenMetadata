@@ -855,6 +855,20 @@ public abstract class EntityRepository<T extends EntityInterface> {
   }
 
   @Transaction
+  public PutResponse<T> update(UriInfo uriInfo, UUID id, T updated) {
+    // Get all the fields in the original entity that can be updated during PATCH operation
+    T original = setFieldsInternal(dao.findEntityById(id), patchFields);
+    setInheritedFields(original, patchFields);
+
+    // Update the attributes and relationships of an entity
+    EntityUpdater entityUpdater = getUpdater(original, updated, Operation.PATCH);
+    entityUpdater.update();
+    String change = entityUpdater.fieldsChanged() ? RestUtil.ENTITY_UPDATED : RestUtil.ENTITY_NO_CHANGE;
+    setInheritedFields(updated, new Fields(allowedFields));
+    return new PutResponse<>(Status.OK, withHref(uriInfo, updated), change);
+  }
+
+  @Transaction
   public final PatchResponse<T> patch(UriInfo uriInfo, UUID id, String user, JsonPatch patch) {
     // Get all the fields in the original entity that can be updated during PATCH operation
     T original = setFieldsInternal(dao.findEntityById(id), patchFields);

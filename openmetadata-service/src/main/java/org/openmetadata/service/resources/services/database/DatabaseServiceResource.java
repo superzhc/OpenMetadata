@@ -380,6 +380,31 @@ public class DatabaseServiceResource
     return response;
   }
 
+  @PUT
+  @Path("/{id}")
+  @Operation(
+      operationId = "updateDatabaseService",
+      summary = "Update Database service",
+      description = "update an existing database service identified by `Id`.",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Database service instance",
+            content =
+                @Content(mediaType = "application/json", schema = @Schema(implementation = DatabaseService.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request")
+      })
+  public Response update(
+      @Context UriInfo uriInfo,
+      @Context SecurityContext securityContext,
+      @Parameter(description = "Id of the Network service", schema = @Schema(type = "UUID")) @PathParam("id") UUID id,
+      @Valid CreateDatabaseService update) {
+    DatabaseService service = getService(update, securityContext.getUserPrincipal().getName());
+    Response response = update(uriInfo, securityContext, id, service);
+    decryptOrNullify(securityContext, (DatabaseService) response.getEntity());
+    return response;
+  }
+
   @PATCH
   @Path("/{id}")
   @Operation(
