@@ -6,16 +6,26 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
+import javax.net.ssl.SSLContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
 @Slf4j
@@ -28,6 +38,29 @@ public final class HttpClientUtils {
 
   // 请求获取数据的超时时间(即响应时间)，单位毫秒。
   private static final int SOCKET_TIMEOUT = 6000;
+
+  private static final TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
+  private static final SSLContext sslContext;
+
+  static {
+    try {
+      sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static final SSLConnectionSocketFactory sslsf =
+      new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+
+  private static final Registry<ConnectionSocketFactory> socketFactoryRegistry =
+      RegistryBuilder.<ConnectionSocketFactory>create()
+          .register("https", sslsf)
+          .register("http", new PlainConnectionSocketFactory())
+          .build();
+
+  private static final BasicHttpClientConnectionManager connectionManager =
+      new BasicHttpClientConnectionManager(socketFactoryRegistry);
 
   /**
    * 发送get请求；不带请求头和请求参数
@@ -211,7 +244,7 @@ public final class HttpClientUtils {
 
   public static String body(HttpRequestBase httpMethod) {
     // 创建 HttpClient 对象
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+    try (CloseableHttpClient httpClient = createHttpClient() /*HttpClients.createDefault()*/) {
       LOG.debug("[{}]-{}", httpClient.hashCode(), httpMethod.toString());
 
       /**
@@ -251,7 +284,7 @@ public final class HttpClientUtils {
   }
 
   public static byte[] bytes(HttpRequestBase httpMethod) {
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+    try (CloseableHttpClient httpClient = createHttpClient() /*HttpClients.createDefault()*/) {
       /**
        * setConnectTimeout：设置连接超时时间，单位毫秒。 setConnectionRequestTimeout：设置从connect
        * Manager(连接池)获取Connection超时时间，单位毫秒。这个属性是新加的属性，因为目前版本是可以共享连接池的。 setSocketTimeout：请求获取数据的超时时间(即响应时间)，单位毫秒。
@@ -288,7 +321,7 @@ public final class HttpClientUtils {
   }
 
   public static void stream(HttpRequestBase httpMethod, Function<InputStream, Void> function) {
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+    try (CloseableHttpClient httpClient = createHttpClient() /*HttpClients.createDefault()*/) {
       /**
        * setConnectTimeout：设置连接超时时间，单位毫秒。 setConnectionRequestTimeout：设置从connect
        * Manager(连接池)获取Connection超时时间，单位毫秒。这个属性是新加的属性，因为目前版本是可以共享连接池的。 setSocketTimeout：请求获取数据的超时时间(即响应时间)，单位毫秒。
@@ -311,6 +344,10 @@ public final class HttpClientUtils {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private static CloseableHttpClient createHttpClient() {
+    return HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(connectionManager).build();
   }
 
   public static String appendParams(String url, Map<String, String> params) {
