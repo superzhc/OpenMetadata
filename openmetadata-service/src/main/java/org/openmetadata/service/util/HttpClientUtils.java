@@ -347,7 +347,7 @@ public final class HttpClientUtils {
   }
 
   private static CloseableHttpClient createHttpClient() {
-    return HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(connectionManager).build();
+    return HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(connectionManager).setConnectionManagerShared(true).build();
   }
 
   public static String appendParams(String url, Map<String, String> params) {
