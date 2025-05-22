@@ -162,11 +162,11 @@ public class MigrationUtil {
       int limitParam,
       String nameHashColumn) {
     LOG.debug("Starting Migration for table : {}", dao.getTableName());
-    if (dao instanceof CollectionDAO.TestSuiteDAO) {
-      // We have to do this since this column in changed in the dao in latest version after this , and this will fail
-      // the migrations here
-      nameHashColumn = "nameHash";
-    }
+//    if (dao instanceof CollectionDAO.TestSuiteDAO) {
+//      // We have to do this since this column in changed in the dao in latest version after this , and this will fail
+//      // the migrations here
+//      nameHashColumn = "nameHash";
+//    }
     while (true) {
       // Read from Database
       try {
@@ -249,7 +249,7 @@ public class MigrationUtil {
     updateFQNHashForEntity(handle, Database.class, collectionDAO.databaseDAO(), limitParam);
     updateFQNHashForEntity(handle, DatabaseSchema.class, collectionDAO.databaseSchemaDAO(), limitParam);
     updateFQNHashForEntity(handle, Table.class, collectionDAO.tableDAO(), limitParam);
-    updateFQNHashForEntity(handle, Query.class, collectionDAO.queryDAO(), limitParam, "nameHash");
+    updateFQNHashForEntity(handle, Query.class, collectionDAO.queryDAO(), limitParam);
     updateFQNHashForEntity(handle, Topic.class, collectionDAO.topicDAO(), limitParam);
     updateFQNHashForEntity(handle, Dashboard.class, collectionDAO.dashboardDAO(), limitParam);
     updateFQNHashForEntity(handle, DashboardDataModel.class, collectionDAO.dashboardDataModelDAO(), limitParam);
@@ -274,7 +274,7 @@ public class MigrationUtil {
     updateFQNHashForEntity(
         handle, TestConnectionDefinition.class, collectionDAO.testConnectionDefinitionDAO(), limitParam);
     updateFQNHashForEntity(handle, TestDefinition.class, collectionDAO.testDefinitionDAO(), limitParam);
-    updateFQNHashForEntity(handle, TestSuite.class, collectionDAO.testSuiteDAO(), limitParam, "nameHash");
+    updateFQNHashForEntity(handle, TestSuite.class, collectionDAO.testSuiteDAO(), limitParam);
 
     // Update Misc
     updateFQNHashForEntity(handle, Policy.class, collectionDAO.policyDAO(), limitParam);

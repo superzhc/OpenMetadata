@@ -3,7 +3,7 @@ UPDATE entity_extension_time_series
 SET json = jsonb_set(
 	json,
 	'{timestamp}',
-	to_jsonb(cast(json#>'{timestamp}' as int8) *1000)
+	to_jsonb(cast(json #> '{timestamp}' as int8) *1000)
 )
 WHERE
 	extension  in ('table.tableProfile', 'table.columnProfile', 'testCase.testCaseResult');

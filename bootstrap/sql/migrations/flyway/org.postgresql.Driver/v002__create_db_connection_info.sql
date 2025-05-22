@@ -35,9 +35,9 @@ SET json = jsonb_set(json, '{reactions}', '[]'::jsonb, true);
 
 ALTER TABLE thread_entity
     ADD type VARCHAR(64) GENERATED ALWAYS AS (json ->> 'type') STORED NOT NULL,
-    ADD taskId INT GENERATED ALWAYS AS ((json#>'{task,id}')::integer) STORED,
-    ADD taskStatus VARCHAR(64) GENERATED ALWAYS AS (json#>>'{task,status}') STORED,
-    ADD taskAssignees JSONB GENERATED ALWAYS AS (json#>'{task,assignees}') STORED,
+    ADD taskId INT GENERATED ALWAYS AS ((json #>'{task,id}')::integer) STORED,
+    ADD taskStatus VARCHAR(64) GENERATED ALWAYS AS (json #>>'{task,status}') STORED,
+    ADD taskAssignees JSONB GENERATED ALWAYS AS (json #>'{task,assignees}') STORED,
     ADD CONSTRAINT task_id_constraint UNIQUE(taskId);
 
 CREATE INDEX IF NOT EXISTS thread_entity_type_index ON thread_entity(type);
@@ -53,9 +53,9 @@ DELETE from ingestion_pipeline_entity where 1=1;
 DELETE FROM pipeline_service_entity WHERE 1=1;
 
 UPDATE dbservice_entity
-SET json = jsonb_set(json, '{connection,config,databaseSchema}', json#>'{connection,config,database}')
+SET json = jsonb_set(json, '{connection,config,databaseSchema}', json #> '{connection,config,database}')
 where serviceType in ('Mysql','Hive','Presto','Trino','Clickhouse','SingleStore','MariaDB','Db2','Oracle')
-  and json#>'{connection,config,database}' is not null;
+  and json #> '{connection,config,database}' is not null;
 
 UPDATE dbservice_entity
 SET json = json::jsonb #- '{connection,config,database}'

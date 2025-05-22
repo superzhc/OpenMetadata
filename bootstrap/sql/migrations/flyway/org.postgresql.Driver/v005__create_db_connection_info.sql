@@ -18,10 +18,10 @@ UPDATE dbservice_entity
 SET json = jsonb_set(
         json,
         '{connection,config,metastoreConnection}',
-        jsonb_build_object('metastoreHostPort', json#>'{connection,config,metastoreHostPort}')
+        jsonb_build_object('metastoreHostPort', json #> '{connection,config,metastoreHostPort}')
     )
 WHERE serviceType = 'DeltaLake'
-  AND json#>'{connection,config,metastoreHostPort}' is not null;
+  AND json #> '{connection,config,metastoreHostPort}' is not null;
 
 UPDATE dbservice_entity
 SET json = json::jsonb #- '{connection,config,metastoreHostPort}'
@@ -31,10 +31,10 @@ UPDATE dbservice_entity
 SET json = jsonb_set(
         json,
         '{connection,config,metastoreConnection}',
-        jsonb_build_object('metastoreFilePath', json#>'{connection,config,metastoreFilePath}')
+        jsonb_build_object('metastoreFilePath', json #> '{connection,config,metastoreFilePath}')
     )
 WHERE serviceType = 'DeltaLake'
-  AND json#>'{connection,config,metastoreFilePath}' is not null;
+  AND json #> '{connection,config,metastoreFilePath}' is not null;
 
 UPDATE dbservice_entity
 SET json = json::jsonb #- '{connection,config,metastoreFilePath}'

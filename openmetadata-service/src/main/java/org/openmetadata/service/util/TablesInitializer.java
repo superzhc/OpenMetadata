@@ -194,6 +194,8 @@ public final class TablesInitializer {
     String jdbcUrl = dataSourceFactory.getUrl();
     String user = dataSourceFactory.getUser();
     String password = dataSourceFactory.getPassword();
+    String dbType = dataSourceFactory.getDriverClass();
+    String dbSubType = config.getDatabaseLocale();
 
     boolean disableValidateOnMigrate = commandLine.hasOption(DISABLE_VALIDATE_ON_MIGRATE);
     if (disableValidateOnMigrate) {
@@ -208,7 +210,8 @@ public final class TablesInitializer {
             user,
             password,
             flywayRootPath,
-            config.getDataSourceFactory().getDriverClass(),
+            dbType,
+            dbSubType,
             !disableValidateOnMigrate);
     try {
       execute(config, flyway, schemaMigrationOptionSpecified, nativeSQLScriptRootPath, extensionSQLScriptRootPath);
@@ -221,7 +224,7 @@ public final class TablesInitializer {
   }
 
   static Flyway get(
-      String url, String user, String password, String scriptRootPath, String dbSubType, boolean validateOnMigrate) {
+      String url, String user, String password, String scriptRootPath,String dbType, String dbSubType, boolean validateOnMigrate) {
     printToConsoleInDebug(
         "Url:"
             + url
@@ -231,13 +234,16 @@ public final class TablesInitializer {
             + password
             + " ScriptRoot: "
             + scriptRootPath
-            + "ValidateOnMigrate:"
+            + " ValidateOnMigrate:"
             + validateOnMigrate);
-    String location = "filesystem:" + scriptRootPath + File.separator + dbSubType;
+    String location = "filesystem:" + scriptRootPath + File.separator + dbType;
+    if (null != dbSubType && dbSubType.trim().length() > 0) {
+      location = location + File.separator + dbSubType.toLowerCase();
+    }
     printToConsoleInDebug("Location: " + location);
     return Flyway.configure()
         .encoding(StandardCharsets.UTF_8)
-        .table("DATABASE_CHANGE_LOG")
+        .table("kingbase".equalsIgnoreCase(dbSubType) ? "database_change_log" : "DATABASE_CHANGE_LOG")
         .sqlMigrationPrefix("v")
         .validateOnMigrate(validateOnMigrate)
         .outOfOrder(false)

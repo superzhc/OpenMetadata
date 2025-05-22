@@ -41,6 +41,8 @@ import org.openmetadata.service.monitoring.EventMonitorConfiguration;
 @Getter
 @Setter
 public class OpenMetadataApplicationConfig extends Configuration {
+  @JsonProperty("databaseLocale")
+  private String databaseLocale;
   @JsonProperty("database")
   @NotNull
   @Valid

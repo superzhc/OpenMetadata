@@ -9,7 +9,7 @@ UPDATE dbservice_entity SET json = json #- '{connection,config,classificationNam
 -- migrate ingestAllDatabases in postgres 
 UPDATE dbservice_entity de2 
 SET json = JSONB_SET(
-    json || JSONB_SET(json,'{connection,config}', json#>'{connection,config}'|| 
+    json || JSONB_SET(json,'{connection,config}', json #> '{connection,config}'||
     jsonb_build_object('database',
     (SELECT json->>'name' 
         FROM database_entity de 
@@ -111,7 +111,7 @@ DROP TABLE temp_query_migration;
 UPDATE metadata_service_entity
 SET json = json::jsonb #- '{connection,config,securityConfig,audience}'
 WHERE name = 'OpenMetadata'
-    AND json#>'{connection,config,authProvider}' IS NOT NULL
+    AND json #> '{connection,config,authProvider}' IS NOT NULL
     AND json -> 'connection' -> 'config' ->> 'authProvider' != 'google';
 
 ALTER TABLE user_tokens ALTER COLUMN expiryDate DROP NOT NULL;
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS dashboard_data_model_entity (
 );
 
 UPDATE dbservice_entity
-SET json = jsonb_set(json::jsonb #- '{connection,config,database}', '{connection,config,databaseName}', json#> '{connection,config,database}', true)
-WHERE servicetype = 'Druid' and json #>'{connection,config,database}' is not null;
+SET json = jsonb_set(json::jsonb #- '{connection,config,database}', '{connection,config,databaseName}', json #> '{connection,config,database}', true)
+WHERE servicetype = 'Druid' and json #> '{connection,config,database}' is not null;
 
 -- We were using the same jsonSchema for Pipeline Services and Ingestion Pipeline status
 -- Also, we relied on the extension to store the run id
@@ -172,8 +172,8 @@ jsonb_build_object('authType',jsonb_build_object(
 'password',json #>'{connection,config,password}'
 )), true)
 where servicetype = 'Tableau'
-and json#>'{connection,config,password}' is not null
-and json#>'{connection,config,username}' is not null;
+and json #> '{connection,config,password}' is not null
+and json #> '{connection,config,username}' is not null;
 
 UPDATE dashboard_service_entity
 SET json = JSONB_SET(json::jsonb,
@@ -183,8 +183,8 @@ jsonb_build_object('authType',jsonb_build_object(
 'personalAccessTokenSecret',json #>'{connection,config,personalAccessTokenSecret}'
 )), true)
 where servicetype = 'Tableau'
-and json#>'{connection,config,personalAccessTokenName}' is not null
-and json#>'{connection,config,personalAccessTokenSecret}' is not null;
+and json #> '{connection,config,personalAccessTokenName}' is not null
+and json #> '{connection,config,personalAccessTokenSecret}' is not null;
 
 -- Removed property from metadataService.json
 UPDATE metadata_service_entity
@@ -199,7 +199,7 @@ WHERE name = 'OpenMetadata';
 UPDATE dbservice_entity
 SET json = JSONB_SET(json::jsonb, '{connection,config,awsConfig,endPointURL}', '"https://glue.region_name.amazonaws.com/"')
 WHERE serviceType = 'Glue'
-  AND json#>'{connection,config,awsConfig,endPointURL}' = '"https://glue.<region_name>.amazonaws.com/"';
+  AND json #> '{connection,config,awsConfig,endPointURL}' = '"https://glue.<region_name>.amazonaws.com/"';
 
 -- Delete connectionOptions from superset
 UPDATE dashboard_service_entity
