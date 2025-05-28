@@ -806,7 +806,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT toId, toEntity, json FROM entity_relationship "
-                + "WHERE  json->'pipeline'->>'id' =:fromId OR fromId = :fromId AND relation = :relation "
+                + "WHERE  json -> 'pipeline' ->> 'id' = :fromId OR fromId = :fromId AND relation = :relation "
                 + "ORDER BY toId",
         connectionType = POSTGRES)
     @RegisterRowMapper(ToRelationshipMapper.class)
@@ -843,7 +843,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT fromId, fromEntity, json FROM entity_relationship "
-                + "WHERE  json->'pipeline'->>'id' = :toId OR toId = :toId AND relation = :relation "
+                + "WHERE  json -> 'pipeline' ->> 'id' = :toId OR toId = :toId AND relation = :relation "
                 + "ORDER BY fromId",
         connectionType = POSTGRES)
     @RegisterRowMapper(FromRelationshipMapper.class)
@@ -965,7 +965,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT json FROM thread_entity <condition> AND "
-                + "taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>]::jsonb[]) "
+                + "taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>] :: jsonb[]) "
                 + "ORDER BY createdAt DESC "
                 + "LIMIT :limit",
         connectionType = POSTGRES)
@@ -985,7 +985,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT count(id) FROM thread_entity <condition> AND "
-                + "taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>]::jsonb[])",
+                + "taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>] :: jsonb[])",
         connectionType = POSTGRES)
     @ConnectionAwareSqlQuery(
         value =
@@ -1000,7 +1000,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT json FROM thread_entity <condition> "
-                + "AND (taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>]::jsonb[]) OR createdBy = :username) "
+                + "AND (taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>] :: jsonb[]) OR createdBy = :username) "
                 + "ORDER BY createdAt DESC "
                 + "LIMIT :limit",
         connectionType = POSTGRES)
@@ -1021,7 +1021,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT count(id) FROM thread_entity <condition> "
-                + "AND (taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>]::jsonb[]) OR createdBy = :username) ",
+                + "AND (taskAssignees @> ANY (ARRAY[<userTeamJsonPostgres>] :: jsonb[]) OR createdBy = :username) ",
         connectionType = POSTGRES)
     @ConnectionAwareSqlQuery(
         value =
@@ -2117,7 +2117,7 @@ public interface CollectionDAO {
                 mySqlCondition);
         postgresCondition =
             String.format(
-                "%s AND ((c.json#>'{disabled}') IS NULL OR ((c.json#>'{disabled}')::boolean)  = TRUE)",
+                "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = TRUE)",
                 postgresCondition);
       } else {
         mySqlCondition =
@@ -2126,7 +2126,7 @@ public interface CollectionDAO {
                 mySqlCondition);
         postgresCondition =
             String.format(
-                "%s AND ((c.json#>'{disabled}') IS NULL OR ((c.json#>'{disabled}')::boolean)  = FALSE)",
+                "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = FALSE)",
                 postgresCondition);
       }
 
@@ -2154,7 +2154,7 @@ public interface CollectionDAO {
                 mySqlCondition);
         postgresCondition =
             String.format(
-                "%s AND ((c.json#>'{disabled}') IS NULL OR ((c.json#>'{disabled}')::boolean) = TRUE)",
+                "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean) = TRUE)",
                 postgresCondition);
       } else {
         mySqlCondition =
@@ -2163,7 +2163,7 @@ public interface CollectionDAO {
                 mySqlCondition);
         postgresCondition =
             String.format(
-                "%s AND ((c.json#>'{disabled}') IS NULL OR ((c.json#>'{disabled}')::boolean)  = FALSE)",
+                "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = FALSE)",
                 postgresCondition);
       }
 
@@ -2192,7 +2192,7 @@ public interface CollectionDAO {
                 mySqlCondition);
         postgresCondition =
             String.format(
-                "%s AND ((c.json#>'{disabled}') IS NULL OR ((c.json#>'{disabled}')::boolean) = TRUE)",
+                "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean) = TRUE)",
                 postgresCondition);
       } else {
         mySqlCondition =
@@ -2201,7 +2201,7 @@ public interface CollectionDAO {
                 mySqlCondition);
         postgresCondition =
             String.format(
-                "%s AND ((c.json#>'{disabled}') IS NULL OR ((c.json#>'{disabled}')::boolean)  = FALSE)",
+                "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = FALSE)",
                 postgresCondition);
       }
 
@@ -2449,7 +2449,7 @@ public interface CollectionDAO {
           // All the teams without parents should come under "organization" team
           condition =
               String.format(
-                  "%s AND id NOT IN ( (SELECT '%s') UNION (SELECT toId FROM entity_relationship WHERE fromId!='%s' AND fromEntity='team' AND toEntity='team' AND relation=%d) )",
+                  "%s AND id NOT IN ( (SELECT '%s') UNION (SELECT toId FROM entity_relationship WHERE fromId != '%s' AND fromEntity='team' AND toEntity='team' AND relation=%d) )",
                   condition, team.getId(), team.getId(), Relationship.PARENT_OF.ordinal());
         } else {
           condition =
@@ -2463,7 +2463,7 @@ public interface CollectionDAO {
       if (isJoinable != null) {
         mySqlCondition = String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
         postgresCondition =
-            String.format("%s AND ((json#>'{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
+            String.format("%s AND ((json #> '{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
       }
 
       return listCount(getTableName(), getNameColumn(), mySqlCondition, postgresCondition);
@@ -2495,7 +2495,7 @@ public interface CollectionDAO {
       if (isJoinable != null) {
         mySqlCondition = String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
         postgresCondition =
-            String.format("%s AND ((json#>'{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
+            String.format("%s AND ((json #> '{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
       }
 
       // Quoted name is stored in fullyQualifiedName column and not in the name column
@@ -2529,7 +2529,7 @@ public interface CollectionDAO {
       if (isJoinable != null) {
         mySqlCondition = String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
         postgresCondition =
-            String.format("%s AND ((json#>'{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
+            String.format("%s AND ((json #> '{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
       }
 
       // Quoted name is stored in fullyQualifiedName column and not in the name column
@@ -2725,7 +2725,7 @@ public interface CollectionDAO {
         boolean isAdmin = Boolean.parseBoolean(isAdminStr);
         if (isAdmin) {
           mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
-          postgresCondition = String.format("%s AND ((ue.json#>'{isAdmin}')::boolean)  = TRUE ", postgresCondition);
+          postgresCondition = String.format("%s AND ((ue.json #> '{isAdmin}') :: boolean)  = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
               String.format(
@@ -2733,7 +2733,7 @@ public interface CollectionDAO {
                   mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json#>'{isAdmin}' IS NULL OR ((ue.json#>'{isAdmin}')::boolean) = FALSE ) ",
+                  "%s AND (ue.json #> '{isAdmin}' IS NULL OR ((ue.json #> '{isAdmin}') :: boolean) = FALSE ) ",
                   postgresCondition);
         }
       }
@@ -2741,7 +2741,7 @@ public interface CollectionDAO {
         boolean isBot = Boolean.parseBoolean(isBotStr);
         if (isBot) {
           mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
-          postgresCondition = String.format("%s AND ((ue.json#>'{isBot}')::boolean) = TRUE ", postgresCondition);
+          postgresCondition = String.format("%s AND ((ue.json #> '{isBot}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
               String.format(
@@ -2749,7 +2749,7 @@ public interface CollectionDAO {
                   mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json#>'{isBot}' IS NULL OR ((ue.json#>'{isBot}')::boolean) = FALSE) ", postgresCondition);
+                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ", postgresCondition);
         }
       }
       if (team == null && isAdminStr == null && isBotStr == null) {
@@ -2770,7 +2770,7 @@ public interface CollectionDAO {
         boolean isAdmin = Boolean.parseBoolean(isAdminStr);
         if (isAdmin) {
           mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
-          postgresCondition = String.format("%s AND ((ue.json#>'{isAdmin}')::boolean) = TRUE ", postgresCondition);
+          postgresCondition = String.format("%s AND ((ue.json #> '{isAdmin}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
               String.format(
@@ -2778,7 +2778,7 @@ public interface CollectionDAO {
                   mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json#>'{isAdmin}' IS NULL OR ((ue.json#>'{isAdmin}')::boolean) = FALSE ) ",
+                  "%s AND (ue.json #> '{isAdmin}' IS NULL OR ((ue.json #> '{isAdmin}') :: boolean) = FALSE ) ",
                   postgresCondition);
         }
       }
@@ -2786,7 +2786,7 @@ public interface CollectionDAO {
         boolean isBot = Boolean.parseBoolean(isBotStr);
         if (isBot) {
           mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
-          postgresCondition = String.format("%s AND ((ue.json#>'{isBot}')::boolean) = TRUE ", postgresCondition);
+          postgresCondition = String.format("%s AND ((ue.json #> '{isBot}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
               String.format(
@@ -2794,7 +2794,7 @@ public interface CollectionDAO {
                   mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json#>'{isBot}' IS NULL OR ((ue.json#>'{isBot}')::boolean) = FALSE) ", postgresCondition);
+                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ", postgresCondition);
         }
       }
       if (team == null && isAdminStr == null && isBotStr == null) {
@@ -2822,7 +2822,7 @@ public interface CollectionDAO {
         boolean isAdmin = Boolean.parseBoolean(isAdminStr);
         if (isAdmin) {
           mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
-          postgresCondition = String.format("%s AND ((ue.json#>'{isAdmin}')::boolean) = TRUE ", postgresCondition);
+          postgresCondition = String.format("%s AND ((ue.json #> '{isAdmin}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
               String.format(
@@ -2830,7 +2830,7 @@ public interface CollectionDAO {
                   mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json#>'{isAdmin}' IS NULL OR ((ue.json#>'{isAdmin}')::boolean) = FALSE ) ",
+                  "%s AND (ue.json #> '{isAdmin}' IS NULL OR ((ue.json #> '{isAdmin}') :: boolean) = FALSE ) ",
                   postgresCondition);
         }
       }
@@ -2838,7 +2838,7 @@ public interface CollectionDAO {
         boolean isBot = Boolean.parseBoolean(isBotStr);
         if (isBot) {
           mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
-          postgresCondition = String.format("%s AND ((ue.json#>'{isBot}')::boolean) = TRUE ", postgresCondition);
+          postgresCondition = String.format("%s AND ((ue.json #> '{isBot}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
               String.format(
@@ -2846,7 +2846,7 @@ public interface CollectionDAO {
                   mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json#>'{isBot}' IS NULL OR ((ue.json#>'{isBot}')::boolean) = FALSE) ", postgresCondition);
+                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ", postgresCondition);
         }
       }
       if (team == null && isAdminStr == null && isBotStr == null) {
@@ -3077,7 +3077,7 @@ public interface CollectionDAO {
 
       if (testPlatform != null) {
         mysqlCondition.append(String.format("AND json_extract(json, '$.testPlatforms') LIKE '%%%s%%' ", testPlatform));
-        psqlCondition.append(String.format("AND json->>'testPlatforms' LIKE '%%%s%%' ", testPlatform));
+        psqlCondition.append(String.format("AND json ->> 'testPlatforms' LIKE '%%%s%%' ", testPlatform));
       }
 
       if (entityType != null) {
@@ -3114,7 +3114,7 @@ public interface CollectionDAO {
 
       if (testPlatform != null) {
         mysqlCondition.append(String.format("AND json_extract(json, '$.testPlatforms') LIKE '%%%s%%' ", testPlatform));
-        psqlCondition.append(String.format("AND json->>'testPlatforms' LIKE '%%%s%%' ", testPlatform));
+        psqlCondition.append(String.format("AND json ->> 'testPlatforms' LIKE '%%%s%%' ", testPlatform));
       }
 
       if (entityType != null) {
@@ -3151,7 +3151,7 @@ public interface CollectionDAO {
 
       if (testPlatform != null) {
         mysqlCondition.append(String.format("AND json_extract(json, '$.testPlatforms') LIKE '%%%s%%' ", testPlatform));
-        psqlCondition.append(String.format("AND json->>'testPlatforms' LIKE '%%%s%%' ", testPlatform));
+        psqlCondition.append(String.format("AND json ->> 'testPlatforms' LIKE '%%%s%%' ", testPlatform));
       }
 
       if (entityType != null) {
@@ -3307,7 +3307,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlQuery(
         value =
             "SELECT json, ranked FROM "
-                + "(SELECT id, json, deleted, ROW_NUMBER() OVER(ORDER BY (json->'testCaseResult'->>'timestamp') DESC NULLS LAST) AS ranked FROM <table> "
+                + "(SELECT id, json, deleted, ROW_NUMBER() OVER(ORDER BY (json -> 'testCaseResult' ->> 'timestamp') DESC NULLS LAST) AS ranked FROM <table> "
                 + ") executionTimeSorted "
                 + "<cond> AND ranked > :after "
                 + "LIMIT :limit",
@@ -3521,7 +3521,7 @@ public interface CollectionDAO {
                 + "(SELECT COUNT(*) FROM mlmodel_service_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM search_service_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM storage_service_entity <cond>)) as servicesCount, "
-                + "(SELECT COUNT(*) FROM user_entity <cond> AND (json#>'{isBot}' IS NULL OR ((json#>'{isBot}')::boolean) = FALSE)) as userCount, "
+                + "(SELECT COUNT(*) FROM user_entity <cond> AND (json #> '{isBot}' IS NULL OR ((json #> '{isBot}')::boolean) = FALSE)) as userCount, "
                 + "(SELECT COUNT(*) FROM team_entity <cond>) as teamCount, "
                 + "(SELECT COUNT(*) FROM test_suite <cond>) as testSuiteCount",
         connectionType = POSTGRES)

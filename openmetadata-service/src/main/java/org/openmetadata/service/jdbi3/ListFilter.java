@@ -120,8 +120,8 @@ public class ListFilter {
           : String.format("(JSON_EXTRACT(%s.json, '$.displayName') like '%%%s%%')", tableName, escape(displayName));
     }
     return tableName == null
-        ? String.format("(json->>'displayName' like '%%%s%%')", escape(displayName))
-        : String.format("(%s.json->>'displayName' like '%%%s%%')", tableName, escape(displayName));
+        ? String.format("(json ->> 'displayName' like '%%%s%%')", escape(displayName))
+        : String.format("(%s.json ->> 'displayName' like '%%%s%%')", tableName, escape(displayName));
   }
 
   public String getDatabaseCondition(String tableName) {
@@ -177,9 +177,9 @@ public class ListFilter {
       }
     } else {
       if (disabled) {
-        disabledCondition = "((c.json#>'{disabled}')::boolean)  = TRUE)";
+        disabledCondition = "((c.json #> '{disabled}')::boolean)  = TRUE)";
       } else {
-        disabledCondition = "(c.json#>'{disabled}' IS NULL OR ((c.json#>'{disabled}'):boolean) = FALSE";
+        disabledCondition = "(c.json #> '{disabled}' IS NULL OR ((c.json #> '{disabled}'):boolean) = FALSE";
       }
     }
     return disabledCondition;
@@ -259,12 +259,12 @@ public class ListFilter {
         if (DatasourceConfig.getInstance().isMySQL()) {
           return "(JSON_UNQUOTE(JSON_EXTRACT(json, '$.executable')) = 'true')";
         }
-        return "(json->>'executable' = 'true')";
+        return "(json ->> 'executable' = 'true')";
       case ("logical"):
         if (DatasourceConfig.getInstance().isMySQL()) {
           return "(JSON_UNQUOTE(JSON_EXTRACT(json, '$.executable')) = 'false' OR JSON_UNQUOTE(JSON_EXTRACT(json, '$.executable')) IS NULL)";
         }
-        return "(json->>'executable' = 'false' or json -> 'executable' is null)";
+        return "(json ->> 'executable' = 'false' or json -> 'executable' is null)";
       default:
         return "";
     }
@@ -296,8 +296,8 @@ public class ListFilter {
               tableName, inCondition);
     }
     return tableName == null
-        ? String.format("ingestion_pipeline_entity.json->>'pipelineType' IN (%s)", inCondition)
-        : String.format("%s.json->>'pipelineType' IN (%s)", tableName, inCondition);
+        ? String.format("ingestion_pipeline_entity.json ->> 'pipelineType' IN (%s)", inCondition)
+        : String.format("%s.json ->> 'pipelineType' IN (%s)", tableName, inCondition);
   }
 
   protected String getInConditionFromString(String condition) {
