@@ -126,7 +126,7 @@ public class TableRepository extends EntityRepository<Table> {
   public Response treeByGlossary(String glossaryName, ListFilter filter) {
     final Map<String, Object> tableMap = new HashMap<>();
     // 一次性直接从数据库读取所有的数据表
-    List<String> jsons = dao.listAfter(filter, Integer.MAX_VALUE, "");
+    List<String> jsons = dao.listAfter(filter, Integer.MAX_VALUE, " ");
     for (String json : jsons) {
       Table entity = JsonUtils.readValue(json, Table.class);
 
@@ -146,7 +146,7 @@ public class TableRepository extends EntityRepository<Table> {
             .listAfter(
                 new ListFilter(Include.NON_DELETED).addQueryParam("parent", glossary.getFullyQualifiedName()),
                 Integer.MAX_VALUE,
-                "");
+                " ");
 
     final Map<String, List<Object>> tagUsageMap = new HashMap<>();
     // 一次性直接从数据库获取指定术语下的所有使用
