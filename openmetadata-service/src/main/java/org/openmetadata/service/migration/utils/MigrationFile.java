@@ -1,5 +1,6 @@
 package org.openmetadata.service.migration.utils;
 
+import com.github.mengweijin.flyway.database.dm.DmParser;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -34,10 +35,20 @@ public class MigrationFile implements Comparable<MigrationFile> {
     this.version = dir.getName();
     this.connectionType = connectionType;
     this.migrationDAO = migrationDAO;
-    this.dbPackageName = connectionType == ConnectionType.MYSQL ? "mysql" : "postgres";
+    this.dbPackageName = getDbPackageNameByConnectionType(connectionType);
     versionNumbers = convertToNumber(version);
     schemaChanges = new ArrayList<>();
     postDDLScripts = new ArrayList<>();
+  }
+
+  private String getDbPackageNameByConnectionType(ConnectionType connectionType) {
+    if (connectionType == ConnectionType.MYSQL) {
+      return "mysql";
+    } else if (connectionType == ConnectionType.DAMENG) {
+      return "dameng";
+    } else {
+      return "postgres";
+    }
   }
 
   @Override
@@ -54,10 +65,15 @@ public class MigrationFile implements Comparable<MigrationFile> {
   public void parseSQLFiles() {
     final ParsingContext parsingContext = new ParsingContext();
     Configuration configuration = new ClassicConfiguration();
-    Parser parser = new PostgreSQLParser(configuration, parsingContext);
+    Parser parser;
     if (connectionType == ConnectionType.MYSQL) {
       parser = new MySQLParser(configuration, parsingContext);
+    } else if (connectionType == ConnectionType.DAMENG) {
+      parser = new DmParser(configuration, parsingContext);
+    } else {
+      parser = new PostgreSQLParser(configuration, parsingContext);
     }
+
     if (new File(getSchemaChangesFile()).isFile()) {
       try (SqlStatementIterator schemaChangesIterator =
           parser.parse(new FileSystemResource(null, getSchemaChangesFile(), StandardCharsets.UTF_8, true))) {
@@ -96,6 +112,8 @@ public class MigrationFile implements Comparable<MigrationFile> {
   public String getMigrationsFilePath() {
     if (connectionType == ConnectionType.MYSQL) {
       return Paths.get(dir.getAbsolutePath(), "mysql").toString();
+    } else if (connectionType == ConnectionType.DAMENG) {
+      return Paths.get(dir.getAbsolutePath(), "dameng").toString();
     } else {
       return Paths.get(dir.getAbsolutePath(), "postgres").toString();
     }
@@ -104,6 +122,8 @@ public class MigrationFile implements Comparable<MigrationFile> {
   public String getSchemaChangesFile() {
     if (connectionType == ConnectionType.MYSQL) {
       return Paths.get(dir.getAbsolutePath(), "mysql", "schemaChanges.sql").toString();
+    } else if (connectionType == ConnectionType.DAMENG) {
+      return Paths.get(dir.getAbsolutePath(), "dameng", "schemaChanges.sql").toString();
     } else {
       return Paths.get(dir.getAbsolutePath(), "postgres", "schemaChanges.sql").toString();
     }
@@ -112,6 +132,8 @@ public class MigrationFile implements Comparable<MigrationFile> {
   public String getPostDDLScriptFile() {
     if (connectionType == ConnectionType.MYSQL) {
       return Paths.get(dir.getAbsolutePath(), "mysql", "postDataMigrationSQLScript.sql").toString();
+    } else if (connectionType == ConnectionType.DAMENG) {
+      return Paths.get(dir.getAbsolutePath(), "dameng", "postDataMigrationSQLScript.sql").toString();
     } else {
       return Paths.get(dir.getAbsolutePath(), "postgres", "postDataMigrationSQLScript.sql").toString();
     }

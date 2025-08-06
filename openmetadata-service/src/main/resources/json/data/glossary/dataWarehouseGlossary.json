@@ -21,9 +21,9 @@
     },
     {
       "name": "DWS",
-      "displayName": "数据服务层",
+      "displayName": "数据汇总层",
       "description": "DWS（Data Warehouse Summary）：轻度汇总层（面向分析型应用进行细粒度的统计和沉淀），对DWD层的操作数据进行轻度综合和汇总统计",
-      "synonyms": ["轻度汇总层"]
+      "synonyms": ["轻度汇总层","数据服务层"]
     },
     {
       "name": "ADS",

@@ -101,7 +101,7 @@ public class MigrationUtil {
   @SneakyThrows
   public static <T extends EntityInterface> void updateFQNHashForEntity(
       Handle handle, Class<T> clazz, EntityDAO<T> dao, int limitParam, String nameHashColumn) {
-    if (Boolean.TRUE.equals(DatasourceConfig.getInstance().isMySQL())) {
+    if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
       readAndProcessEntity(
           handle,
           String.format(MYSQL_ENTITY_UPDATE, dao.getTableName(), nameHashColumn),
@@ -132,7 +132,7 @@ public class MigrationUtil {
   @SneakyThrows
   public static <T extends EntityInterface> void updateFQNHashForEntityWithName(
       Handle handle, Class<T> clazz, EntityDAO<T> dao, int limitParam, String nameHashColumn) {
-    if (Boolean.TRUE.equals(DatasourceConfig.getInstance().isMySQL())) {
+    if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
       readAndProcessEntity(
           handle,
           String.format(MYSQL_ENTITY_UPDATE, dao.getTableName(), nameHashColumn),
@@ -162,11 +162,12 @@ public class MigrationUtil {
       int limitParam,
       String nameHashColumn) {
     LOG.debug("Starting Migration for table : {}", dao.getTableName());
-//    if (dao instanceof CollectionDAO.TestSuiteDAO) {
-//      // We have to do this since this column in changed in the dao in latest version after this , and this will fail
-//      // the migrations here
-//      nameHashColumn = "nameHash";
-//    }
+    //    if (dao instanceof CollectionDAO.TestSuiteDAO) {
+    //      // We have to do this since this column in changed in the dao in latest version after this , and this will
+    // fail
+    //      // the migrations here
+    //      nameHashColumn = "nameHash";
+    //    }
     while (true) {
       // Read from Database
       try {
@@ -285,14 +286,14 @@ public class MigrationUtil {
     updateFQNHashForEntity(handle, Workflow.class, collectionDAO.workflowDAO(), limitParam);
 
     // Field Relationship
-    if (Boolean.TRUE.equals(DatasourceConfig.getInstance().isMySQL())) {
+    if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
       updateFQNHashForFieldRelationship(handle, MYSQL_FIELD_RELATIONSHIP_UPDATE, collectionDAO, limitParam);
     } else {
       updateFQNHashForFieldRelationship(handle, POSTGRES_FIELD_RELATIONSHIP_UPDATE, collectionDAO, limitParam);
     }
 
     // TimeSeries
-    if (Boolean.TRUE.equals(DatasourceConfig.getInstance().isMySQL())) {
+    if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
       updateFQNHashEntityExtensionTimeSeries(
           handle, MYSQL_ENTITY_EXTENSION_TIME_SERIES_UPDATE, collectionDAO, limitParam);
     } else {

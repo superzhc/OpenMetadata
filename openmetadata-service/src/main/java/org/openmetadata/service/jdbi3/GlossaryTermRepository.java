@@ -209,6 +209,10 @@ public class GlossaryTermRepository extends EntityRepository<GlossaryTerm> {
     return Entity.getEntityReferenceById(GLOSSARY, UUID.fromString(id), ALL);
   }
 
+  public EntityReference getGlossaryByName(String name) {
+    return Entity.getEntityReferenceByName(GLOSSARY, name, ALL);
+  }
+
   @Override
   public GlossaryTermUpdater getUpdater(GlossaryTerm original, GlossaryTerm updated, Operation operation) {
     return new GlossaryTermUpdater(original, updated, operation);

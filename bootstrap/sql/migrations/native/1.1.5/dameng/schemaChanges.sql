@@ -66,8 +66,8 @@ DELETE FROM entity_extension_time_series
 WHERE extension = 'testCase.testCaseResult';
 COMMIT;
 
-ALTER TABLE automations_workflow MODIFY   nameHash VARCHAR(256) COLLATE ascii_bin;
-ALTER TABLE automations_workflow MODIFY   workflowType VARCHAR(256) COLLATE ascii_bin;
+--ALTER TABLE automations_workflow MODIFY   nameHash VARCHAR(256) COLLATE ascii_bin;
+--ALTER TABLE automations_workflow MODIFY   workflowType VARCHAR(256) COLLATE ascii_bin;
 ALTER TABLE automations_workflow MODIFY   status VARCHAR(256) COLLATE ascii_bin;
 ALTER TABLE entity_extension_time_series MODIFY   entityFQNHash VARCHAR(768) COLLATE ascii_bin;
 ALTER TABLE entity_extension_time_series MODIFY   jsonSchema VARCHAR(50) COLLATE ascii_bin;

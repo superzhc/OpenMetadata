@@ -83,7 +83,7 @@ public class ListFilter {
       condition = addCondition(condition, customCondition);
     }
 
-    return condition.isEmpty() ? "WHERE TRUE" : "WHERE " + condition;
+    return condition.isEmpty() ? "WHERE 1=1" : "WHERE " + condition;
   }
 
   public String getIncludeCondition(String tableName) {
@@ -114,7 +114,7 @@ public class ListFilter {
       return "";
     }
 
-    if (DatasourceConfig.getInstance().isMySQL()) {
+    if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
       return tableName == null
           ? String.format("(JSON_EXTRACT(json, '$.displayName') like '%%%s%%')", escape(displayName))
           : String.format("(JSON_EXTRACT(%s.json, '$.displayName') like '%%%s%%')", tableName, escape(displayName));
@@ -174,6 +174,13 @@ public class ListFilter {
         disabledCondition = "JSON_EXTRACT(json, '$.disabled') = TRUE";
       } else {
         disabledCondition = "(JSON_EXTRACT(json, '$.disabled') IS NULL OR JSON_EXTRACT(json, '$.disabled') = FALSE)";
+      }
+    } else if (DatasourceConfig.getInstance().isDameng()) {
+      if (disabled) {
+        disabledCondition = "CAST(JSON_VALUE(json, '$.disabled' RETURNING NUMBER) AS TINYINT) = TRUE";
+      } else {
+        disabledCondition =
+            "(JSON_VALUE(json, '$.disabled') IS NULL OR CAST(JSON_VALUE(json, '$.disabled' RETURNING NUMBER) AS TINYINT) = FALSE)";
       }
     } else {
       if (disabled) {
@@ -256,12 +263,12 @@ public class ListFilter {
 
     switch (testSuiteType) {
       case ("executable"):
-        if (DatasourceConfig.getInstance().isMySQL()) {
+        if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
           return "(JSON_UNQUOTE(JSON_EXTRACT(json, '$.executable')) = 'true')";
         }
         return "(json ->> 'executable' = 'true')";
       case ("logical"):
-        if (DatasourceConfig.getInstance().isMySQL()) {
+        if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
           return "(JSON_UNQUOTE(JSON_EXTRACT(json, '$.executable')) = 'false' OR JSON_UNQUOTE(JSON_EXTRACT(json, '$.executable')) IS NULL)";
         }
         return "(json ->> 'executable' = 'false' or json -> 'executable' is null)";
@@ -287,7 +294,7 @@ public class ListFilter {
   private String getPipelineTypePrefixCondition(String tableName, String pipelineType) {
     pipelineType = escape(pipelineType);
     String inCondition = getInConditionFromString(pipelineType);
-    if (DatasourceConfig.getInstance().isMySQL()) {
+    if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
       return tableName == null
           ? String.format(
               "JSON_UNQUOTE(JSON_EXTRACT(ingestion_pipeline_entity.json, '$.pipelineType')) IN (%s)", inCondition)

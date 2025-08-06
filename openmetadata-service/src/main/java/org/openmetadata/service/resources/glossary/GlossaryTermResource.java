@@ -165,6 +165,12 @@ public class GlossaryTermResource extends EntityResource<GlossaryTerm, GlossaryT
           String glossaryIdParam,
       @Parameter(
               description =
+                  "List glossary terms filtered by glossary identified by name given in `glossary` parameter.",
+              schema = @Schema(type = "string", example = FIELDS))
+          @QueryParam("glossaryName")
+          String glossaryNameParam,
+      @Parameter(
+              description =
                   "List glossary terms filtered by children of glossary term identified by Id given in "
                       + "`parent` parameter.",
               schema = @Schema(type = "string", example = FIELDS))
@@ -202,6 +208,10 @@ public class GlossaryTermResource extends EntityResource<GlossaryTerm, GlossaryT
     EntityReference glossary = null;
     if (glossaryIdParam != null) {
       glossary = repository.getGlossary(glossaryIdParam);
+      fqn = glossary.getName();
+    } else if (glossaryNameParam != null) {
+      // 2024年11月15日 术语库id的优先级高于名称
+      glossary = repository.getGlossaryByName(glossaryNameParam);
       fqn = glossary.getName();
     }
 

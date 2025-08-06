@@ -35,7 +35,7 @@ public class MigrationUtil {
 
     try {
       List<String> fqnList;
-      if (Boolean.TRUE.equals(DatasourceConfig.getInstance().isMySQL())) {
+      if (DatasourceConfig.getInstance().isMySQL() || DatasourceConfig.getInstance().isDameng()) {
         fqnList = handle.createQuery(MYSQL_LIST_TABLE_FQNS).mapTo(String.class).list();
       } else {
         fqnList = handle.createQuery(POSTGRES_LIST_TABLE_FQNS).mapTo(String.class).list();

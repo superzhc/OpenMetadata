@@ -31,8 +31,12 @@ public class SyncRepository {
   public SyncRepository(OpenMetadataApplicationConfig config) {
     this.config = config;
 
-    // 注册同步客户端
-    addClient(new LowCodeSyncClient(config.getHanYunConfiguration()));
+    if (null != config.getHanYunConfiguration()
+        && config.getHanYunConfiguration().getApiEndpoint() != null
+        && !config.getHanYunConfiguration().getApiEndpoint().isBlank()) {
+      // 注册同步客户端
+      addClient(new LowCodeSyncClient(config.getHanYunConfiguration()));
+    }
 
     Entity.setSyncRepository(this);
   }

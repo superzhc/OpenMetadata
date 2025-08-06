@@ -204,15 +204,7 @@ public final class TablesInitializer {
     String nativeSQLScriptRootPath = config.getMigrationConfiguration().getNativePath();
     String flywayRootPath = config.getMigrationConfiguration().getFlywayPath();
     String extensionSQLScriptRootPath = config.getMigrationConfiguration().getExtensionPath();
-    Flyway flyway =
-        get(
-            jdbcUrl,
-            user,
-            password,
-            flywayRootPath,
-            dbType,
-            dbSubType,
-            !disableValidateOnMigrate);
+    Flyway flyway = get(jdbcUrl, user, password, flywayRootPath, dbType, dbSubType, !disableValidateOnMigrate);
     try {
       execute(config, flyway, schemaMigrationOptionSpecified, nativeSQLScriptRootPath, extensionSQLScriptRootPath);
       printToConsoleInDebug(schemaMigrationOptionSpecified + "option successful");
@@ -224,7 +216,13 @@ public final class TablesInitializer {
   }
 
   static Flyway get(
-      String url, String user, String password, String scriptRootPath,String dbType, String dbSubType, boolean validateOnMigrate) {
+      String url,
+      String user,
+      String password,
+      String scriptRootPath,
+      String dbType,
+      String dbSubType,
+      boolean validateOnMigrate) {
     printToConsoleInDebug(
         "Url:"
             + url

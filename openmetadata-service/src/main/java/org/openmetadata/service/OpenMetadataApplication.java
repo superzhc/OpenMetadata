@@ -101,11 +101,7 @@ import org.openmetadata.service.security.NoopAuthorizer;
 import org.openmetadata.service.security.NoopFilter;
 import org.openmetadata.service.security.auth.*;
 import org.openmetadata.service.security.jwt.JWTTokenGenerator;
-import org.openmetadata.service.security.saml.OMMicrometerHttpFilter;
-import org.openmetadata.service.security.saml.SamlAssertionConsumerServlet;
-import org.openmetadata.service.security.saml.SamlLoginServlet;
-import org.openmetadata.service.security.saml.SamlMetadataServlet;
-import org.openmetadata.service.security.saml.SamlSettingsHolder;
+import org.openmetadata.service.security.saml.*;
 import org.openmetadata.service.socket.FeedServlet;
 import org.openmetadata.service.socket.OpenMetadataAssetServlet;
 import org.openmetadata.service.socket.SocketAddressFilter;
@@ -125,7 +121,7 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
   public void run(OpenMetadataApplicationConfig catalogConfig, Environment environment)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException,
           InvocationTargetException, IOException, ConfigurationException, CertificateException, KeyStoreException,
-          NoSuchAlgorithmException {
+          NoSuchAlgorithmException, SchedulerException {
     validateConfiguration(catalogConfig);
 
     // init for dataSourceFactory
@@ -135,6 +131,10 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
     final Jdbi jdbi = createAndSetupJDBI(environment, catalogConfig.getDataSourceFactory());
     CollectionDAO collectionDAO = jdbi.onDemand(CollectionDAO.class);
     Entity.setCollectionDAO(collectionDAO);
+
+    // init for client
+    // final HttpClient httpClient=new
+    // HttpClientBuilder(environment).using(catalogConfig.getHttpClientConfiguration()).build(getName());
 
     // initialize Search Repository, all repositories use SearchRepository this line should always before initializing
     // repository
@@ -264,10 +264,12 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
     Jdbi jdbi = new JdbiFactory().build(environment, dbFactory, "database");
     SqlLogger sqlLogger =
         new SqlLogger() {
-          // @Override
-          // public void logBeforeExecution(StatementContext context) {
-          //   LOG.debug("sql {}, parameters {}", context.getRenderedSql(), context.getBinding());
-          // }
+          /*@Override
+          public void logBeforeExecution(StatementContext context) {
+            String sql=context.getRenderedSql();
+            Binding binding=context.getBinding();
+            LOG.debug("sql {}, parameters {}", sql, binding);
+          }*/
 
           @Override
           public void logAfterExecution(StatementContext context) {

@@ -16,8 +16,7 @@ package org.openmetadata.service.jdbi3;
 import static org.openmetadata.service.exception.CatalogExceptionMessage.entityNotFound;
 import static org.openmetadata.service.jdbi3.ListFilter.escape;
 import static org.openmetadata.service.jdbi3.ListFilter.escapeApostrophe;
-import static org.openmetadata.service.jdbi3.locator.ConnectionType.MYSQL;
-import static org.openmetadata.service.jdbi3.locator.ConnectionType.POSTGRES;
+import static org.openmetadata.service.jdbi3.locator.ConnectionType.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -65,6 +64,9 @@ public interface EntityDAO<T extends EntityInterface> {
   @ConnectionAwareSqlUpdate(
       value = "INSERT INTO <table> (<nameHashColumn>, json) VALUES (:nameHashColumnValue, :json :: jsonb)",
       connectionType = POSTGRES)
+  @ConnectionAwareSqlUpdate(
+      value = "INSERT INTO <table> (<nameHashColumn>, json) VALUES (:nameHashColumnValue, :json)",
+      connectionType = DAMENG)
   int insert(
       @Define("table") String table,
       @Define("nameHashColumn") String nameHashColumn,
@@ -77,6 +79,9 @@ public interface EntityDAO<T extends EntityInterface> {
   @ConnectionAwareSqlUpdate(
       value = "UPDATE <table> SET  json = (:json :: jsonb), <nameHashColumn> = :nameHashColumnValue WHERE id = :id",
       connectionType = POSTGRES)
+  @ConnectionAwareSqlUpdate(
+      value = "UPDATE <table> SET  json = :json, <nameHashColumn> = :nameHashColumnValue WHERE id = :id",
+      connectionType = DAMENG)
   void update(
       @Define("table") String table,
       @Define("nameHashColumn") String nameHashColumn,
@@ -120,6 +125,7 @@ public interface EntityDAO<T extends EntityInterface> {
 
   @ConnectionAwareSqlUpdate(value = "<mySqlUpdate>", connectionType = MYSQL)
   @ConnectionAwareSqlUpdate(value = "<postgresUpdate>", connectionType = POSTGRES)
+  @ConnectionAwareSqlUpdate(value = "<mySqlUpdate>", connectionType = DAMENG)
   void updateFqnInternal(@Define("mySqlUpdate") String mySqlUpdate, @Define("postgresUpdate") String postgresUpdate);
 
   @SqlQuery("SELECT json FROM <table> WHERE id = :id <cond>")
@@ -137,6 +143,7 @@ public interface EntityDAO<T extends EntityInterface> {
 
   @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <mysqlCond>", connectionType = MYSQL)
   @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <postgresCond>", connectionType = POSTGRES)
+  @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <mysqlCond>", connectionType = DAMENG)
   int listCount(
       @Define("table") String table,
       @Define("nameColumn") String nameColumn,
@@ -165,6 +172,17 @@ public interface EntityDAO<T extends EntityInterface> {
               "LIMIT :limit"
               + ") last_rows_subquery ORDER BY <nameColumn>",
       connectionType = POSTGRES)
+  @ConnectionAwareSqlQuery(
+      value =
+          "SELECT json FROM ("
+              + "SELECT <table>.<nameColumn>, <table>.json FROM <table> <mysqlCond> AND "
+              + "<table>.<nameColumn> < :before "
+              + // Pagination by entity fullyQualifiedName or name (when entity does not have fqn)
+              "ORDER BY <table>.<nameColumn> DESC "
+              + // Pagination ordering by entity fullyQualifiedName or name (when entity does not have fqn)
+              "LIMIT :limit"
+              + ") last_rows_subquery ORDER BY <nameColumn>",
+      connectionType = DAMENG)
   List<String> listBefore(
       @Define("table") String table,
       @Define("nameColumn") String nameColumn,
@@ -187,6 +205,13 @@ public interface EntityDAO<T extends EntityInterface> {
               + "ORDER BY <table>.<nameColumn> "
               + "LIMIT :limit",
       connectionType = POSTGRES)
+  @ConnectionAwareSqlQuery(
+      value =
+          "SELECT <table>.json FROM <table> <mysqlCond> AND "
+              + "<table>.<nameColumn> > :after "
+              + "ORDER BY <table>.<nameColumn> "
+              + "LIMIT :limit",
+      connectionType = DAMENG)
   List<String> listAfter(
       @Define("table") String table,
       @Define("nameColumn") String nameColumn,

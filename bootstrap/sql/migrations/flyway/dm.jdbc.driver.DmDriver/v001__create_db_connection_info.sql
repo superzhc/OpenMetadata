@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS entity_relationship (
     fromId VARCHAR(36) NOT NULL,                -- ID of the from entity
     toId VARCHAR(36) NOT NULL,                  -- ID of the to entity
@@ -6,15 +5,15 @@ CREATE TABLE IF NOT EXISTS entity_relationship (
     toEntity VARCHAR(256) NOT NULL,             -- Type name of to entity
     relation TINYINT NOT NULL,
     jsonSchema VARCHAR(256),                    -- Schema used for generating JSON
-    json text,                                  -- JSON payload with additional information
+    json text CHECK (json IS JSON(LAX)),        -- JSON payload with additional information
     deleted NUMBER(1) NOT NULL DEFAULT 0,
     CONSTRAINT pk_entity_relationship PRIMARY KEY (fromId, toId, relation)
 );
 
 -- 创建索引
-CREATE INDEX entity_relationship_from_index ON entity_relationship(fromId, relation);
-CREATE INDEX entity_relationship_to_index ON entity_relationship(toId, relation);
-CREATE INDEX entity_relationship_edge_index ON entity_relationship(fromId, toId, relation);
+CREATE INDEX IF NOT EXISTS entity_relationship_from_index ON entity_relationship(fromId, relation);
+CREATE INDEX IF NOT EXISTS entity_relationship_to_index ON entity_relationship(toId, relation);
+CREATE INDEX IF NOT EXISTS entity_relationship_edge_index ON entity_relationship(fromId, toId, relation);
 
 CREATE TABLE IF NOT EXISTS field_relationship (
      fromFQN VARCHAR(256) NOT NULL,              -- Fully qualified name of entity or field
@@ -23,32 +22,24 @@ CREATE TABLE IF NOT EXISTS field_relationship (
      toType VARCHAR(256) NOT NULL,               -- Fully qualified type of entity or field
      relation TINYINT NOT NULL,
      jsonSchema VARCHAR(256),                    -- Schema used for generating JSON
-     json text,
-    CONSTRAINT pk_field_relationship PRIMARY KEY (fromFQN, toFQN, relation)
+     json text CHECK (json IS JSON(LAX)) NULL,
+     CONSTRAINT pk_field_relationship PRIMARY KEY (fromFQN, toFQN, relation)
 );
+
 -- 创建索引
-CREATE INDEX from_index ON field_relationship(fromFQN, relation);
-CREATE INDEX to_index ON field_relationship(toFQN, relation);
+CREATE INDEX IF NOT EXISTS field_relationship_from_index ON field_relationship(fromFQN, relation);
+CREATE INDEX IF NOT EXISTS field_relationship_to_index ON field_relationship(toFQN, relation);
 
 --
 -- Used for storing additional metadata for an entity
 --
 CREATE TABLE IF NOT EXISTS entity_extension (
-    id VARCHAR(36) NOT NULL,                    -- ID of the from entity
-    extension VARCHAR(256) NOT NULL,            -- Extension name same as entity.fieldName
-    jsonSchema VARCHAR(256) NOT NULL,           -- Schema used for generating JSON
-    json JSON NOT NULL,
-    PRIMARY KEY (id, extension)
-);
-
-CREATE TABLE IF NOT EXISTS entity_extension (
      id VARCHAR(36) NOT NULL,
      extension VARCHAR(256) NOT NULL,              -- Fully qualified name of entity or field
      jsonSchema VARCHAR(256) NOT NULL,                -- Fully qualified name of entity or field
-     json text NOT NULL,
+     json text NOT NULL CHECK (json IS JSON(LAX)),
     CONSTRAINT pk_entity_extension PRIMARY KEY (id, extension)
 );
-
 
 CREATE TABLE IF NOT EXISTS dbservice_entity (
      id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
@@ -62,12 +53,12 @@ CREATE TABLE IF NOT EXISTS dbservice_entity (
 
 CREATE TABLE IF NOT EXISTS messaging_service_entity (
     id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
-         name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
-         serviceType VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.serviceType')) NOT NULL,
-         json text NOT NULL CHECK (json IS JSON(LAX)),
-         updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
-         updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
-         deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
+    name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
+    serviceType VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.serviceType')) NOT NULL,
+    json text NOT NULL CHECK (json IS JSON(LAX)),
+    updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
+    updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
+    deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
 );
 
 CREATE TABLE IF NOT EXISTS dashboard_service_entity (
@@ -108,7 +99,6 @@ CREATE TABLE IF NOT EXISTS database_entity (
      updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
      deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
 );
-
 
 CREATE TABLE IF NOT EXISTS database_schema_entity (
      id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
@@ -222,7 +212,6 @@ CREATE TABLE IF NOT EXISTS policy_entity (
      deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
 );
 
-
 CREATE TABLE IF NOT EXISTS ingestion_pipeline_entity (
      id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
      fullyQualifiedName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.fullyQualifiedName')) NOT NULL,
@@ -246,7 +235,7 @@ CREATE TABLE IF NOT EXISTS user_entity (
      id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
      name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
      email VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.email')) NOT NULL,
-     deactivated VARCHAR(8) GENERATED ALWAYS AS (json_value(json , '$.deactivated')) NOT NULL,
+     deactivated VARCHAR(8) GENERATED ALWAYS AS (json_value(json , '$.deactivated')),
      json text NOT NULL CHECK (json IS JSON(LAX)),
      updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
      updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
@@ -288,7 +277,6 @@ CREATE TABLE IF NOT EXISTS entity_usage (
     UNIQUE (usageDate, id)
 );
 
-
 CREATE TABLE IF NOT EXISTS tag_category (
      id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
      name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
@@ -299,17 +287,15 @@ CREATE TABLE IF NOT EXISTS tag_category (
      deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
 );
 
- CREATE TABLE IF NOT EXISTS tag (
-      id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
-      fullyQualifiedName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.fullyQualifiedName')) NOT NULL,
-      defaultRole tinyint GENERATED ALWAYS AS (json_value(json, '$.defaultRole' RETURNING NUMBER)),
-      json text NOT NULL CHECK (json IS JSON(LAX)),
-      updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
-      updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
-      deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
- );
-
-
+CREATE TABLE IF NOT EXISTS tag (
+  id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
+  fullyQualifiedName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.fullyQualifiedName')) NOT NULL,
+  defaultRole tinyint GENERATED ALWAYS AS (json_value(json, '$.defaultRole' RETURNING NUMBER)),
+  json text NOT NULL CHECK (json IS JSON(LAX)),
+  updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
+  updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
+  deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
+);
 
 CREATE TABLE IF NOT EXISTS tag_usage (
     source TINYINT NOT NULL,            -- Source of the tag label
@@ -320,37 +306,35 @@ CREATE TABLE IF NOT EXISTS tag_usage (
     UNIQUE (source, tagFQN, targetFQN)
 );
 
- CREATE TABLE IF NOT EXISTS change_event (
-      eventType VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.eventType')) NOT NULL,
-      entityType VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.entityType')) NOT NULL,
-      userName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.userName')) NOT NULL,
-      eventTime BIGINT   GENERATED ALWAYS AS (json_value(json , '$.timestamp'))NOT NULL,
-      json text NOT NULL CHECK (json IS JSON(LAX))
- );
+CREATE TABLE IF NOT EXISTS change_event (
+  eventType VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.eventType')) NOT NULL,
+  entityType VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.entityType')) NOT NULL,
+  userName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.userName')) NOT NULL,
+  eventTime BIGINT   GENERATED ALWAYS AS (json_value(json , '$.timestamp'))NOT NULL,
+  json text NOT NULL CHECK (json IS JSON(LAX))
+);
 
-  CREATE TABLE IF NOT EXISTS webhook_entity (
+CREATE TABLE IF NOT EXISTS webhook_entity (
+   id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
+   name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
+   json text NOT NULL CHECK (json IS JSON(LAX)),
+   deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
+);
+
+CREATE TABLE IF NOT EXISTS glossary_entity (
+    id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
+    name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
+    json text NOT NULL CHECK (json IS JSON(LAX)),
+    updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
+    updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
+    deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
+);
+
+CREATE TABLE IF NOT EXISTS glossary_term_entity (
        id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
-       name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
+       fullyQualifiedName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.fullyQualifiedName')) NOT NULL,
        json text NOT NULL CHECK (json IS JSON(LAX)),
+       updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
+       updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
        deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
-  );
-
-   CREATE TABLE IF NOT EXISTS glossary_entity (
-        id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
-        name VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.name')) NOT NULL,
-        json text NOT NULL CHECK (json IS JSON(LAX)),
-        updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
-        updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
-        deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
-   );
-
-    CREATE TABLE IF NOT EXISTS glossary_term_entity (
-           id VARCHAR(36) GENERATED ALWAYS AS (json_value(json , '$.id')) NOT NULL,
-           fullyQualifiedName VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.fullyQualifiedName')) NOT NULL,
-           json text NOT NULL CHECK (json IS JSON(LAX)),
-           updatedAt BIGINT   GENERATED ALWAYS AS (json_value(json , '$.updatedAt'))NOT NULL,
-           updatedBy VARCHAR(256) GENERATED ALWAYS AS (json_value(json , '$.updatedBy')) NOT NULL,
-           deleted tinyint GENERATED ALWAYS AS (json_value(json, '$.deleted' RETURNING NUMBER))
-      );
-
-
+);

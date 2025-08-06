@@ -18,8 +18,7 @@ import static org.openmetadata.schema.type.Relationship.MENTIONED_IN;
 import static org.openmetadata.service.Entity.ORGANIZATION_NAME;
 import static org.openmetadata.service.Entity.QUERY;
 import static org.openmetadata.service.jdbi3.ListFilter.escapeApostrophe;
-import static org.openmetadata.service.jdbi3.locator.ConnectionType.MYSQL;
-import static org.openmetadata.service.jdbi3.locator.ConnectionType.POSTGRES;
+import static org.openmetadata.service.jdbi3.locator.ConnectionType.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.sql.ResultSet;
@@ -103,6 +102,7 @@ import org.openmetadata.service.jdbi3.CollectionDAO.UsageDAO.UsageDetailsMapper;
 import org.openmetadata.service.jdbi3.FeedRepository.FilterType;
 import org.openmetadata.service.jdbi3.locator.ConnectionAwareSqlQuery;
 import org.openmetadata.service.jdbi3.locator.ConnectionAwareSqlUpdate;
+import org.openmetadata.service.resources.databases.DatasourceConfig;
 import org.openmetadata.service.resources.feeds.MessageParser.EntityLink;
 import org.openmetadata.service.resources.tags.TagLabelUtil;
 import org.openmetadata.service.util.EntityUtil;
@@ -621,6 +621,14 @@ public interface CollectionDAO {
                 + "VALUES (:id, :extension, :jsonSchema, (:json :: jsonb)) "
                 + "ON CONFLICT (id, extension) DO UPDATE SET jsonSchema = EXCLUDED.jsonSchema, json = EXCLUDED.json",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "MERGE INTO entity_extension AS t1 "
+                + "USING (SELECT :id AS id, :extension AS extension, :jsonSchema AS jsonSchema, :json AS json FROM dual) AS t2 "
+                + "ON (t1.id=t2.id AND t1.extension=t2.extension) "
+                + "WHEN MATCHED THEN UPDATE SET t1.jsonSchema = t2.jsonSchema, t1.json = t2.json "
+                + "WHEN NOT MATCHED THEN INSERT (id, extension, jsonSchema, json) VALUES (t2.id, t2.extension, t2.jsonSchema, t2.json)",
+        connectionType = DAMENG)
     void insert(
         @BindUUID("id") UUID id,
         @Bind("extension") String extension,
@@ -746,6 +754,14 @@ public interface CollectionDAO {
                 + "(:fromId, :toId, :fromEntity, :toEntity, :relation, (:json :: jsonb)) "
                 + "ON CONFLICT (fromId, toId, relation) DO UPDATE SET json = EXCLUDED.json",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "MERGE INTO entity_relationship AS t1 "
+                + "USING (SELECT :fromId AS fromId, :toId AS toId, :fromEntity AS fromEntity, :toEntity AS toEntity, :relation AS relation, :json AS json FROM dual) AS t2 "
+                + "ON(t1.fromId=t2.fromId AND t1.toId=t2.toId AND t1.relation=t2.relation) "
+                + "WHEN MATCHED THEN UPDATE SET t1.json = t2.json "
+                + "WHEN NOT MATCHED THEN INSERT (fromId, toId, fromEntity, toEntity, relation, json) VALUES (t2.fromId, t2.toId, t2.fromEntity, t2.toEntity, t2.relation, t2.json) ",
+        connectionType = DAMENG)
     void insert(
         @BindUUID("fromId") UUID fromId,
         @BindUUID("toId") UUID toId,
@@ -762,6 +778,10 @@ public interface CollectionDAO {
             "INSERT INTO entity_relationship(fromId, toId, fromEntity, toEntity, relation) VALUES <values>"
                 + "ON CONFLICT DO NOTHING",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "INSERT /*+IGNORE_ROW_ON_DUPKEY_INDEX(entity_relationship(fromId, toId, relation))*/ INTO entity_relationship(fromId, toId, fromEntity, toEntity, relation) VALUES <values>",
+        connectionType = DAMENG)
     void bulkInsertTo(
         @BindBeanList(
                 value = "values",
@@ -809,6 +829,12 @@ public interface CollectionDAO {
                 + "WHERE  json -> 'pipeline' ->> 'id' = :fromId OR fromId = :fromId AND relation = :relation "
                 + "ORDER BY toId",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT toId, toEntity, json FROM entity_relationship "
+                + "WHERE JSON_UNQUOTE(JSON_EXTRACT(json, '$.pipeline.id')) =:fromId OR fromId = :fromId AND relation = :relation "
+                + "ORDER BY toId",
+        connectionType = DAMENG)
     @RegisterRowMapper(ToRelationshipMapper.class)
     List<EntityRelationshipRecord> findToPipeline(@BindUUID("fromId") UUID fromId, @Bind("relation") int relation);
 
@@ -846,6 +872,12 @@ public interface CollectionDAO {
                 + "WHERE  json -> 'pipeline' ->> 'id' = :toId OR toId = :toId AND relation = :relation "
                 + "ORDER BY fromId",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT fromId, fromEntity, json FROM entity_relationship "
+                + "WHERE JSON_UNQUOTE(JSON_EXTRACT(json, '$.pipeline.id')) = :toId OR toId = :toId AND relation = :relation "
+                + "ORDER BY fromId",
+        connectionType = DAMENG)
     @RegisterRowMapper(FromRelationshipMapper.class)
     List<EntityRelationshipRecord> findFromPipeline(@BindUUID("toId") UUID toId, @Bind("relation") int relation);
 
@@ -922,6 +954,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlUpdate(
         value = "INSERT INTO thread_entity(json) VALUES (:json :: jsonb)",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(value = "INSERT INTO thread_entity(json) VALUES (:json)", connectionType = DAMENG)
     void insert(@Bind("json") String json);
 
     @SqlQuery("SELECT json FROM thread_entity WHERE id = :id")
@@ -938,6 +971,7 @@ public interface CollectionDAO {
 
     @ConnectionAwareSqlUpdate(value = "UPDATE task_sequence SET id=LAST_INSERT_ID(id+1)", connectionType = MYSQL)
     @ConnectionAwareSqlUpdate(value = "UPDATE task_sequence SET id=(id+1) RETURNING id", connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(value = "UPDATE task_sequence SET id=@@IDENTITY+1", connectionType = DAMENG)
     void updateTaskId();
 
     @SqlQuery("SELECT id FROM task_sequence LIMIT 1")
@@ -976,6 +1010,13 @@ public interface CollectionDAO {
                 + "ORDER BY createdAt DESC "
                 + "LIMIT :limit",
         connectionType = MYSQL)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM thread_entity <condition> AND "
+                + "JSON_OVERLAPS(taskAssignees, :userTeamJsonMysql) "
+                + "ORDER BY createdAt DESC "
+                + "LIMIT :limit",
+        connectionType = DAMENG)
     List<String> listTasksAssigned(
         @BindList("userTeamJsonPostgres") List<String> userTeamJsonPostgres,
         @Bind("userTeamJsonMysql") String userTeamJsonMysql,
@@ -992,6 +1033,11 @@ public interface CollectionDAO {
             "SELECT count(id) FROM thread_entity <condition> AND "
                 + "JSON_OVERLAPS(taskAssignees, :userTeamJsonMysql) ",
         connectionType = MYSQL)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT count(id) FROM thread_entity <condition> AND "
+                + "JSON_OVERLAPS(taskAssignees, :userTeamJsonMysql) ",
+        connectionType = DAMENG)
     int listCountTasksAssignedTo(
         @BindList("userTeamJsonPostgres") List<String> userTeamJsonPostgres,
         @Bind("userTeamJsonMysql") String userTeamJsonMysql,
@@ -1011,6 +1057,13 @@ public interface CollectionDAO {
                 + "ORDER BY createdAt DESC "
                 + "LIMIT :limit",
         connectionType = MYSQL)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM thread_entity <condition> "
+                + "AND (JSON_OVERLAPS(taskAssignees, :userTeamJsonMysql) OR createdBy = :username) "
+                + "ORDER BY createdAt DESC "
+                + "LIMIT :limit",
+        connectionType = DAMENG)
     List<String> listTasksOfUser(
         @BindList("userTeamJsonPostgres") List<String> userTeamJsonPostgres,
         @Bind("userTeamJsonMysql") String userTeamJsonMysql,
@@ -1028,6 +1081,11 @@ public interface CollectionDAO {
             "SELECT count(id) FROM thread_entity <condition> "
                 + "AND (JSON_OVERLAPS(taskAssignees, :userTeamJsonMysql) OR createdBy = :username) ",
         connectionType = MYSQL)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT count(id) FROM thread_entity <condition> "
+                + "AND (JSON_OVERLAPS(taskAssignees, :userTeamJsonMysql) OR createdBy = :username) ",
+        connectionType = DAMENG)
     int listCountTasksOfUser(
         @BindList("userTeamJsonPostgres") List<String> userTeamJsonPostgres,
         @Bind("userTeamJsonMysql") String userTeamJsonMysql,
@@ -1142,6 +1200,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlUpdate(
         value = "UPDATE thread_entity SET json = (:json :: jsonb) where id = :id",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(value = "UPDATE thread_entity SET json = :json where id = :id", connectionType = DAMENG)
     void update(@BindUUID("id") UUID id, @Bind("json") String json);
 
     @SqlQuery(
@@ -1281,6 +1340,11 @@ public interface CollectionDAO {
                 + "VALUES (:fromFQNHash, :toFQNHash, :fromFQN, :toFQN, :fromType, :toType, :relation, (:json :: jsonb)) "
                 + "ON CONFLICT (fromFQNHash, toFQNHash, relation) DO NOTHING",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "INSERT /*+IGNORE_ROW_ON_DUPKEY_INDEX(field_relationship(fromFQNHash, toFQNHash, relation))*/ INTO field_relationship(fromFQNHash, toFQNHash, fromFQN, toFQN, fromType, toType, relation, json) "
+                + "VALUES (:fromFQNHash, :toFQNHash, :fromFQN, :toFQN, :fromType, :toType, :relation, :json)",
+        connectionType = DAMENG)
     void insert(
         @BindFQN("fromFQNHash") String fromFQNHash,
         @BindFQN("toFQNHash") String toFQNHash,
@@ -1303,6 +1367,15 @@ public interface CollectionDAO {
                 + "VALUES (:fromFQNHash, :toFQNHash, :fromFQN, :toFQN, :fromType, :toType, :relation, :jsonSchema, (:json :: jsonb)) "
                 + "ON CONFLICT (fromFQNHash, toFQNHash, relation) DO UPDATE SET json = EXCLUDED.json",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "MERGE INTO field_relationship AS t1 "
+                + "USING (SELECT :fromFQNHash AS fromFQNHash, :toFQNHash AS toFQNHash, :fromFQN AS fromFQN, :toFQN AS toFQN, :fromType AS fromType, :toType AS toType, :relation AS relation, :jsonSchema AS jsonSchema, :json AS json FROM dual) AS t2 "
+                + "ON (t1.fromFQNHash=t2.fromFQNHash, t1.toFQNHash=t2.toFQNHash, t1.relation=t2.relation) "
+                + "WHEN MATCHED THEN UPDATE SET json = t2.json "
+                + "WHEN NOT MATCHED THEN INSERT (fromFQNHash, toFQNHash, fromFQN, toFQN, fromType, toType, relation, jsonSchema, json) "
+                + "VALUES (t2.fromFQNHash, t2.toFQNHash, t2.fromFQN, t2.toFQN, t2.fromType, t2.toType, t2.relation, t2.jsonSchema, t2.json)",
+        connectionType = DAMENG)
     void upsert(
         @BindFQN("fromFQNHash") String fromFQNHash,
         @BindFQN("toFQNHash") String toFQNHash,
@@ -2112,18 +2185,26 @@ public interface CollectionDAO {
 
       if (disabled) {
         mySqlCondition =
-            String.format(
-                "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = TRUE)",
-                mySqlCondition);
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND (JSON_VALUE(c.json, '$.disabled') IS NULL OR CAST(JSON_VALUE(c.json, '$.disabled' RETURNING NUMBER) AS TINYINT) = TRUE)",
+                    mySqlCondition)
+                : String.format(
+                    "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = TRUE)",
+                    mySqlCondition);
         postgresCondition =
             String.format(
                 "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = TRUE)",
                 postgresCondition);
       } else {
         mySqlCondition =
-            String.format(
-                "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = FALSE)",
-                mySqlCondition);
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND (JSON_VALUE(c.json, '$.disabled') IS NULL OR CAST(JSON_VALUE(c.json, '$.disabled' RETURNING NUMBER) AS TINYINT) = FALSE)",
+                    mySqlCondition)
+                : String.format(
+                    "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = FALSE)",
+                    mySqlCondition);
         postgresCondition =
             String.format(
                 "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = FALSE)",
@@ -2149,18 +2230,26 @@ public interface CollectionDAO {
 
       if (disabled) {
         mySqlCondition =
-            String.format(
-                "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = TRUE)",
-                mySqlCondition);
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND (JSON_VALUE(c.json, '$.disabled') IS NULL OR CAST(JSON_VALUE(c.json, '$.disabled' RETURNING NUMBER) AS TINYINT) = TRUE)",
+                    mySqlCondition)
+                : String.format(
+                    "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = TRUE)",
+                    mySqlCondition);
         postgresCondition =
             String.format(
                 "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean) = TRUE)",
                 postgresCondition);
       } else {
         mySqlCondition =
-            String.format(
-                "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = FALSE)",
-                mySqlCondition);
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND (JSON_VALUE(c.json, '$.disabled') IS NULL OR CAST(JSON_VALUE(c.json, '$.disabled' RETURNING NUMBER) AS TINYINT) = FALSE)",
+                    mySqlCondition)
+                : String.format(
+                    "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = FALSE)",
+                    mySqlCondition);
         postgresCondition =
             String.format(
                 "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = FALSE)",
@@ -2187,18 +2276,26 @@ public interface CollectionDAO {
 
       if (disabled) {
         mySqlCondition =
-            String.format(
-                "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = TRUE)",
-                mySqlCondition);
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND (JSON_VALUE(c.json, '$.disabled') IS NULL OR CAST(JSON_VALUE(c.json, '$.disabled' RETURNING NUMBER) AS TINYINT) = TRUE)",
+                    mySqlCondition)
+                : String.format(
+                    "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = TRUE)",
+                    mySqlCondition);
         postgresCondition =
             String.format(
                 "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean) = TRUE)",
                 postgresCondition);
       } else {
         mySqlCondition =
-            String.format(
-                "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = FALSE)",
-                mySqlCondition);
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND (JSON_VALUE(c.json, '$.disabled') IS NULL OR CAST(JSON_VALUE(c.json, '$.disabled' RETURNING NUMBER) AS TINYINT) = FALSE)",
+                    mySqlCondition)
+                : String.format(
+                    "%s AND (JSON_EXTRACT(c.json, '$.disabled') IS NULL OR JSON_EXTRACT(c.json, '$.disabled') = FALSE)",
+                    mySqlCondition);
         postgresCondition =
             String.format(
                 "%s AND ((c.json #> '{disabled}') IS NULL OR ((c.json #> '{disabled}') :: boolean)  = FALSE)",
@@ -2221,6 +2318,10 @@ public interface CollectionDAO {
         value =
             "INSERT INTO tag_usage (source, tagFQN, tagFQNHash, targetFQNHash, labelType, state) VALUES (:source, :tagFQN, :tagFQNHash, :targetFQNHash, :labelType, :state) ON CONFLICT (source, tagFQNHash, targetFQNHash) DO NOTHING",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "INSERT /*+IGNORE_ROW_ON_DUPKEY_INDEX(tag_usage(source, tagFQNHash, targetFQNHash))*/ INTO tag_usage (source, tagFQN, tagFQNHash, targetFQNHash, labelType, state) VALUES (:source, :tagFQN, :tagFQNHash, :targetFQNHash, :labelType, :state)",
+        connectionType = DAMENG)
     void applyTag(
         @Bind("source") int source,
         @Bind("tagFQN") String tagFQN,
@@ -2286,6 +2387,15 @@ public interface CollectionDAO {
                 + "ON CONFLICT (source, tagFQN, targetFQN) "
                 + "DO UPDATE SET tagFQNHash = EXCLUDED.tagFQNHash, targetFQNHash = EXCLUDED.targetFQNHash",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "MERGE INTO tag_usage AS t1 "
+                + "USING (SELECT :source AS source, :tagFQN AS tagFQN, :tagFQNHash AS tagFQNHash, :targetFQNHash AS targetFQNHash, :labelType AS labelType, :state AS state, :targetFQN AS targetFQN FROM dual) AS t2 "
+                + "ON(t1.source=t2.source, t1.tagFQN=t2.tagFQN, t1.targetFQN=t2.targetFQN) "
+                + "WHEN MATCHED THEN UPDATE SET t1.tagFQNHash = t2.tagFQNHash, t1.targetFQNHash = t2.targetFQNHash "
+                + "WHEN NOT MATCHED THEN INSERT (source, tagFQN, tagFQNHash, targetFQNHash, labelType, state, targetFQN) "
+                + "VALUES (t2.source, t2.tagFQN, t2.tagFQNHash, t2.targetFQNHash, t2.labelType, t2.state, t2.targetFQN) ",
+        connectionType = DAMENG)
     void upsertFQNHash(
         @Bind("source") int source,
         @Bind("tagFQN") String tagFQN,
@@ -2461,7 +2571,12 @@ public interface CollectionDAO {
       String mySqlCondition = condition;
       String postgresCondition = condition;
       if (isJoinable != null) {
-        mySqlCondition = String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
+        mySqlCondition =
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND CAST(JSON_VALUE(json, '$.isJoinable' RETURNING NUMBER) AS TINYINT) = %s)",
+                    mySqlCondition, isJoinable)
+                : String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
         postgresCondition =
             String.format("%s AND ((json #> '{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
       }
@@ -2493,7 +2608,12 @@ public interface CollectionDAO {
       String mySqlCondition = condition;
       String postgresCondition = condition;
       if (isJoinable != null) {
-        mySqlCondition = String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
+        mySqlCondition =
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND CAST(JSON_VALUE(json, '$.isJoinable' RETURNING NUMBER) AS TINYINT) = %s)",
+                    mySqlCondition, isJoinable)
+                : String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
         postgresCondition =
             String.format("%s AND ((json #> '{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
       }
@@ -2527,7 +2647,12 @@ public interface CollectionDAO {
       String mySqlCondition = condition;
       String postgresCondition = condition;
       if (isJoinable != null) {
-        mySqlCondition = String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
+        mySqlCondition =
+            DatasourceConfig.getInstance().isDameng()
+                ? String.format(
+                    "%s AND CAST(JSON_VALUE(json, '$.isJoinable' RETURNING NUMBER) AS TINYINT) = %s)",
+                    mySqlCondition, isJoinable)
+                : String.format("%s AND JSON_EXTRACT(json, '$.isJoinable') = %s ", mySqlCondition, isJoinable);
         postgresCondition =
             String.format("%s AND ((json #> '{isJoinable}')::boolean)  = %s ", postgresCondition, isJoinable);
       }
@@ -2724,13 +2849,22 @@ public interface CollectionDAO {
       if (isAdminStr != null) {
         boolean isAdmin = Boolean.parseBoolean(isAdminStr);
         if (isAdmin) {
-          mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
+          mySqlCondition =
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND CAST(JSON_VALUE(ue.json, '$.isAdmin' RETURNING NUMBER) AS TINYINT) = TRUE ",
+                      mySqlCondition)
+                  : String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
           postgresCondition = String.format("%s AND ((ue.json #> '{isAdmin}') :: boolean)  = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
-              String.format(
-                  "%s AND (JSON_EXTRACT(ue.json, '$.isAdmin') IS NULL OR JSON_EXTRACT(ue.json, '$.isAdmin') = FALSE ) ",
-                  mySqlCondition);
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND (JSON_VALUE(ue.json, '$.isAdmin') IS NULL OR CAST(JSON_VALUE(ue.json, '$.isAdmin' RETURNING NUMBER) AS TINYINT) = FALSE ) ",
+                      mySqlCondition)
+                  : String.format(
+                      "%s AND (JSON_EXTRACT(ue.json, '$.isAdmin') IS NULL OR JSON_EXTRACT(ue.json, '$.isAdmin') = FALSE ) ",
+                      mySqlCondition);
           postgresCondition =
               String.format(
                   "%s AND (ue.json #> '{isAdmin}' IS NULL OR ((ue.json #> '{isAdmin}') :: boolean) = FALSE ) ",
@@ -2740,16 +2874,25 @@ public interface CollectionDAO {
       if (isBotStr != null) {
         boolean isBot = Boolean.parseBoolean(isBotStr);
         if (isBot) {
-          mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
+          mySqlCondition =
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND CAST(JSON_VALUE(ue.json, '$.isBot' RETURNING NUMBER) AS TINYINT) = TRUE ", mySqlCondition)
+                  : String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
           postgresCondition = String.format("%s AND ((ue.json #> '{isBot}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
-              String.format(
-                  "%s AND (JSON_EXTRACT(ue.json, '$.isBot') IS NULL OR JSON_EXTRACT(ue.json, '$.isBot') = FALSE ) ",
-                  mySqlCondition);
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND (JSON_VALUE(ue.json, '$.isBot') IS NULL OR CAST(JSON_VALUE(ue.json, '$.isBot' RETURNING NUMBER) AS TINYINT) = FALSE ) ",
+                      mySqlCondition)
+                  : String.format(
+                      "%s AND (JSON_EXTRACT(ue.json, '$.isBot') IS NULL OR JSON_EXTRACT(ue.json, '$.isBot') = FALSE ) ",
+                      mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ", postgresCondition);
+                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ",
+                  postgresCondition);
         }
       }
       if (team == null && isAdminStr == null && isBotStr == null) {
@@ -2769,13 +2912,22 @@ public interface CollectionDAO {
       if (isAdminStr != null) {
         boolean isAdmin = Boolean.parseBoolean(isAdminStr);
         if (isAdmin) {
-          mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
+          mySqlCondition =
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND CAST(JSON_VALUE(ue.json, '$.isAdmin' RETURNING NUMBER) AS TINYINT) = TRUE ",
+                      mySqlCondition)
+                  : String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
           postgresCondition = String.format("%s AND ((ue.json #> '{isAdmin}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
-              String.format(
-                  "%s AND (JSON_EXTRACT(ue.json, '$.isAdmin') IS NULL OR JSON_EXTRACT(ue.json, '$.isAdmin') = FALSE ) ",
-                  mySqlCondition);
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND (JSON_VALUE(ue.json, '$.isAdmin') IS NULL OR CAST(JSON_VALUE(ue.json, '$.isAdmin' RETURNING NUMBER) AS TINYINT) = FALSE ) ",
+                      mySqlCondition)
+                  : String.format(
+                      "%s AND (JSON_EXTRACT(ue.json, '$.isAdmin') IS NULL OR JSON_EXTRACT(ue.json, '$.isAdmin') = FALSE ) ",
+                      mySqlCondition);
           postgresCondition =
               String.format(
                   "%s AND (ue.json #> '{isAdmin}' IS NULL OR ((ue.json #> '{isAdmin}') :: boolean) = FALSE ) ",
@@ -2785,16 +2937,25 @@ public interface CollectionDAO {
       if (isBotStr != null) {
         boolean isBot = Boolean.parseBoolean(isBotStr);
         if (isBot) {
-          mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
+          mySqlCondition =
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND CAST(JSON_VALUE(ue.json, '$.isBot' RETURNING NUMBER) AS TINYINT) = TRUE ", mySqlCondition)
+                  : String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
           postgresCondition = String.format("%s AND ((ue.json #> '{isBot}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
-              String.format(
-                  "%s AND (JSON_EXTRACT(ue.json, '$.isBot') IS NULL OR JSON_EXTRACT(ue.json, '$.isBot') = FALSE ) ",
-                  mySqlCondition);
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND (JSON_VALUE(ue.json, '$.isBot') IS NULL OR CAST(JSON_VALUE(ue.json, '$.isBot' RETURNING NUMBER) AS TINYINT) = FALSE ) ",
+                      mySqlCondition)
+                  : String.format(
+                      "%s AND (JSON_EXTRACT(ue.json, '$.isBot') IS NULL OR JSON_EXTRACT(ue.json, '$.isBot') = FALSE ) ",
+                      mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ", postgresCondition);
+                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ",
+                  postgresCondition);
         }
       }
       if (team == null && isAdminStr == null && isBotStr == null) {
@@ -2821,13 +2982,22 @@ public interface CollectionDAO {
       if (isAdminStr != null) {
         boolean isAdmin = Boolean.parseBoolean(isAdminStr);
         if (isAdmin) {
-          mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
+          mySqlCondition =
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND CAST(JSON_VALUE(ue.json, '$.isAdmin' RETURNING NUMBER) AS TINYINT) = TRUE ",
+                      mySqlCondition)
+                  : String.format("%s AND JSON_EXTRACT(ue.json, '$.isAdmin') = TRUE ", mySqlCondition);
           postgresCondition = String.format("%s AND ((ue.json #> '{isAdmin}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
-              String.format(
-                  "%s AND (JSON_EXTRACT(ue.json, '$.isAdmin') IS NULL OR JSON_EXTRACT(ue.json, '$.isAdmin') = FALSE ) ",
-                  mySqlCondition);
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND (JSON_VALUE(ue.json, '$.isAdmin') IS NULL OR CAST(JSON_VALUE(ue.json, '$.isAdmin' RETURNING NUMBER) AS TINYINT) = FALSE ) ",
+                      mySqlCondition)
+                  : String.format(
+                      "%s AND (JSON_EXTRACT(ue.json, '$.isAdmin') IS NULL OR JSON_EXTRACT(ue.json, '$.isAdmin') = FALSE ) ",
+                      mySqlCondition);
           postgresCondition =
               String.format(
                   "%s AND (ue.json #> '{isAdmin}' IS NULL OR ((ue.json #> '{isAdmin}') :: boolean) = FALSE ) ",
@@ -2837,16 +3007,25 @@ public interface CollectionDAO {
       if (isBotStr != null) {
         boolean isBot = Boolean.parseBoolean(isBotStr);
         if (isBot) {
-          mySqlCondition = String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
+          mySqlCondition =
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND CAST(JSON_VALUE(ue.json, '$.isBot' RETURNING NUMBER) AS TINYINT) = TRUE ", mySqlCondition)
+                  : String.format("%s AND JSON_EXTRACT(ue.json, '$.isBot') = TRUE ", mySqlCondition);
           postgresCondition = String.format("%s AND ((ue.json #> '{isBot}') :: boolean) = TRUE ", postgresCondition);
         } else {
           mySqlCondition =
-              String.format(
-                  "%s AND (JSON_EXTRACT(ue.json, '$.isBot') IS NULL OR JSON_EXTRACT(ue.json, '$.isBot') = FALSE ) ",
-                  mySqlCondition);
+              DatasourceConfig.getInstance().isDameng()
+                  ? String.format(
+                      "%s AND (JSON_VALUE(ue.json, '$.isBot') IS NULL OR CAST(JSON_VALUE(ue.json, '$.isBot' RETURNING NUMBER) AS TINYINT) = FALSE ) ",
+                      mySqlCondition)
+                  : String.format(
+                      "%s AND (JSON_EXTRACT(ue.json, '$.isBot') IS NULL OR JSON_EXTRACT(ue.json, '$.isBot') = FALSE ) ",
+                      mySqlCondition);
           postgresCondition =
               String.format(
-                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ", postgresCondition);
+                  "%s AND (ue.json #> '{isBot}' IS NULL OR ((ue.json #> '{isBot}') :: boolean) = FALSE) ",
+                  postgresCondition);
         }
       }
       if (team == null && isAdminStr == null && isBotStr == null) {
@@ -2885,6 +3064,17 @@ public interface CollectionDAO {
                 + " AND (:team IS NULL OR te.nameHash = :team) "
                 + "GROUP BY ue.id) subquery",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT count(id) FROM ("
+                + "SELECT ue.id "
+                + "FROM user_entity ue "
+                + "LEFT JOIN entity_relationship er on ue.id = er.toId "
+                + "LEFT JOIN team_entity te on te.id = er.fromId and er.relation = :relation "
+                + " <mysqlCond> "
+                + " AND (:team IS NULL OR te.nameHash = :team) "
+                + "GROUP BY ue.id) subquery",
+        connectionType = DAMENG)
     int listCount(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -2923,6 +3113,21 @@ public interface CollectionDAO {
                 + "LIMIT :limit"
                 + ") last_rows_subquery ORDER BY <nameColumn>",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM ("
+                + "SELECT ue.<nameColumn>, ue.json "
+                + "FROM user_entity ue "
+                + "LEFT JOIN entity_relationship er on ue.id = er.toId "
+                + "LEFT JOIN team_entity te on te.id = er.fromId and er.relation = :relation "
+                + " <mysqlCond> "
+                + "AND (:team IS NULL OR te.nameHash = :team) "
+                + "AND ue.<nameColumn> < :before "
+                + "GROUP BY ue.<nameColumn>, ue.json "
+                + "ORDER BY ue.<nameColumn> DESC "
+                + "LIMIT :limit"
+                + ") last_rows_subquery ORDER BY <nameColumn>",
+        connectionType = DAMENG)
     List<String> listBefore(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -2959,6 +3164,19 @@ public interface CollectionDAO {
                 + "ORDER BY ue.<nameColumn> "
                 + "LIMIT :limit",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT ue.json "
+                + "FROM user_entity ue "
+                + "LEFT JOIN entity_relationship er on ue.id = er.toId "
+                + "LEFT JOIN team_entity te on te.id = er.fromId and er.relation = :relation "
+                + " <mysqlCond> "
+                + "AND (:team IS NULL OR te.nameHash = :team) "
+                + "AND ue.<nameColumn> > :after "
+                + "GROUP BY ue.<nameColumn>, ue.json "
+                + "ORDER BY ue.<nameColumn> "
+                + "LIMIT :limit",
+        connectionType = DAMENG)
     List<String> listAfter(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -2989,6 +3207,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlUpdate(
         value = "INSERT INTO change_event (json) VALUES (:json :: jsonb)",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(value = "INSERT INTO change_event (json) VALUES (:json)", connectionType = DAMENG)
     void insert(@Bind("json") String json);
 
     @SqlUpdate("DELETE FROM change_event WHERE entityType = :entityType")
@@ -3185,6 +3404,15 @@ public interface CollectionDAO {
                 + "LIMIT :limit"
                 + ") last_rows_subquery ORDER BY <nameColumn>",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM ("
+                + "SELECT <nameColumn>, json FROM <table> <mysqlCond> AND "
+                + "<nameColumn> < :before "
+                + "ORDER BY <nameColumn> DESC "
+                + "LIMIT :limit"
+                + ") last_rows_subquery ORDER BY <nameColumn>",
+        connectionType = DAMENG)
     List<String> listBefore(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -3207,6 +3435,13 @@ public interface CollectionDAO {
                 + "ORDER BY <nameColumn> "
                 + "LIMIT :limit",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM <table> <mysqlCond> AND "
+                + "<nameColumn> > :after "
+                + "ORDER BY <nameColumn> "
+                + "LIMIT :limit",
+        connectionType = DAMENG)
     List<String> listAfter(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -3217,6 +3452,7 @@ public interface CollectionDAO {
 
     @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <mysqlCond>", connectionType = MYSQL)
     @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <psqlCond>", connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <mysqlCond>", connectionType = DAMENG)
     int listCount(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -3288,6 +3524,14 @@ public interface CollectionDAO {
                 + "ORDER BY ranked DESC "
                 + "LIMIT :limit) rankedBefore ORDER BY ranked",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT * FROM (SELECT json, ranked FROM "
+                + "(SELECT id, json, deleted, ROW_NUMBER() OVER(ORDER BY (json ->> '$.testCaseResult.timestamp') DESC) AS ranked FROM <table>) executionTimeSorted "
+                + "<cond> AND ranked < :before "
+                + "ORDER BY ranked DESC "
+                + "LIMIT :limit) rankedBefore ORDER BY ranked",
+        connectionType = DAMENG)
     @RegisterRowMapper(TestCaseRecordMapper.class)
     List<TestCaseRecord> listBeforeTsOrdered(
         @Define("table") String table,
@@ -3312,6 +3556,14 @@ public interface CollectionDAO {
                 + "<cond> AND ranked > :after "
                 + "LIMIT :limit",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json, ranked FROM "
+                + "(SELECT id, json, deleted, ROW_NUMBER() OVER(ORDER BY (json ->> '$.testCaseResult.timestamp') DESC ) AS ranked FROM <table> "
+                + ") executionTimeSorted "
+                + "<cond> AND ranked > :after "
+                + "LIMIT :limit",
+        connectionType = DAMENG)
     @RegisterRowMapper(TestCaseRecordMapper.class)
     List<TestCaseRecord> listAfterTsOrdered(
         @Define("table") String table,
@@ -3386,6 +3638,9 @@ public interface CollectionDAO {
     @ConnectionAwareSqlUpdate(
         value = "INSERT INTO apps_extension_time_series(json) " + "VALUES ((:json :: jsonb))",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value = "INSERT INTO apps_extension_time_series(json) " + "VALUES (:json)",
+        connectionType = DAMENG)
     void insert(@Bind("json") String json);
 
     @ConnectionAwareSqlUpdate(
@@ -3395,6 +3650,9 @@ public interface CollectionDAO {
         value =
             "UPDATE apps_extension_time_series set json = (:json :: jsonb) where appId=:appId and timestamp=:timestamp",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value = "UPDATE apps_extension_time_series set json = :json where appId=:appId and timestamp=:timestamp",
+        connectionType = DAMENG)
     void update(@Bind("appId") String appId, @Bind("json") String json, @Bind("timestamp") Long timestamp);
 
     @SqlQuery("SELECT count(*) FROM apps_extension_time_series where appId = :appId")
@@ -3426,6 +3684,9 @@ public interface CollectionDAO {
         value =
             "DELETE FROM report_data_time_series WHERE entityFQNHash = :reportDataType and DATE(TO_TIMESTAMP((json ->> 'timestamp')::bigint/1000)) = DATE(:date)",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value = "DELETE FROM report_data_time_series WHERE entityFQNHash = :reportDataType and date = :date",
+        connectionType = DAMENG)
     void deleteReportDataTypeAtDate(@BindFQN("reportDataType") String reportDataType, @Bind("date") String date);
 
     @SqlUpdate("DELETE FROM report_data_time_series WHERE entityFQNHash = :reportDataType")
@@ -3525,6 +3786,29 @@ public interface CollectionDAO {
                 + "(SELECT COUNT(*) FROM team_entity <cond>) as teamCount, "
                 + "(SELECT COUNT(*) FROM test_suite <cond>) as testSuiteCount",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT (SELECT COUNT(*) FROM table_entity <cond>) as tableCount, "
+                + "(SELECT COUNT(*) FROM topic_entity <cond>) as topicCount, "
+                + "(SELECT COUNT(*) FROM dashboard_entity <cond>) as dashboardCount, "
+                + "(SELECT COUNT(*) FROM pipeline_entity <cond>) as pipelineCount, "
+                + "(SELECT COUNT(*) FROM ml_model_entity <cond>) as mlmodelCount, "
+                + "(SELECT COUNT(*) FROM storage_container_entity <cond>) as storageContainerCount, "
+                + "(SELECT COUNT(*) FROM search_index_entity <cond>) as searchIndexCount, "
+                + "(SELECT COUNT(*) FROM glossary_entity <cond>) as glossaryCount, "
+                + "(SELECT COUNT(*) FROM glossary_term_entity <cond>) as glossaryTermCount, "
+                + "(SELECT (SELECT COUNT(*) FROM metadata_service_entity <cond>) + "
+                + "(SELECT COUNT(*) FROM dbservice_entity <cond>)+"
+                + "(SELECT COUNT(*) FROM messaging_service_entity <cond>)+ "
+                + "(SELECT COUNT(*) FROM dashboard_service_entity <cond>)+ "
+                + "(SELECT COUNT(*) FROM pipeline_service_entity <cond>)+ "
+                + "(SELECT COUNT(*) FROM mlmodel_service_entity <cond>)+ "
+                + "(SELECT COUNT(*) FROM search_service_entity <cond>)+ "
+                + "(SELECT COUNT(*) FROM storage_service_entity <cond>)) as servicesCount, "
+                + "(SELECT COUNT(*) FROM user_entity <cond> AND (JSON_EXTRACT(json, '$.isBot') IS NULL OR JSON_EXTRACT(json, '$.isBot') = FALSE)) as userCount, "
+                + "(SELECT COUNT(*) FROM team_entity <cond>) as teamCount, "
+                + "(SELECT COUNT(*) FROM test_suite <cond>) as testSuiteCount",
+        connectionType = DAMENG)
     @RegisterRowMapper(EntitiesCountRowMapper.class)
     EntitiesCount getAggregatedEntitiesCount(@Define("cond") String cond) throws StatementException;
 
@@ -3557,6 +3841,12 @@ public interface CollectionDAO {
             "INSERT into openmetadata_settings (configType, json)"
                 + "VALUES (:configType, :json :: jsonb) ON CONFLICT (configType) DO UPDATE SET json = EXCLUDED.json",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value =
+            "MERGE INTO openmetadata_settings AS t1 USING (SELECT :configType AS configType, :json AS json FROM dual) AS t2 ON(t1.configType=t2.configType) "
+                + "WHEN MATCHED THEN UPDATE SET t1.json=t2.json "
+                + "WHEN NOT MATCHED THEN INSERT (configType, json) VALUES (t2.configType, t2.json)",
+        connectionType = DAMENG)
     void insertSettings(@Bind("configType") String configType, @Bind("json") String json);
 
     @SqlUpdate(value = "DELETE from openmetadata_settings WHERE configType = :configType")
@@ -3638,6 +3928,7 @@ public interface CollectionDAO {
     @ConnectionAwareSqlUpdate(
         value = "INSERT INTO user_tokens (json) VALUES (:json :: jsonb)",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(value = "INSERT INTO user_tokens (json) VALUES (:json)", connectionType = DAMENG)
     void insert(@Bind("json") String json);
 
     @ConnectionAwareSqlUpdate(
@@ -3646,6 +3937,9 @@ public interface CollectionDAO {
     @ConnectionAwareSqlUpdate(
         value = "UPDATE user_tokens SET json = (:json :: jsonb) WHERE token = :token",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlUpdate(
+        value = "UPDATE user_tokens SET json = :json WHERE token = :token",
+        connectionType = DAMENG)
     void update(@Bind("token") String token, @Bind("json") String json);
 
     @SqlUpdate(value = "DELETE from user_tokens WHERE token = :token")
@@ -3945,6 +4239,15 @@ public interface CollectionDAO {
                 + "LIMIT :limit"
                 + ") last_rows_subquery ORDER BY <nameColumn>",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM ("
+                + "SELECT <nameColumn>, json FROM <table> <mysqlCond> AND "
+                + "<nameColumn> < :before "
+                + "ORDER BY <nameColumn> DESC "
+                + "LIMIT :limit"
+                + ") last_rows_subquery ORDER BY <nameColumn>",
+        connectionType = DAMENG)
     List<String> listBefore(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -3967,6 +4270,13 @@ public interface CollectionDAO {
                 + "ORDER BY <nameColumn> "
                 + "LIMIT :limit",
         connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(
+        value =
+            "SELECT json FROM <table> <mysqlCond> AND "
+                + "<nameColumn> > :after "
+                + "ORDER BY <nameColumn> "
+                + "LIMIT :limit",
+        connectionType = DAMENG)
     List<String> listAfter(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,
@@ -3977,6 +4287,7 @@ public interface CollectionDAO {
 
     @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <mysqlCond>", connectionType = MYSQL)
     @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <psqlCond>", connectionType = POSTGRES)
+    @ConnectionAwareSqlQuery(value = "SELECT count(*) FROM <table> <mysqlCond>", connectionType = DAMENG)
     int listCount(
         @Define("table") String table,
         @Define("nameColumn") String nameColumn,

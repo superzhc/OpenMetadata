@@ -27,15 +27,13 @@ CREATE TABLE IF NOT EXISTS mlmodel_service_entity (
 
 UPDATE thread_entity SET json = JSON_SET(json, '$.type', 'Conversation', '$.reactions', JSON_ARRAY());
 
-ALTER TABLE thread_entity ADD type VARCHAR(64) GENERATED ALWAYS AS (json_value(json , '$.type'));
-ALTER TABLE thread_entity ADD taskId INT  GENERATED ALWAYS AS (json_value(json , '$.task.id'));
-ALTER TABLE thread_entity ADD taskStatus VARCHAR(64) GENERATED ALWAYS AS (json_value(json , '$.task.status'));
-ALTER TABLE thread_entity ADD taskAssignees GENERATED ALWAYS AS (json_value(json, '$.task.assignees'));
+ALTER TABLE thread_entity ADD COLUMN "type" VARCHAR(64) GENERATED ALWAYS AS (json_value(json , '$.type'));
+ALTER TABLE thread_entity ADD COLUMN taskId INT  GENERATED ALWAYS AS (json_value(json , '$.task.id'));
+ALTER TABLE thread_entity ADD COLUMN taskStatus VARCHAR(64) GENERATED ALWAYS AS (json_value(json , '$.task.status'));
+ALTER TABLE thread_entity ADD COLUMN taskAssignees GENERATED ALWAYS AS (json_value(json, '$.task.assignees'));
 
-
-CREATE TABLE task_sequence (id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id));
+CREATE TABLE IF NOT EXISTS task_sequence (id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id));
 INSERT INTO task_sequence VALUES (0);
-
 
 DELETE from ingestion_pipeline_entity where 1=1;
 
