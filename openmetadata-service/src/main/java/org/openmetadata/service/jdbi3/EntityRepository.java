@@ -13,6 +13,15 @@
 
 package org.openmetadata.service.jdbi3;
 
+import static org.openmetadata.common.utils.CommonUtil.listOrEmpty;
+import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
+import static org.openmetadata.schema.type.Include.*;
+import static org.openmetadata.schema.utils.EntityInterfaceUtil.quoteName;
+import static org.openmetadata.service.Entity.*;
+import static org.openmetadata.service.exception.CatalogExceptionMessage.csvNotSupported;
+import static org.openmetadata.service.exception.CatalogExceptionMessage.entityNotFound;
+import static org.openmetadata.service.util.EntityUtil.*;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.cache.CacheBuilder;
@@ -21,6 +30,19 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
+import java.io.IOException;
+import java.net.URI;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.json.JsonPatch;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -60,29 +82,6 @@ import org.openmetadata.service.util.*;
 import org.openmetadata.service.util.RestUtil.DeleteResponse;
 import org.openmetadata.service.util.RestUtil.PatchResponse;
 import org.openmetadata.service.util.RestUtil.PutResponse;
-
-import javax.json.JsonPatch;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
-import java.net.URI;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static org.openmetadata.common.utils.CommonUtil.listOrEmpty;
-import static org.openmetadata.common.utils.CommonUtil.nullOrEmpty;
-import static org.openmetadata.schema.type.Include.*;
-import static org.openmetadata.schema.utils.EntityInterfaceUtil.quoteName;
-import static org.openmetadata.service.Entity.*;
-import static org.openmetadata.service.exception.CatalogExceptionMessage.csvNotSupported;
-import static org.openmetadata.service.exception.CatalogExceptionMessage.entityNotFound;
-import static org.openmetadata.service.util.EntityUtil.*;
 
 /**
  * This is the base class used by Entity Resources to perform READ and WRITE operations to the backend database to

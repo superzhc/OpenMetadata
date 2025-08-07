@@ -1,7 +1,8 @@
--- 1. 创建新表
-CREATE TABLE classification AS SELECT * FROM tag_category;
--- 2. 删除原表
-DROP TABLE tag_category;
+-- -- 1. 创建新表
+-- CREATE TABLE classification AS SELECT * FROM tag_category;
+-- -- 2. 删除原表
+-- DROP TABLE tag_category;
+ALTER TABLE tag_category RENAME TO classification;
 
 -- Rename tagCategoryName in BigQuery for classificationName
 UPDATE dbservice_entity

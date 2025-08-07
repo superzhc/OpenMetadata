@@ -5,3 +5,4 @@ ALTER TABLE field_relationship MODIFY fromFQN VARCHAR(2096) NOT NULL;
 ALTER TABLE field_relationship MODIFY toFQN VARCHAR(2096) NOT NULL;
 ALTER TABLE tag_usage DROP COLUMN targetFQN;
 ALTER TABLE tag_usage ADD UNIQUE (source, tagFQNHash, targetFQNHash);
+ALTER TABLE classification ADD UNIQUE (nameHash);
