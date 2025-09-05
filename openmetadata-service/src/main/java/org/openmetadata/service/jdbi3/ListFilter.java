@@ -199,7 +199,7 @@ public class ListFilter {
     }
 
     String tagsCondition =
-        Arrays.stream(escape(tags).split(","))
+        Arrays.stream(/*escape(tags)*/tags.split(","))
             .map(
                 tag ->
                     tableName == null
